@@ -1,0 +1,6 @@
+{
+  "name": "Tata Kelola Ekspor",
+  "description": "Aplikasi tata kelola usaha ekspor komprehensif dengan alur kerja, pembuatan dokumen trader, katalog produk, sertifikasi, pelacakan status, dan notifikasi real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
