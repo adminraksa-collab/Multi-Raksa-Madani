@@ -1462,10 +1462,10 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => handleTabClick('guide')}
-                  className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                     activeTab === 'guide'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250'
+                      ? 'bg-slate-900 text-white shadow-sm font-extrabold'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
@@ -1474,13 +1474,13 @@ export default function App() {
                 {currentUser.role === 'Owner/Direktur' && (
                   <button
                     onClick={() => handleTabClick('users')}
-                    className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       activeTab === 'users'
-                        ? 'bg-purple-700 text-white shadow-sm'
-                        : 'text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200'
+                        ? 'bg-slate-900 text-white shadow-sm font-extrabold'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
-                    <Users className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+                    <Users className="w-3.5 h-3.5" />
                     <span>Atur Akun</span>
                   </button>
                 )}
@@ -1529,17 +1529,17 @@ export default function App() {
                             setCurrentUser(null);
                             setShowRestrictedAlert(null);
                           }}
-                          className="text-[9px] text-red-600 hover:text-red-700 font-extrabold px-1 bg-slate-100 rounded hover:underline uppercase tracking-wider animate-pulse"
+                          className="text-[9px] text-red-600 hover:text-red-700 font-extrabold px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 rounded uppercase tracking-wider transition-all"
                           title="Keluar"
                         >
                           Keluar
                         </button>
                         <button 
                           onClick={openEditProfile}
-                          className="text-indigo-600 hover:text-indigo-800 p-0.5 bg-indigo-50 hover:bg-indigo-100 rounded hover:underline flex items-center justify-center"
+                          className="text-slate-600 hover:text-slate-800 p-0.5 bg-slate-100 hover:bg-slate-200 rounded flex items-center justify-center transition-all"
                           title="Edit Profil & Sandi"
                         >
-                          <Settings className="w-3 h-3 text-indigo-500 hover:rotate-90 transition-transform duration-300" />
+                          <Settings className="w-3 h-3 text-slate-500 hover:rotate-90 transition-transform duration-300" />
                         </button>
                       </p>
                       <p className="text-[10px] text-gray-400 font-extrabold capitalize leading-none pt-0.5">{currentUser.role === 'Owner/Direktur' ? 'Owner/Direktur' : currentUser.role}</p>
@@ -1625,7 +1625,7 @@ export default function App() {
               <button
                 onClick={() => handleTabClick('workflow')}
                 className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
-                  activeTab === 'workflow' ? 'bg-slate-950 text-white font-black animate-pulse' : 'text-gray-500 hover:bg-gray-50'
+                  activeTab === 'workflow' ? 'bg-slate-900 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
                 Transaksi
@@ -1633,7 +1633,7 @@ export default function App() {
               <button
                 onClick={() => handleTabClick('guide')}
                 className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
-                  activeTab === 'guide' ? 'bg-emerald-600 text-white font-black' : 'text-emerald-700 hover:bg-emerald-50'
+                  activeTab === 'guide' ? 'bg-slate-900 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
                 Panduan
@@ -1642,7 +1642,7 @@ export default function App() {
                 <button
                   onClick={() => handleTabClick('users')}
                   className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
-                    activeTab === 'users' ? 'bg-purple-700 text-white font-black' : 'text-purple-750 hover:bg-purple-50'
+                    activeTab === 'users' ? 'bg-slate-900 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
                   }`}
                 >
                   Akun
