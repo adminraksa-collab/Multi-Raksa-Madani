@@ -115,6 +115,8 @@ export interface ExportShipment {
   etd: string; // Estimated Time of Departure
   eta: string; // Estimated Time of Arrival
   trackingNumber: string;
+  incoterms?: string;
+  paymentTerms?: string;
   currentStep: ShipmentStep;
   stepHistory: Array<{
     step: ShipmentStep;
@@ -142,8 +144,8 @@ export interface ExportProduct {
 
 export interface RealTimeAlert {
   id: string;
-  shipmentId: string;
-  contractNumber: string;
+  shipmentId?: string;
+  contractNumber?: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'alert';

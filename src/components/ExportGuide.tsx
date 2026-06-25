@@ -31,7 +31,7 @@ export default function ExportGuide() {
     if (name.includes('Sales Contract')) {
       fields.contractNo = 'SC-ANG-2026-8801';
       fields.contractDate = '2026-06-20';
-      fields.sellerName = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.sellerName = 'PT Multi Raksa Madani';
       fields.sellerAddress = 'Gedung Cyber 2, Lt. 17, HR. Rasuna Said, Jakarta, Indonesia';
       fields.buyerName = 'YOSHIHIDE TRADING CO., LTD.';
       fields.buyerAddress = '2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan';
@@ -52,11 +52,11 @@ export default function ExportGuide() {
       fields.unitPrice = 'USD 1,450.00';
       fields.totalAmount = 'USD 36,250.00';
       fields.bankName = 'Bank Negara Indonesia (BNI) Syariah / Mandiri Corporate';
-      fields.bankAccount = 'PT AGRI NUSANTARA GLOBAL - ACC NO: 9988-2231-1100';
+      fields.bankAccount = 'PT MULTI RAKSA MADANI - ACC NO: 9988-2231-1100';
     } else if (name.includes('Invoice & Packing List (Awal)')) {
       fields.invoiceNo = 'PL-ANG-2026-102-INIT';
       fields.invoiceDate = '2026-06-25';
-      fields.shipper = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.shipper = 'PT Multi Raksa Madani';
       fields.consignee = 'YOSHIHIDE TRADING CO., LTD.';
       fields.packageCount = '2,500 Master Boxes (10kg net per box)';
       fields.grossWeight = '25,300 KGS';
@@ -75,7 +75,7 @@ export default function ExportGuide() {
     } else if (name.includes('Phytosanitary')) {
       fields.certNo = 'PC-0402-2026-EXPORT-2292';
       fields.issueDate = '2026-06-28';
-      fields.shipperName = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.shipperName = 'PT Multi Raksa Madani';
       fields.consigneeName = 'YOSHIHIDE TRADING CO., LTD.';
       fields.plantScientificName = 'Cocos nucifera (processed shell charcoal)';
       fields.sanitaryDeclaration = 'The consignment conforms with current phytosanitary requirements of the importing country.';
@@ -83,7 +83,7 @@ export default function ExportGuide() {
       fields.officerName = 'Dr. Ir. Hermawan Sutisna, M.Si (Karantina Pertanian)';
     } else if (name.includes('Origin') || name.includes('SKA')) {
       fields.cooNo = 'COO-ID-JP-26-44021';
-      fields.exporter = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.exporter = 'PT Multi Raksa Madani';
       fields.importer = 'YOSHIHIDE TRADING CO., LTD.';
       fields.transportDetails = 'Vessel: EVER GREEN v.2605E, Port of Loading: Tanjung Priok, Port of Discharge: Tokyo Port';
       fields.hsCode = '4402.90.00';
@@ -110,12 +110,12 @@ export default function ExportGuide() {
       fields.npeNo = 'NPE-BC-065-2026-90812';
       fields.npeDate = '2026-06-30';
       fields.pebNoLinked = '3004-06-2026-00918';
-      fields.exporterName = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.exporterName = 'PT Multi Raksa Madani';
       fields.containerUnitCount = '1 x 40ft HQ Container (EMCU-908127-0)';
       fields.approvingOfficer = 'Andi Wijaya, NIP 198804152010121003';
     } else if (name.includes('Bill of Lading')) {
       fields.blNo = 'BL-EGCV-2605E09118';
-      fields.shipper = 'PT. AGRI NUSANTARA GLOBAL LTD.';
+      fields.shipper = 'PT Multi Raksa Madani';
       fields.consignee = 'YOSHIHIDE TRADING CO., LTD.';
       fields.notifyParty = 'Same as Consignee';
       fields.vesselVoyage = 'EVER GREEN v.2605E';
@@ -381,7 +381,7 @@ export default function ExportGuide() {
         ) : (
           <div className="border-b-2 border-slate-800 pb-3 flex justify-between items-start">
             <div className="space-y-1">
-              <h4 className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-slate-900">PT. AGRI NUSANTARA GLOBAL LTD.</h4>
+              <h4 className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-slate-900">PT MULTI RAKSA MADANI</h4>
               <p className="text-[8px] text-slate-450 uppercase tracking-wider font-sans leading-tight">Gedung Cyber 2, Jakarta, Indonesia • customercare@agrinusantara.co.id</p>
             </div>
             <div className="text-right text-[8px] font-mono font-bold text-slate-400">
@@ -553,8 +553,12 @@ export default function ExportGuide() {
       a: 'Dokumen ekspor diterbitkan oleh berbagai instansi resmi yang berbeda sesuai kompetensinya. Untuk Karantina ditangani Badan Karantina Indonesia (Barantin). Untuk asal barang (COO) diterbitkan oleh Kementerian Perdagangan RI melalui dinas Disperindag daerah setempat. Surat Kontrak Penjualan dibuat mandiri oleh eksportir (trader) dan disepakati oleh pembeli luar negeri.'
     },
     {
-      q: 'Bagaimana cara menggunakan Simulator Alur Kerja di aplikasi ini?',
-      a: 'Sangat mudah! Buka tab "Dashboard Alur Kerja", Anda dapat memilih transaksi ekspor di dropdown atas. Klik tombol bulat "Ganti Langkah Alur Kerja" pada infografis interaktif untuk menaikkan tahapan logistik. Anda juga bisa membuka panel "Edit" pada dokumen tertentu untuk merasakan simulasi mengisi isian dokumen ekspor secara langsung layaknya eksportir profesional.'
+      q: 'Bagaimana cara menggunakan Simulator Transaksi di aplikasi ini?',
+      a: 'Sangat mudah! Buka tab "Transaksi", Anda dapat memilih transaksi ekspor aktif di dropdown atas. Klik tombol bulat "Ganti Langkah Alur Kerja" pada infografis interaktif atau klik tombol interaktif di dalam langkah alur kerja untuk menguji, menelusuri, dan memperbarui seluruh tahapan transaksi terpadu.'
+    },
+    {
+      q: 'Bagaimana dasar penomoran dokumen di aplikasi ini (contoh: "SC/NGL/PROD-2-2026-NEGO" atau "SC/NGL/PL-2026-001")?',
+      a: 'Penomoran dokumen ekspor (seperti Sales Contract / Kontrak Penjualan) mengikuti format kode standar bisnis internasional terstruktur berikut:\n\n• SC: Singkatan dari jenis dokumen utama, yaitu Sales Contract (Kontrak Penjualan).\n• NGL: Kode identitas dari pihak eksportir, yaitu Multi Raksa Madani (PT Multi Raksa Madani).\n• PROD-2 / PL: Kode komoditas/produk ekspor yang diperdagangkan (misal: PROD-2 untuk spesifikasi produk tertentu, PL untuk Cocopeat/Coir Pith, COF untuk Coffee, CHR untuk Charcoal, dst).\n• 2026: Tahun pembuatan dokumen atau tahun transaksi berjalan.\n• NEGO / 001: Keterangan status atau nomor urut (NEGO menandakan draf negosiasi kesepakatan awal, sedangkan angka seperti 001/002 menunjukkan nomor urut transaksi pada tahun berjalan).'
     },
     {
       q: 'Apakah aplikasi ini benar-benar terhubung ke portal Bea Cukai atau Bea Cukai INSW?',

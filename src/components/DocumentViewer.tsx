@@ -356,7 +356,7 @@ export default function DocumentViewer({
                     {document.createdBy === 'usr-trader' ? 'H. Kurniawan' : 'Siti Aminah'}
                   </span>
                 </div>
-                <span className="text-[9px] font-semibold text-gray-500 block mt-1">PT Nusantara Global Trader</span>
+                <span className="text-[9px] font-semibold text-gray-500 block mt-1">PT Multi Raksa Madani</span>
               </div>
             </div>
           </div>

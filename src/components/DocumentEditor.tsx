@@ -37,7 +37,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
     if (selectedShipmentId) {
       const ship = shipments.find(s => s.id === selectedShipmentId);
       if (ship) {
-        setShipper(ship.traderName + '\n' + (currentUser?.companyName || 'PT Nusantara Global Trader') + '\n' + (currentUser?.address || 'Jakarta, Indonesia'));
+        setShipper(ship.traderName + '\n' + (currentUser?.companyName || 'PT Multi Raksa Madani') + '\n' + (currentUser?.address || 'Jakarta, Indonesia'));
         setConsignee(ship.buyerName + '\n' + ship.buyerCompany + '\nFrankfurt, Germany');
         setVessel(ship.vesselName + ' ' + (ship.voyageNumber || ''));
         setPortLoading(ship.portOfLoading);

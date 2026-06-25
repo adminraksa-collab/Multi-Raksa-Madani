@@ -4,7 +4,7 @@ import { WORKFLOW_STEPS } from '../mockData';
 import { 
   FileText, Calendar, Compass, Anchor, ShieldCheck, 
   CheckCircle, ArrowRight, UserPlus, Info, PlusCircle, Award, 
-  MapPin, Check, AlertCircle, FilePlus, ChevronRight 
+  MapPin, Check, AlertCircle, FilePlus, ChevronRight, RefreshCw 
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import VesselGPSMap from './VesselGPSMap';
@@ -35,14 +35,21 @@ export default function ShipmentWorkflowTracker({
   const currentStepIndex = WORKFLOW_STEPS.findIndex(s => s.step === shipment.currentStep);
   const activeStepInfo = WORKFLOW_STEPS[currentStepIndex];
 
-  // Check if current user is the required actor for this step
-  const isAuthorizedRole = currentUser?.role === activeStepInfo.actor;
+  const isFullyCompleted = shipment.currentStep === 'Completed' && shipment.stepHistory.some(h => h.step === 'Completed');
+
+  // Check if current user is the required actor for this step (or Owner/Direktur acting for Trader in an emergency)
+  const isEmergencyTakeover = activeStepInfo.actor === 'Trader' && currentUser?.role === 'Owner/Direktur';
+  const isAuthorizedRole = currentUser?.role === activeStepInfo.actor || isEmergencyTakeover;
 
   const handleAdvanceStep = () => {
     if (currentStepIndex < WORKFLOW_STEPS.length - 1) {
       const nextStep = WORKFLOW_STEPS[currentStepIndex + 1].step;
-      const defaultComment = `${activeStepInfo.actor} (${currentUser?.name || currentUser?.role}) menyetujui tahap ${activeStepInfo.label} dan beralih ke tahap berikutnya.`;
+      const defaultComment = `${activeStepInfo.actor}${isEmergencyTakeover ? ' (Diwakili Owner/Direktur)' : ''} (${currentUser?.name || currentUser?.role}) menyetujui tahap ${activeStepInfo.label} dan beralih ke tahap berikutnya.`;
       onUpdateStep(shipment.id, nextStep, overrideComments || defaultComment);
+      setOverrideComments('');
+    } else if (shipment.currentStep === 'Completed') {
+      const defaultComment = `Buyer (${currentUser?.name || 'Kenji Yoshihide'}) secara resmi mengonfirmasi penerimaan kargo kontainer di pelabuhan tujuan, menyerahkan Bill of Lading (B/L) asli ke bank penjamin, dan mencairkan pembayaran Letter of Credit (L/C) penuh ke rekening Eksportir.`;
+      onUpdateStep(shipment.id, 'Completed', overrideComments || defaultComment);
       setOverrideComments('');
     }
   };
@@ -121,6 +128,34 @@ export default function ShipmentWorkflowTracker({
           </motion.div>
         )}
 
+        {/* Success Celebration Banner when transaction is fully completed */}
+        {isFullyCompleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-5 text-emerald-900 space-y-3.5 shadow-sm text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-emerald-500 text-white rounded-lg shrink-0 mt-0.5 shadow-sm">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-sm text-emerald-950">🏆 Transaksi Ekspor Tuntas Sempurna!</h3>
+                <p className="text-xs leading-relaxed text-emerald-800">
+                  Seluruh rangkaian perdagangan ekspor untuk kargo <strong>{shipment.productName}</strong> (No. Kontrak: {shipment.contractNumber}) telah berhasil diselesaikan secara sempurna hingga pelunasan Letter of Credit (L/C) penuh oleh Buyer.
+                </p>
+                <div className="text-[11px] text-emerald-800 bg-white/75 p-3 rounded-lg border border-emerald-150 mt-2 space-y-1.5 shadow-3xs leading-relaxed">
+                  <p className="font-bold text-emerald-950">📍 Lokasi Penyimpanan Arsip Transaksi:</p>
+                  <ul className="list-disc pl-4 space-y-1 font-sans">
+                    <li><strong>Riwayat Log Aktivitas:</strong> Semua komentar, tanda tangan digital para aktor, dan penanda waktu (timestamp) terlampir di bawah pada setiap tahap timeline.</li>
+                    <li><strong>Daftar Dokumen Ekspor:</strong> Seluruh berkas (Sales Contract, Commercial Invoice, Packing List, Phytosanitary, dll.) diarsipkan secara digital di panel samping kanan dan siap dicetak/diunduh kapan saja.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Workflow Timeline Cards */}
         <div className="bg-white rounded-xl border border-gray-150 p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -129,15 +164,15 @@ export default function ShipmentWorkflowTracker({
               <p className="text-xs text-gray-400">Sembilan tahap pemantauan dari persiapan ladang tani hingga serah terima laut lepas</p>
             </div>
             <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">
-              Tahap Ke {currentStepIndex + 1} dari 8
+              {isFullyCompleted ? 'Status: Selesai & Ditutup' : `Tahap Ke ${currentStepIndex + 1} dari 8`}
             </span>
           </div>
 
           <div className="relative pl-6 space-y-6 before:absolute before:top-2 before:left-3 before:bottom-2 before:w-0.5 before:bg-gray-150">
             {WORKFLOW_STEPS.map((stepInfo, index) => {
-              const isCompleted = index < currentStepIndex;
-              const isActive = index === currentStepIndex;
-              const isUpcoming = index > currentStepIndex;
+              const isCompleted = isFullyCompleted ? true : index < currentStepIndex;
+              const isActive = isFullyCompleted ? false : index === currentStepIndex;
+              const isUpcoming = isFullyCompleted ? false : index > currentStepIndex;
 
               let statusBg = 'bg-gray-100 text-gray-400 border-gray-200';
               let wrapperBg = 'bg-white opacity-60';
@@ -241,55 +276,79 @@ export default function ShipmentWorkflowTracker({
 
           {/* Prompt action block state */}
           <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-150">
-            <p className="text-xs text-gray-400 uppercase font-black">Tahap Saat Ini :</p>
-            <p className="text-base font-extrabold text-blue-900">{activeStepInfo.label}</p>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Otoritas Penyelesaian: <span className="font-bold text-gray-800">{activeStepInfo.actor}</span>
-            </p>
-
-            {isAuthorizedRole ? (
-              <div className="space-y-3 pt-2 border-t border-gray-200">
-                <span className="block text-[10px] font-bold text-green-600 uppercase tracking-wider">
-                  &bull; Akun Anda Sesuai! Anda memiliki kendali
-                </span>
-                
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-gray-500">Beri Catatan Prosedur (Opsional) :</label>
-                  <input
-                    type="text"
-                    value={overrideComments}
-                    onChange={(e) => setOverrideComments(e.target.value)}
-                    placeholder="Contoh: Dokumen disahkan, kargo diangkut transit..."
-                    className="w-full text-xs p-2 bg-white border border-gray-300 rounded focus:outline-none"
-                  />
-                </div>
-
+            {isFullyCompleted ? (
+              <div className="space-y-3.5 text-left">
+                <p className="text-xs text-emerald-800 uppercase font-black flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                  Siklus Transaksi :
+                </p>
+                <p className="text-base font-extrabold text-emerald-950">Selesai &amp; Diarsipkan Sukses</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Semua dokumen pabean, pengapalan, dan pembayaran L/C telah disahkan. Anda dapat memulai ulang simulasi pengapalan dari tahap penawaran (Sales Contract) kapan saja.
+                </p>
                 <button
-                  onClick={handleAdvanceStep}
-                  className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors shadow-xs"
+                  onClick={() => {
+                    onUpdateStep(shipment.id, 'Draft', 'Simulasi diulang kembali dari tahap draf (Sales Contract) oleh pengguna.');
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-xs cursor-pointer"
                 >
-                  Beralih ke Tahap Berikutnya
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
+                  Mulai Ulang Simulasi (Reset ke Tahap 1)
                 </button>
               </div>
             ) : (
-              <div className="pt-2.5 border-t border-gray-200 text-xs text-gray-500 space-y-2">
-                <div className="flex gap-1.5 items-start">
-                  <AlertCircle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                  <p className="leading-relaxed">
-                    Aktivasi tombol terkunci. Masuk sebagai <span className="font-extrabold text-gray-800">{activeStepInfo.actor}</span> melalui menu login popup di atas untuk memajukan alur kerja ini.
-                  </p>
-                </div>
-                {/* Fallback button bypass for flawless testing experience */}
-                <div className="pt-1">
-                  <button
-                    onClick={handleAdvanceStep}
-                    className="w-full text-[10px] text-gray-400 hover:text-gray-600 text-center font-medium underline block transition-colors bg-white/70 border border-dashed border-gray-300 py-1 rounded"
-                  >
-                    Bypass / Lompati Tahap (Opsi Penguji)
-                  </button>
-                </div>
-              </div>
+              <>
+                <p className="text-xs text-gray-400 uppercase font-black">Tahap Saat Ini :</p>
+                <p className="text-base font-extrabold text-blue-900">{activeStepInfo.label}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Otoritas Penyelesaian: <span className="font-bold text-gray-800">{activeStepInfo.actor}</span>
+                </p>
+
+                {isAuthorizedRole ? (
+                  <div className="space-y-3 pt-2 border-t border-gray-200">
+                    <span className="block text-[10px] font-bold text-green-600 uppercase tracking-wider">
+                      &bull; Akun Anda Sesuai! {isEmergencyTakeover ? 'Anda memiliki kendali (Mode Darurat: Mewakili Trader)' : 'Anda memiliki kendali'}
+                    </span>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-500">Beri Catatan Prosedur (Opsional) :</label>
+                      <input
+                        type="text"
+                        value={overrideComments}
+                        onChange={(e) => setOverrideComments(e.target.value)}
+                        placeholder="Contoh: Dokumen disahkan, kargo diangkut transit..."
+                        className="w-full text-xs p-2 bg-white border border-gray-300 rounded focus:outline-none"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleAdvanceStep}
+                      className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors shadow-xs"
+                    >
+                      {shipment.currentStep === 'Completed' ? 'Cairkan L/C & Selesaikan Transaksi' : 'Beralih ke Tahap Berikutnya'}
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="pt-2.5 border-t border-gray-200 text-xs text-gray-500 space-y-2">
+                    <div className="flex gap-1.5 items-start">
+                      <AlertCircle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed text-left">
+                        Aktivasi tombol terkunci. Masuk sebagai <span className="font-extrabold text-gray-800">{activeStepInfo.actor}</span> melalui menu login popup di atas untuk memajukan alur kerja ini.
+                      </p>
+                    </div>
+                    {/* Fallback button bypass for flawless testing experience */}
+                    <div className="pt-1">
+                      <button
+                        onClick={handleAdvanceStep}
+                        className="w-full text-[10px] text-gray-400 hover:text-gray-600 text-center font-medium underline block transition-colors bg-white/70 border border-dashed border-gray-300 py-1 rounded"
+                      >
+                        Bypass / Lompati Tahap (Opsi Penguji)
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -299,9 +358,9 @@ export default function ShipmentWorkflowTracker({
           <div className="flex items-center justify-between border-b border-gray-100 pb-2">
             <div>
               <h4 className="font-bold text-sm text-gray-900">Uji Dokumen Ekspor Terbit</h4>
-              <p className="text-[11px] text-gray-400">Pembuatan wajib sisi Trader & print-ready</p>
+              <p className="text-[11px] text-gray-400">Pembuatan wajib sisi Trader &amp; print-ready</p>
             </div>
-            {currentUser?.role === 'Trader' && (
+            {(currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur') && (
               <button
                 onClick={onOpenDocumentEditor}
                 className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors text-xs font-semibold flex items-center gap-0.5"
@@ -341,9 +400,9 @@ export default function ShipmentWorkflowTracker({
               <div className="py-6 text-center text-gray-450 border border-dashed border-gray-200 rounded-lg">
                 <p className="text-xs font-semibold">Dokumen belum terbit</p>
                 <p className="text-[10px] text-gray-400 leading-normal px-2">
-                  {currentUser?.role === 'Trader' 
+                  {(currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur') 
                     ? 'Gunakan tombol "+ Buat" di kanan atas untuk melengkapi Commercial Invoice / Packing List.' 
-                    : 'Masuk sebagai akun Trader untuk merilis manifes dokumen resmi.'}
+                    : 'Masuk sebagai akun Trader atau Owner/Direktur untuk merilis manifes dokumen resmi.'}
                 </p>
               </div>
             )}
@@ -357,7 +416,7 @@ export default function ShipmentWorkflowTracker({
               <h4 className="font-bold text-sm text-gray-900">Sertifikasi Komoditi Spesifik</h4>
               <p className="text-[11px] text-gray-400">Verifikasi standar mutu ekspor agraria</p>
             </div>
-            {currentUser?.role === 'Trader' && (
+            {(currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur') && (
               <button
                 onClick={() => setShowAddCertForm(!showAddCertForm)}
                 className="text-xs text-blue-600 hover:underline font-bold"

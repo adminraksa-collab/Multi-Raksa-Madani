@@ -6,10 +6,135 @@ import {
   CheckCircle, ArrowRight, Info, AlertCircle, 
   Award, FileText, Anchor, Compass, UserCheck, Play, 
   Layers, ChevronRight, Check, Sparkles, Send, FileDown,
-  X, BookOpen, AlertTriangle, Lightbulb
+  X, BookOpen, AlertTriangle, Lightbulb, ChevronDown, ChevronUp, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VesselGPSMap from './VesselGPSMap';
+import NegotiationDashboard from './NegotiationDashboard';
+
+interface UnifiedStepInfo {
+  stepId: string;
+  step: ShipmentStep;
+  label: string;
+  description: string;
+  actor: UserRole;
+  expectedDuration: string;
+  stepIcon: string;
+  stage: 'negotiation' | 'logistics';
+}
+
+const UNIFIED_STEPS: UnifiedStepInfo[] = [
+  {
+    stepId: 'nego-loi',
+    step: 'Draft',
+    label: 'LOI (Surat Minat)',
+    description: 'Buyer menyatakan minat pembelian komoditas ekspor via Letter of Intent (LOI) resmi.',
+    actor: 'Buyer',
+    expectedDuration: '1-2 Hari',
+    stepIcon: 'FileText',
+    stage: 'negotiation'
+  },
+  {
+    stepId: 'nego-quotation',
+    step: 'Draft',
+    label: 'Quotation (Penawaran)',
+    description: 'Trader mengirim lembar penawaran harga, spesifikasi kargo, dan kalkulasi bea.',
+    actor: 'Trader',
+    expectedDuration: '1-3 Hari',
+    stepIcon: 'Award',
+    stage: 'negotiation'
+  },
+  {
+    stepId: 'nego-pi',
+    step: 'Draft',
+    label: 'Draf PI & Negosiasi',
+    description: 'Para pihak merancang Proforma Invoice (PI) dan menegosiasikan klausul jual-beli ekspor.',
+    actor: 'Trader',
+    expectedDuration: '2-4 Hari',
+    stepIcon: 'Layers',
+    stage: 'negotiation'
+  },
+  {
+    stepId: 'nego-signing',
+    step: 'Draft',
+    label: 'Tanda Tangan Kontrak',
+    description: 'Penandatanganan bilateral Sales Contract oleh Trader dan Buyer Jerman secara hukum.',
+    actor: 'Trader',
+    expectedDuration: '1-2 Hari',
+    stepIcon: 'UserCheck',
+    stage: 'negotiation'
+  },
+  {
+    stepId: 'sourcing',
+    step: 'Sourcing',
+    label: 'Penyediaan Barang',
+    description: 'Supplier memproduksi kargo ramah lingkungan dan mengapalkan ke Gudang Transit Utama.',
+    actor: 'Supplier',
+    expectedDuration: '7-14 Hari',
+    stepIcon: 'Layers',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'verification',
+    step: 'Verification',
+    label: 'Sertifikasi Karantina',
+    description: 'Pengujian lab acak oleh Balai Karantina Pertanian RI guna sertifikat Phytosanitary.',
+    actor: 'Trader',
+    expectedDuration: '2-5 Hari',
+    stepIcon: 'Award',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'documents',
+    step: 'Documents',
+    label: 'Sertifikat Asal (COO)',
+    description: 'Eksportir mengurus Certificate of Origin (COO) resmi dari Kementerian Perdagangan.',
+    actor: 'Trader',
+    expectedDuration: '2-3 Hari',
+    stepIcon: 'FileText',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'customs',
+    step: 'Customs',
+    label: 'Kepabeanan Bea Cukai',
+    description: 'Pengajuan berkas PEB secara daring mandiri dan penerbitan izin muat NPE oleh pabean.',
+    actor: 'Owner/Direktur',
+    expectedDuration: '1-2 Hari',
+    stepIcon: 'Shield',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'loading',
+    step: 'Loading',
+    label: 'Loading & Stuffing',
+    description: 'Forwarder memuat kargo FCL ke kontainer baja laut dan dinaikkan ke kapal cargo.',
+    actor: 'Forwarder',
+    expectedDuration: '1-2 Hari',
+    stepIcon: 'Anchor',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'shipping',
+    step: 'Shipping',
+    label: 'Pelayaran Logistik',
+    description: 'Kapal kontainer berlayar mengarungi samudra samudera menuju Hamburg lintas negara.',
+    actor: 'Forwarder',
+    expectedDuration: '15-25 Hari',
+    stepIcon: 'Compass',
+    stage: 'logistics'
+  },
+  {
+    stepId: 'completed',
+    step: 'Completed',
+    label: 'Pelunasan L/C',
+    description: 'Kargo diterima di Eropa, eksportir melepas draf BL bersih guna klaim dana L/C bank.',
+    actor: 'Buyer',
+    expectedDuration: '3-5 Hari',
+    stepIcon: 'CheckCircle',
+    stage: 'logistics'
+  }
+];
 
 interface InteractiveInfographicProps {
   shipment: ExportShipment;
@@ -18,6 +143,18 @@ interface InteractiveInfographicProps {
   onUpdateStep: (shipmentId: string, nextStep: ShipmentStep, comments: string) => void;
   onOpenDocumentEditor: () => void;
   onSimulateEvent: (type: 'ship-movement' | 'customs-approved' | 'phytosanitary-issued' | 'supplier-ready') => void;
+  negoStepId?: number;
+  onNegoStepIdChange?: (stepId: number) => void;
+  onUpdateShipmentFromDeal?: (shipmentId: string, updatedData: {
+    quantity: number;
+    pricePerUnit: number;
+    paymentTerms: string;
+    incoterms: string;
+    portOfDischarge: string;
+    buyerCompany: string;
+    nextStep: 'Sourcing';
+    comments: string;
+  }) => void;
 }
 
 export default function InteractiveInfographic({
@@ -26,17 +163,43 @@ export default function InteractiveInfographic({
   onSelectUser,
   onUpdateStep,
   onOpenDocumentEditor,
-  onSimulateEvent
+  onSimulateEvent,
+  negoStepId,
+  onNegoStepIdChange,
+  onUpdateShipmentFromDeal
 }: InteractiveInfographicProps) {
   
   // Index of the actual/real shipment progress step
-  const actualStepIndex = WORKFLOW_STEPS.findIndex(s => s.step === shipment.currentStep);
+  const getActualUnifiedIndex = () => {
+    if (shipment.currentStep !== 'Draft') {
+      switch (shipment.currentStep) {
+        case 'Sourcing': return 4;
+        case 'Verification': return 5;
+        case 'Documents': return 6;
+        case 'Customs': return 7;
+        case 'Loading': return 8;
+        case 'Shipping': return 9;
+        case 'Completed': return 10;
+        default: return 4;
+      }
+    } else {
+      // It's Draft (Negotiation Phase)
+      const currentNegoStep = negoStepId || 1;
+      if (currentNegoStep === 1) return 0;
+      if (currentNegoStep === 2) return 1;
+      if (currentNegoStep === 3 || currentNegoStep === 4) return 2;
+      if (currentNegoStep === 5) return 3;
+      return 0;
+    }
+  };
+
+  const actualStepIndex = getActualUnifiedIndex();
   
   // Currently inspected step on the infographic map (default to the current active step)
   const [inspectedStepIndex, setInspectedStepIndex] = useState<number>(actualStepIndex);
   
   // Track selected actor profile inside the Kamus tab
-  const activeStepActor = WORKFLOW_STEPS[actualStepIndex]?.actor || 'Trader';
+  const activeStepActor = UNIFIED_STEPS[actualStepIndex]?.actor || 'Trader';
   const [selectedRole, setSelectedRole] = useState<UserRole>(activeStepActor);
 
   // Dynamic state for custom editable document template fields
@@ -48,6 +211,7 @@ export default function InteractiveInfographic({
   const [onPageTab, setOnPageTab] = useState<'details' | 'actions' | 'dictionary'>('details');
   const [showEducation, setShowEducation] = useState<boolean>(true);
   const [dictionaryRole, setDictionaryRole] = useState<UserRole>('Trader');
+  const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(true);
 
   // Trigger auto-focus whenever the actual active step advances
   useEffect(() => {
@@ -57,63 +221,57 @@ export default function InteractiveInfographic({
   useEffect(() => {
     // Generate default fields based on inspectedStepIndex & shipment
     const defaultFields: {[key: string]: string} = {};
-    if (inspectedStepIndex === 0) {
-      defaultFields.contractNo = `SC/NGL/COF-${shipment.contractNumber.split('-').pop() || '2026-105'}`;
-      defaultFields.seller = 'PT Nusantara Global Agrisindo (Hendry Kurniawan)';
-      defaultFields.buyer = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
-      defaultFields.commodity = shipment.productName;
-      defaultFields.quantity = `${shipment.quantity} ${shipment.unit}`;
-      defaultFields.price = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
-      defaultFields.payment = 'Letter of Credit (L/C) at Sight';
-    } else if (inspectedStepIndex === 1) {
+    if (inspectedStepIndex === 4) {
       defaultFields.deliveryNo = 'DO/TRANSIT-GAYO/2026/889';
       defaultFields.supplier = shipment.supplierCompany || 'Koperasi Kopi Gayo Organik';
-      defaultFields.receiver = 'Gudang Transit Utama PT Nusantara Global';
+      defaultFields.receiver = 'Gudang Transit Utama PT Multi Raksa Madani';
       defaultFields.truckNo = 'B 9201 TXX';
       defaultFields.netMass = `${shipment.quantity * 1000} Kilogram (kg)`;
       defaultFields.condition = 'Kadar air tervalidasi 12% max, bebas jamur & hama parasit';
-    } else if (inspectedStepIndex === 2) {
+    } else if (inspectedStepIndex === 5) {
       defaultFields.appNo = 'REQ-PHYT/KT-GAYO/2026/410';
-      defaultFields.exporter = 'PT Nusantara Global Agrisindo (Hendry Kurniawan)';
+      defaultFields.exporter = 'PT Multi Raksa Madani (Hendry Kurniawan)';
       defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
       defaultFields.botanicalName = shipment.productName.toLowerCase().includes('kopi') ? 'Coffea arabica' : 'Cocos nucifera';
       defaultFields.origin = 'Sumatran Highlands, Indonesia';
       defaultFields.treatment = 'Sertifikasi lab bebas pestisida, fumigasi Metil Bromida';
-    } else if (inspectedStepIndex === 3) {
+    } else if (inspectedStepIndex === 6) {
       defaultFields.cooNo = 'COO/A-EUR/2026/10291';
       defaultFields.cooNo_part2 = 'KEMENTERIAN PERDAGANGAN RI';
-      defaultFields.shipper = 'PT Nusantara Global Agrisindo';
+      defaultFields.shipper = 'PT Multi Raksa Madani';
       defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
       defaultFields.transport = `${shipment.vesselName} ${shipment.voyageNumber || 'HP.991'} via ${shipment.portOfLoading}`;
       defaultFields.preference = 'Indonesian Origin Certified (GSP Scheme)';
       defaultFields.hsCode = shipment.hsCode || '0901.11.10';
-    } else if (inspectedStepIndex === 4) {
+    } else if (inspectedStepIndex === 7) {
       defaultFields.pebNo = 'PEB-REG/BEACUKAI-TJP/2026/778';
-      defaultFields.declarant = 'Hendry Kurniawan (PT Nusantara Global Agrisindo)';
+      defaultFields.declarant = 'Hendry Kurniawan (PT Multi Raksa Madani)';
       defaultFields.hsCode = shipment.hsCode || '0901.11.10';
       defaultFields.fobValue = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
       defaultFields.currency = 'USD';
       defaultFields.loadingPort = shipment.portOfLoading;
-    } else if (inspectedStepIndex === 5) {
+    } else if (inspectedStepIndex === 8) {
       defaultFields.stuffingNo = 'SO/SK-LOG/2026/1102';
       defaultFields.forwarder = 'PT Samudera Logistik Internasional';
       defaultFields.containerNo = 'TGBU 882019-2 (40ft High Cube)';
       defaultFields.sealNo = 'ID-BC-SEGEL-88201';
       defaultFields.driverPhone = 'Budiono (+62 812-9908-1123)';
       defaultFields.stuffingDate = shipment.etd || '2026-07-01';
-    } else if (inspectedStepIndex === 6) {
+    } else if (inspectedStepIndex === 9) {
       defaultFields.siNo = 'SI/SAMUDERA/2026/099';
-      defaultFields.shipper = 'PT Nusantara Global Agrisindo';
+      defaultFields.shipper = 'PT Multi Raksa Madani';
       defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
       defaultFields.vesselName = shipment.vesselName;
       defaultFields.destination = shipment.portOfDischarge;
       defaultFields.freightCharges = 'Freight Prepaid (Sistem CIF)';
-    } else if (inspectedStepIndex === 7) {
+    } else if (inspectedStepIndex === 10) {
       defaultFields.lcNo = 'LC-DEUTSCH/2026/9011';
-      defaultFields.beneficiary = 'PT Nusantara Global Agrisindo';
+      defaultFields.beneficiary = 'PT Multi Raksa Madani';
       defaultFields.advisingBank = 'Bank Mandiri (Persero) Tbk - Jakarta Cabang Thamrin';
       defaultFields.amount = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
       defaultFields.docRequiredList = 'Commercial Invoice, Packing List, Certificate of Origin, Bill of Lading, Phytosanitary Certificate';
+    } else {
+      defaultFields.trxId = shipment.id;
     }
     
     setDocFields(defaultFields);
@@ -129,20 +287,7 @@ export default function InteractiveInfographic({
 
   const getDocMeta = (idx: number) => {
     switch (idx) {
-      case 0:
-        return {
-          title: 'Draf Surat Perjanjian Jual Beli (Sales Contract)',
-          inputs: [
-            { label: 'Nomor Kontrak', key: 'contractNo' },
-            { label: 'Penjual (Exporter)', key: 'seller' },
-            { label: 'Pembeli (Importer)', key: 'buyer' },
-            { label: 'Nama Komoditas', key: 'commodity' },
-            { label: 'Kuantitas Ekspor', key: 'quantity' },
-            { label: 'Nilai Kontrak', key: 'price' },
-            { label: 'Ketentuan Pembayaran', key: 'payment' },
-          ]
-        };
-      case 1:
+      case 4:
         return {
           title: 'Draf Surat Jalan Penyerahan Barang (Delivery Order)',
           inputs: [
@@ -154,7 +299,7 @@ export default function InteractiveInfographic({
             { label: 'Spesifikasi/Kualitas', key: 'condition' },
           ]
         };
-      case 2:
+      case 5:
         return {
           title: 'Permohonan Pengujian Lab & Karantina (Phytosanitary Application)',
           inputs: [
@@ -166,7 +311,7 @@ export default function InteractiveInfographic({
             { label: 'Rincian Treatment', key: 'treatment' },
           ]
         };
-      case 3:
+      case 6:
         return {
           title: 'Keterangan Asal / Certificate of Origin (Form D / A)',
           inputs: [
@@ -179,7 +324,7 @@ export default function InteractiveInfographic({
             { label: 'Kode HS Code', key: 'hsCode' },
           ]
         };
-      case 4:
+      case 7:
         return {
           title: 'Draft Laporan Pemberitahuan Ekspor Barang (Draft PEB)',
           inputs: [
@@ -191,7 +336,7 @@ export default function InteractiveInfographic({
             { label: 'Pelabuhan Asal Muat', key: 'loadingPort' },
           ]
         };
-      case 5:
+      case 8:
         return {
           title: 'Perintah Muat Kontainer (Container Stuffing Order)',
           inputs: [
@@ -203,7 +348,7 @@ export default function InteractiveInfographic({
             { label: 'Tanggal Stuffing', key: 'stuffingDate' },
           ]
         };
-      case 6:
+      case 9:
         return {
           title: 'Instruksi Pengapalan Pelayaran (Shipping Instruction)',
           inputs: [
@@ -215,7 +360,7 @@ export default function InteractiveInfographic({
             { label: 'Keterangan Ongkos', key: 'freightCharges' },
           ]
         };
-      case 7:
+      case 10:
         return {
           title: 'Permohonan Pencairan Letter of Credit (L/C Settlement Request)',
           inputs: [
@@ -227,7 +372,12 @@ export default function InteractiveInfographic({
           ]
         };
       default:
-        return { title: 'Draf Dokumen Ekspor', inputs: [] };
+        return { 
+          title: 'Draf Dokumen Ekspor Dagang', 
+          inputs: [
+            { label: 'ID Transaksi', key: 'trxId' }
+          ] 
+        };
     }
   };
 
@@ -291,8 +441,16 @@ export default function InteractiveInfographic({
     }
   };
 
-  const getStepIcon = (step: ShipmentStep, className: string = "w-5 h-5") => {
+  const getStepIcon = (step: string, className: string = "w-5 h-5") => {
     switch (step) {
+      case 'Sparkles': return <Sparkles className={className} />;
+      case 'UserCheck': return <UserCheck className={className} />;
+      case 'Layers': return <Layers className={className} />;
+      case 'Award': return <Award className={className} />;
+      case 'Shield': return <Shield className={className} />;
+      case 'Anchor': return <Anchor className={className} />;
+      case 'Compass': return <Compass className={className} />;
+      case 'CheckCircle': return <CheckCircle className={className} />;
       case 'Draft': return <FileText className={className} />;
       case 'Sourcing': return <Layers className={className} />;
       case 'Verification': return <Award className={className} />;
@@ -301,6 +459,7 @@ export default function InteractiveInfographic({
       case 'Loading': return <Anchor className={className} />;
       case 'Shipping': return <Compass className={className} />;
       case 'Completed': return <CheckCircle className={className} />;
+      default: return <FileText className={className} />;
     }
   };
 
@@ -309,7 +468,7 @@ export default function InteractiveInfographic({
       case 'Trader':
         return {
           title: 'Trader (Eksportir & Hub Dagang Utama)',
-          company: 'PT Nusantara Global Agrisindo',
+          company: 'PT Multi Raksa Madani',
           hak: [
             'Menerbitkan invoice komersial, packing list, serta pengisian lembar Certificate of Origin (COO) mandiri.',
             'Menunjuk logistik Forwarder & PPJK terpercaya pabean untuk mengatur stuffing kontainer pelabuhan.',
@@ -390,14 +549,11 @@ export default function InteractiveInfographic({
   };
 
   const executeStepProgression = (index: number) => {
-    const targetStep = WORKFLOW_STEPS[index];
+    if (index < 4) return; // Handled by NegotiationDashboard
+    const targetStep = UNIFIED_STEPS[index];
     let defaultComments = '';
     
     switch (targetStep.step) {
-      case 'Draft':
-        defaultComments = 'Trader menandatangani Sales Contract utama. Beralih ke tahap penyediaan bahan baku.';
-        onUpdateStep(shipment.id, 'Sourcing', defaultComments);
-        break;
       case 'Sourcing':
         onSimulateEvent('supplier-ready');
         break;
@@ -423,39 +579,77 @@ export default function InteractiveInfographic({
         onUpdateStep(shipment.id, 'Completed', defaultComments);
         break;
       case 'Completed':
-        defaultComments = 'Alur kargo ekspor dinyatakan selesai secara mutlak. Siklus data diarsipkan.';
-        onUpdateStep(shipment.id, 'Draft', defaultComments);
+        defaultComments = 'Buyer secara resmi mengonfirmasi penerimaan kargo kontainer di pelabuhan tujuan, menyerahkan Bill of Lading (B/L) asli ke bank penjamin, dan mencairkan pembayaran Letter of Credit (L/C) penuh ke rekening Eksportir. Siklus data diarsipkan.';
+        onUpdateStep(shipment.id, 'Completed', defaultComments);
         break;
     }
     
-    // Set focus inspection to next step or loop back to keep it intuitive
-    const nextInspectIndex = index === WORKFLOW_STEPS.length - 1 ? 0 : index + 1;
+    // Set focus inspection to next step or keep it on the completed screen
+    const nextInspectIndex = index === UNIFIED_STEPS.length - 1 ? 10 : index + 1;
     setInspectedStepIndex(nextInspectIndex);
     setOnPageTab('details');
   };
 
-  const activeInspectedStep = WORKFLOW_STEPS[inspectedStepIndex];
-  const isAuthorizedToClickCurrentInspected = currentUser?.role === activeInspectedStep.actor;
+  const isFullyCompleted = shipment.currentStep === 'Completed' && shipment.stepHistory.some(h => h.step === 'Completed');
+  const activeInspectedStep = UNIFIED_STEPS[inspectedStepIndex];
+  const isEmergencyTakeover = activeInspectedStep.actor === 'Trader' && currentUser?.role === 'Owner/Direktur';
+  const isAuthorizedToClickCurrentInspected = currentUser?.role === activeInspectedStep.actor || isEmergencyTakeover;
 
   const getStepGuide = (index: number) => {
     switch (index) {
       case 0:
         return {
-          title: 'Perjanjian Kontrak Jual-Beli (Sales Contract)',
-          subtitle: 'Inisiasi Transaksi & Kesepakatan Dagang',
-          laymanAnalogy: 'Bagaikan nota deal tertulis saat Anda memesan barang mahal khusus. Isinya kepastian: "Saya sepakat menjual Pala / Kopi Gayo sekian ton seharga USD sekian, dikirim lewat laut, dibayar aman pakai Letter of Credit bank".',
-          purpose: 'Menyepakati rincian harga, kuantitas komoditas, cara pengiriman, dan cara pembayaran internasional agar aman dari sengketa sanksi ekspor.',
-          actors: ['Trader (Hendry Kurniawan)', 'Buyer (Hans Mueller / Jerman)'],
-          badge: 'KONTRAK',
+          title: 'Letter of Intent (Inquiry LOI)',
+          subtitle: 'Minat Awal Kemitraan Dagang',
+          laymanAnalogy: 'Bagaikan surat minat formal dari calon pembeli luar negeri yang menyatakan secara tertulis ketertarikan mereka mengimpor komoditas Anda dengan perkiraan volume awal.',
+          purpose: 'Menyatakan secara sah kehendak calon importir untuk melakukan kemitraan pembelian komoditas ekspor Indonesia.',
+          actors: ['Buyer (Hans Mueller / Jerman)', 'Trader (Eksportir)'],
+          badge: 'INQUIRY',
           docs: [
-            { name: 'Sales Contract (SC)', desc: 'Kesepakatan bilateral sah antara eksportir Indonesia dengan importir Jerman.' }
+            { name: 'Letter of Intent (LOI)', desc: 'Surat resmi bermaterai niaga internasional dari perusahaan importir luar negeri.' }
           ]
         };
       case 1:
         return {
+          title: 'Offer Sheets / Quotation (Penawaran Resmi)',
+          subtitle: 'Kalkulasi Tarif & Lembar Penawaran',
+          laymanAnalogy: 'Bagaikan surat rincian penawaran harga dari eksportir PT Multi Raksa Madani sebagai respon LOI, memuat batas toleransi mutu, harga FOB/CIF, serta garansi pengapalan.',
+          purpose: 'Trader/Eksportir memaparkan syarat harga penawaran niaga komoditi berdasarkan LOI yang diterima.',
+          actors: ['Trader (Hendry Kurniawan)', 'Buyer'],
+          badge: 'QUOTATION',
+          docs: [
+            { name: 'Commercial Quotation Sheet', desc: 'Rincian lembar penawaran harga komoditas per satuan unit beserta durasi validasi.' }
+          ]
+        };
+      case 2:
+        return {
+          title: 'Proforma Invoice (PI) & Syarat Bayar',
+          subtitle: 'Negosiasi Klausul & Cara Pembayaran Internasional',
+          laymanAnalogy: 'Bagaikan draf struk detail belanjaan sementara sebelum pelunasan kasir. Draf ini dipakai oleh pembeli untuk memohon pembukaan Letter of Credit di bank koresponden Jerman.',
+          purpose: 'Menetapkan spesifikasi kargo final, nilai transaksi total, dan jaminan pembayaran instrumen perbankan.',
+          actors: ['Trader', 'Buyer', 'Bank Koresponden'],
+          badge: 'NEGOSIASI',
+          docs: [
+            { name: 'Proforma Invoice (PI)', desc: 'Faktur komersial awal pembuka transaksi dagang bilateral secara internasional.' }
+          ]
+        };
+      case 3:
+        return {
+          title: 'Sales Contract & Bilateral Signatures',
+          subtitle: 'Penandatanganan Kontrak Jual-Beli Konkrit',
+          laymanAnalogy: 'Bagaikan akad deal mengikat dalam bisnis ekspor. Begitu tanda tangan disematkan secara bilateral, kontrak mengikat demi hukum dan kargo resmi berstatus pesanan aktif!',
+          purpose: 'Mengikat kedua belah pihak secara hukum formal dalam payung transaksi ekspor-impor bebas sengketa.',
+          actors: ['Trader', 'Buyer'],
+          badge: 'KONTRAK',
+          docs: [
+            { name: 'Sales Contract (SC)', desc: 'Surat kontrak hukum internasional final bermeterai serta bertanda tangan direksi.' }
+          ]
+        };
+      case 4:
+        return {
           title: 'Surat Penyerahan Bahan Baku (Sourcing DO)',
           subtitle: 'Pengiriman Komoditas dari Petani & Koperasi',
-          laymanAnalogy: 'Bagaikan nota kirim barang dari suplier bahan baku lokal ke gudang utama Anda. Ini membuktikan bahwa bahan Gayo Coffee segar sudah dipanen dan berpindah dari kebun kopi ke pengemasan pabrik.',
+          laymanAnalogy: 'Bagaikan nota kirim barang dari suplier bahan baku lokal ke gudang utama Anda. Ini membuktikan bahwa bahan premium segar sudah dipanen dan berpindah dari kebun gayo ke pengemasan pabrik.',
           purpose: 'Menjamin ketersediaan barang mentah berkualitas premium sesuai kuota yang disepakati.',
           actors: ['Supplier Koperasi Kopi', 'Trader (QC Lapangan)'],
           badge: 'PASOKAN',
@@ -463,11 +657,11 @@ export default function InteractiveInfographic({
             { name: 'Delivery Order (DO)', desc: 'Bukti jalan truk logistik mengangkut komoditas agro menuju gudang transit.' }
           ]
         };
-      case 2:
+      case 5:
         return {
           title: 'Uji Lab & Karantina (Phytosanitary)',
           subtitle: 'Pemeriksaan Kesehatan Bebas Hama Tumbuhan',
-          laymanAnalogy: 'Bagaikan tes swab atau surat sehat medis yang menyatakan kargo pertanian Anda bebas penyakit menular. Tanpa surat ini, negara tujuan (Jerman) akan menolak membongkar kontainer demi melindungi ekosistem alam mereka.',
+          laymanAnalogy: 'Bagaikan tes bebas penyakit menular tumbuhan. Tanpa surat sertifikat ini, otoritas Jerman akan menolak pembongkaran muatan demi melindungi kelestarian biosfer alam mereka.',
           purpose: 'Mendapat sertifikasi jaminan kesehatan tumbuhan bebas parasit, serangga, dan kontaminasi jamur paku.',
           actors: ['Balai Karantina Pertanian RI', 'Trader'],
           badge: 'KARANTINA',
@@ -475,37 +669,37 @@ export default function InteractiveInfographic({
             { name: 'Phytosanitary Certificate (PC)', desc: 'Sertifikat kesehatan nabati wajib dari Kementerian Pertanian RI.' }
           ]
         };
-      case 3:
+      case 6:
         return {
           title: 'Penerbitan Dokumen Pabean (COO & Dokumen Dagang)',
           subtitle: 'Pembuatan Sertifikat Asal Barang Nusantara',
-          laymanAnalogy: 'Bagaikan akte kelahiran atau sertifikat keaslian barang "Made in Indonesia". Ini membuktikan bahwa komoditas benar-benar diproduksi di tanah air kita untuk mendapatkan keringanan tarif bea masuk ekspor (diskon pabean) di Eropa.',
+          laymanAnalogy: 'Bagaikan akte kepemilikan geografi atau sertifikasi keaslian asli "Made in Indonesia". Ini dipakai guna meraup tarif preferensial bea masuk kargo di negara Uni Eropa (Jerman).',
           purpose: 'Menerbitkan Certificate of Origin (COO), Invoice Resmi, dan Packing List untuk kebutuhan pemeriksaan bea masuk impor Jerman.',
           actors: ['Dinas Perindustrian & Perdagangan RI', 'Trader'],
-          badge: 'SERIFIKASI',
+          badge: 'SERTIFIKASI',
           docs: [
             { name: 'Certificate of Origin (COO)', desc: 'Bukti sahih barang diproduksi di Indonesia (Form A/D).' },
             { name: 'Commercial Invoice & Packing List', desc: 'Isian nilai barang, berat bersih, berat kotor, dan rincian kemasan karung kargo.' }
           ]
         };
-      case 4:
+      case 7:
         return {
           title: 'Deklarasi Bea Cukai (Draft PEB & NPE)',
           subtitle: 'Pemberitahuan Ekspor Barang & Persetujuan Muat',
-          laymanAnalogy: 'Bagaikan meminta paspor keluar atau clearance bandara untuk barang dagangan Anda. Kita melapor secara daring ke sistem pabean kementerian keuangan mengenai apa saja isinya agar diizinkan dimuat ke kapal kargo.',
+          laymanAnalogy: 'Bagaikan meminta paspor keluar bandara untuk kargo Anda. Kita melapor secara sistem ELEKTRONIK (PEB) kementerian keuangan mengenai muatan agar diperiksa kelaikannya dan diizinkan naik ke kapal.',
           purpose: 'Melaporkan manifes pabean ekspor negara guna mendapatkan Nota Pelayanan Ekspor (NPE) hijau yang sah dari kepabeanan.',
-          actors: ['Direktorat Jenderal Bea Cukai RI', 'Trader'],
+          actors: ['Owner/Direktur', 'Trader'],
           badge: 'PABEAN',
           docs: [
             { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Dokumen deklarasi deklararif pabean resmi dari eksportir.' },
             { name: 'Nota Pelayanan Ekspor (NPE)', desc: 'Surat clearance resmi pabean yang mengizinkan kontainer masuk pintu dermaga terminal.' }
           ]
         };
-      case 5:
+      case 8:
         return {
           title: 'Pemuatan & Pengemasan (Stuffing & Seal)',
           subtitle: 'Memasukkan Kargo ke Kontainer & Penyegelan Logistik',
-          laymanAnalogy: 'Bagaikan memasukkan barang belanjaan rapuh ke dalam koper tebal gembok pin ganda untuk perjalanan jauh. Kontainer diisi padat (stuffing) di bawah pengawasan ketat, lalu disegel baja berlabel Bea Cukai agar tidak bisa dicuri di jalan.',
+          laymanAnalogy: 'Bagaikan mempacking koper tebal bersegor baja laut berpaku. Kontainer baja diisi penuh kargo (stuffing), kemudian segel magnetik resmi dipasang guna menandakan muatan belum dibuka sepihak.',
           purpose: 'Melakukan penataan kargo seimbang di dalam kontainer samudra 20ft/40ft, melindunginya dari guncangan badai laut, serta menyegel penutup.',
           actors: ['Forwarder Logistik', 'Petugas Bea Cukai'],
           badge: 'STUFFING',
@@ -513,11 +707,11 @@ export default function InteractiveInfographic({
             { name: 'Stuffing Packing Order / Seal Report', desc: 'Laporan segel baja resmi berkode QR pabean dan sertifikasi muat roda logistik.' }
           ]
         };
-      case 6:
+      case 9:
         return {
           title: 'Instruksi Pengapalan (Shipping Bill of Lading)',
           subtitle: 'Pemuatan ke Dek Kapal & Pelayaran Samudra',
-          laymanAnalogy: 'Bagaikan tiket kapal kargo penyeberangan internasional bergaransi. Begitu kontainer dinaikkan ke kapal besi raksasa, kapten kapal menandatangani kuitansi pengiriman ini sebagai tanda terima sah bahwa muatan siap berlayar mengarungi samudra.',
+          laymanAnalogy: 'Bagaikan tiket kapal sekuritas samudera bergaransi. Kapten kapal meneken tanda terima sah B/L ini sebagai garansi bahwa muatan siap melaut berlayar.',
           purpose: 'Menerbitkan Bill of Lading (B/L) resmi pelayaran laut yang berfungsi sebagai dokumen kepemilikan kargo utama selama di laut lepas.',
           actors: ['Pelayaran Samudra / Forwarder', 'Trader'],
           badge: 'PELAYARAN',
@@ -525,13 +719,13 @@ export default function InteractiveInfographic({
             { name: 'Bill of Lading (B/L)', desc: 'Surat perjanjian pengangkutan muatan laut resmi sekaligus tanda kepemilikan barang dagang.' }
           ]
         };
-      case 7:
+      case 10:
         return {
           title: 'Pencairan Pembayaran L/C (Letter of Credit)',
           subtitle: 'Penyerahan Seberkas Dokumen Bersih ke Bank Koresponden',
-          laymanAnalogy: 'Bagaikan mencairkan cek di kasir bank setelah seluruh pekerjaan terbukti tuntas tanpa cacat. Anda menyerahkan tumpukan dokumen resmi (SC, PC, COO, PEB, B/L) ke Bank Mandiri sebagai bukti bahwa kargo kopi gayo sudah berlayar dengan selamat. Bank importir di Jerman pun otomatis mengirimkan pelunasan penuh ke rekening Anda.',
+          laymanAnalogy: 'Bagaikan melepaskan kunci brankas bersama di bank setelah seluruh pengapalan tuntas. Kita menukar dokumen asli pabean laut dengan kucuran dana L/C impor jaminan aman anti-gagal bayar.',
           purpose: 'Menuntaskan siklus transaksi dagang internasional dengan pembayaran aman, bebas risiko gagal bayar pembeli luar negeri.',
-          actors: ['Bank Koresponden Pendanaan RI', 'Trader'],
+          actors: ['Buyer', 'Trader'],
           badge: 'TRANSAKSI',
           docs: [
             { name: 'Letter of Credit Settlement', desc: 'Nota pencairan penagihan ekspor sah berjaminan bank penyelesaian aman.' }
@@ -575,7 +769,7 @@ export default function InteractiveInfographic({
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>${title} - Nusantara Global Agrisindo</title>
+  <title>${title} - PT Multi Raksa Madani</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:ital,wght@1,800&family=JetBrains+Mono:wght@500;800&display=swap');
     body {
@@ -805,7 +999,7 @@ export default function InteractiveInfographic({
     <div class="watermark">OFFICIAL SPECIMEN</div>
     
     <div class="letterhead">
-      <h1>PT NUSANTARA GLOBAL AGRISINDO</h1>
+      <h1>PT MULTI RAKSA MADANI</h1>
       <p>Menara Karya Lt.12, Jalan HR. Rasuna Said Blok X-5 Kuningan, Jakarta Selatan • Telp: (021) 529-5000</p>
       <div class="sub-logo">PORTAL TERPADU HUB PERDAGANGAN EKSPOR REPUBLIK INDONESIA</div>
     </div>
@@ -833,7 +1027,7 @@ export default function InteractiveInfographic({
     
     <div class="legal-clause">
       <strong>PERNYATAAN AKREDITASI MULTI-PIHAK:</strong><br>
-      Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Nusantara Global</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai.
+      Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Multi Raksa Madani</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai.
     </div>
     
     <div class="footer-stamp-area">
@@ -877,7 +1071,7 @@ export default function InteractiveInfographic({
             </span>
           </div>
           <p class="authorized-name">${currentUser?.name || 'Hendry Kurniawan'}</p>
-          <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Nusantara Global Agrisindo'})</p>
+          <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Multi Raksa Madani'})</p>
         </div>
       ` : `
         <div class="left-stamp-box">
@@ -901,7 +1095,7 @@ export default function InteractiveInfographic({
             </span>
           </div>
           <p class="authorized-name">${currentUser?.name || 'Hendry Kurniawan'}</p>
-          <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Nusantara Global Agrisindo'})</p>
+          <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Multi Raksa Madani'})</p>
         </div>
       `}
     </div>
@@ -954,127 +1148,130 @@ export default function InteractiveInfographic({
         console.error(err);
         setIsDownloading(false);
       }
-    }, 1000);
-  };
-
-  return (
+    }, 1000)  };  return (
     <div className="space-y-6">
       
       {/* Conveyor stepper belt pipeline */}
-      <div className="bg-white rounded-2xl border border-slate-150 p-6 shadow-xs relative">
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 pb-4 mb-6 gap-3">
-          <div>
-            <h3 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-500" />
-              Peta Lintasan Logistik &amp; Rantai Dokumen Real-time
-            </h3>
-            <p className="text-xs text-gray-400">
-              Garis hijau melambangkan kargo yang sudah lolos uji pabean. Lingkaran berpijar biru menunjukkan giliran tugas aktif sekarang.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-mono font-black text-blue-700 bg-blue-50 px-3 py-1.5 rounded-md border border-blue-100">
-              Kargo Fisik Saat Ini: <span className="font-black animate-pulse text-blue-700">{shipment.currentStep}</span>
-            </span>
-            <button
-              onClick={() => setShowEducation(!showEducation)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                showEducation 
-                  ? 'bg-amber-50 text-amber-800 border-amber-200' 
-                  : 'bg-slate-100 text-slate-700 border-slate-200'
-              }`}
-            >
-              {showEducation ? '💡 Sembunyikan Panduan' : '💡 Tampilkan Panduan (Rekomendasi)'}
-            </button>
-          </div>
-        </div>
-
-        {/* Horizontal conveyor map */}
-        <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200">
-          <div className="min-w-[1000px] relative px-4 py-8 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-slate-150 p-4 sm:p-5 shadow-xs relative">
+        {/* Single, continuous horizontal conveyor stepper belt without nested box-cards */}
+        <div className="relative py-4 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
+          <div className="min-w-[1080px] relative px-4 pb-2">
             
-            {/* Background connecting track line */}
-            <div className="absolute left-[30px] right-[30px] top-[48px] h-1.5 bg-gray-100 -z-10 rounded-full overflow-hidden">
-              {/* Dynamic green progress fill */}
+            {/* Low-profile, borderless phase header row */}
+            <div className="grid grid-cols-11 mb-3 text-[9px] font-black uppercase tracking-wider text-slate-400">
+              <div className="col-span-4 border-b border-indigo-150 pb-1.5 flex items-center gap-1.5 text-indigo-600 pr-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                <span>Fase I: Komersial &amp; Kontrak (Langkah 1 - 4)</span>
+              </div>
+              <div className="col-span-7 border-b border-emerald-150 pb-1.5 flex items-center gap-1.5 text-emerald-600 pl-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Fase II: Logistik &amp; Kepabeanan Ekspor (Langkah 5 - 11)</span>
+              </div>
+            </div>
+
+            {/* Single background track line spanning across all 11 steps */}
+            <div className="absolute left-[4.5%] right-[4.5%] top-[54px] h-1 bg-slate-150 rounded-full overflow-hidden -z-10">
               <div 
                 className="h-full bg-emerald-500 transition-all duration-700"
-                style={{ width: `${(actualStepIndex / (WORKFLOW_STEPS.length - 1)) * 100}%` }}
+                style={{ 
+                  width: `${(actualStepIndex / 10) * 100}%` 
+                }}
               />
             </div>
 
-            {/* Stepper Node items list */}
-            {WORKFLOW_STEPS.map((st, idx) => {
-              const isPassed = idx < actualStepIndex;
-              const isActiveNow = idx === actualStepIndex;
-              const isBeingInspected = idx === inspectedStepIndex;
-              
-              let statusBorder = 'border-gray-200 bg-white text-gray-400';
-              if (isPassed) statusBorder = 'border-emerald-500 bg-emerald-50 text-emerald-600';
-              if (isActiveNow) statusBorder = 'border-blue-600 bg-blue-50 text-blue-700 font-extrabold ring-4 ring-blue-100 shadow-lg';
-              
-              return (
-                <div 
-                  key={st.step}
-                  onClick={() => {
-                    setInspectedStepIndex(idx);
-                    setSelectedRole(WORKFLOW_STEPS[idx].actor);
-                    setOnPageTab('details');
-                  }}
-                  className={`flex flex-col items-center relative text-center focus:outline-none select-none z-10 cursor-pointer group transition-all duration-300 transform ${
-                    isBeingInspected ? 'scale-105' : 'hover:scale-102'
-                  }`}
-                  style={{ width: `${100 / WORKFLOW_STEPS.length}%` }}
-                >
-                  
-                  {/* Outer circle track indicator */}
-                  <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition-all relative ${statusBorder} ${
-                    isBeingInspected ? 'ring-4 ring-indigo-500/30 border-indigo-500 bg-indigo-50' : ''
-                  }`}>
-                    {/* Pulsing ring indicating authoritative action is awaited right here */}
-                    {isActiveNow && (
-                      <span className="absolute inset-0 rounded-full bg-blue-500/10 animate-ping" />
-                    )}
-                    {isPassed ? (
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    ) : (
-                      getStepIcon(st.step, 'w-5 h-5')
-                    )}
-
-                    {/* Miniature badge inside nodes indicating the authorized actor initials */}
-                    <span className="absolute -bottom-1 -right-1 text-[7.5px] font-mono leading-none tracking-normal font-extrabold px-1 py-0.5 rounded-sm bg-slate-900 text-white shadow-xs">
-                      {st.actor === 'Owner/Direktur' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
-                    </span>
-                  </div>
-
-                  {/* Title labels */}
-                  <p className={`text-[11px] font-black tracking-tight mt-3 mb-0.5 ${
-                    isBeingInspected ? 'text-indigo-700 font-black' : isActiveNow ? 'font-extrabold text-blue-750' : 'text-slate-800 font-medium'
-                  }`}>
-                    {st.label}
-                  </p>
-                  
-                  {/* Status subtitle labels */}
-                  <div className="flex items-center gap-1">
-                    <span className={`text-[9.5px] font-medium ${
-                      isPassed ? 'text-emerald-600 font-bold' : isActiveNow ? 'text-blue-600 font-bold animate-pulse' : 'text-gray-400'
+            {/* Steps container */}
+            <div className="grid grid-cols-11 relative z-10">
+              {UNIFIED_STEPS.map((st, idx) => {
+                const isPassed = isFullyCompleted ? true : idx < actualStepIndex;
+                const isActiveNow = isFullyCompleted ? false : idx === actualStepIndex;
+                const isBeingInspected = idx === inspectedStepIndex;
+                
+                let statusBorder = 'border-slate-300 bg-white text-slate-450';
+                if (isPassed) statusBorder = 'border-emerald-500 bg-emerald-50 text-emerald-600';
+                if (isActiveNow) statusBorder = 'border-blue-600 bg-blue-50 text-blue-700 font-bold ring-4 ring-blue-100 shadow-md';
+                
+                return (
+                  <div 
+                    key={st.stepId}
+                    onClick={() => {
+                      setInspectedStepIndex(idx);
+                      setSelectedRole(UNIFIED_STEPS[idx].actor);
+                      setOnPageTab('details');
+                    }}
+                    className={`flex flex-col items-center text-center relative focus:outline-none select-none cursor-pointer group transition-all duration-200 transform ${
+                      isBeingInspected ? 'scale-[1.05]' : 'hover:scale-[1.02]'
+                    }`}
+                  >
+                    {/* Circle container */}
+                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all relative z-10 ${statusBorder} ${
+                      isBeingInspected ? 'ring-4 ring-indigo-500/30 border-indigo-500 bg-indigo-50 text-indigo-750 font-bold shadow-xs' : ''
                     }`}>
-                      {isPassed ? 'Selesai' : isActiveNow ? 'Aktif' : 'Menunggu'}
+                      {isActiveNow && (
+                        <span className="absolute inset-0 rounded-full bg-blue-500/15 animate-ping" />
+                      )}
+                      {isPassed ? (
+                        <CheckCircle className="w-4.5 h-4.5 text-emerald-500" />
+                      ) : (
+                        getStepIcon(st.stepIcon, 'w-4.5 h-4.5')
+                      )}
+
+                      {/* Initials indicator badge */}
+                      <span className={`absolute -bottom-1 -right-1 text-[7.5px] font-sans font-bold leading-none uppercase tracking-wider px-1 py-0.5 rounded-full border border-white shadow-3xs text-white z-20 ${
+                        st.actor === 'Owner/Direktur' 
+                          ? 'bg-purple-600' 
+                          : st.actor === 'Trader'
+                            ? 'bg-indigo-600'
+                            : st.actor === 'Buyer'
+                              ? 'bg-blue-600'
+                              : st.actor === 'Forwarder'
+                                ? 'bg-amber-600'
+                                : st.actor === 'Supplier'
+                                  ? 'bg-teal-600'
+                                  : 'bg-slate-800'
+                      }`}>
+                        {st.actor === 'Owner/Direktur' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Step Index Label */}
+                    <span className={`text-[8.5px] font-black uppercase tracking-wider font-mono mt-2.5 ${
+                      idx < 4 ? 'text-indigo-600' : 'text-emerald-600'
+                    }`}>
+                      Langkah {idx + 1}
                     </span>
-                    {isBeingInspected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-bounce" />
-                    )}
+
+                    {/* Info label */}
+                    <p className={`text-[10px] leading-tight font-sans font-bold mt-1 max-w-[90px] min-h-[30px] line-clamp-2 ${
+                      isBeingInspected 
+                        ? 'text-indigo-750 font-extrabold' 
+                        : isActiveNow 
+                          ? 'font-extrabold text-blue-700' 
+                          : 'text-slate-600 group-hover:text-slate-900'
+                    }`}>
+                      {st.label}
+                    </p>
+
+                    {/* Sub-label for completion status */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className={`text-[8.5px] font-medium tracking-tight font-sans ${
+                        isPassed ? 'text-emerald-600 font-bold' : isActiveNow ? 'text-blue-600 font-bold animate-pulse' : 'text-slate-400'
+                      }`}>
+                        {isPassed ? 'Selesai' : isActiveNow ? 'Aktif' : 'Menunggu'}
+                      </span>
+                      {isBeingInspected && (
+                        <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" />
+                      )}
+                    </div>
                   </div>
-
-                </div>
-              );
-            })}
-
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Put Vessel GPS MAP here! */}
-      {(shipment.currentStep === 'Shipping' || WORKFLOW_STEPS[inspectedStepIndex].step === 'Shipping') && (
+      {(shipment.currentStep === 'Shipping' || UNIFIED_STEPS[inspectedStepIndex].stepId === 'shipping') && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1085,7 +1282,47 @@ export default function InteractiveInfographic({
       )}
 
       {/* Workspace split layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {inspectedStepIndex < 4 ? (
+        <div className="animate-fadeIn">
+          <div className="bg-gradient-to-r from-indigo-50/60 to-blue-50/60 border border-indigo-100 p-4 rounded-xl text-xs font-semibold flex items-center justify-between shadow-3xs text-slate-800 text-left mb-6">
+            <div className="flex items-center gap-3">
+              <span className="bg-indigo-600 text-white rounded-lg px-2.5 py-1 text-[9px] uppercase font-mono font-black animate-pulse shrink-0">
+                Tahap {inspectedStepIndex + 1}: {UNIFIED_STEPS[inspectedStepIndex].label}
+              </span>
+              <span>
+                Anda sedang melihat langkah negosiasi komersial <strong>{UNIFIED_STEPS[inspectedStepIndex].label}</strong>. 
+                Sistem mengintegrasikan jalannya perundingan harga dengan alur pengiriman logistik dalam satu peta terpadu.
+              </span>
+            </div>
+            <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-mono font-bold uppercase tracking-wider shrink-0 hidden md:inline-block">
+              FASE PRA-PENGAPALAN
+            </span>
+          </div>
+          <NegotiationDashboard
+            shipment={shipment}
+            currentUser={currentUser}
+            onUpdateShipmentFromDeal={onUpdateShipmentFromDeal}
+            forcedStepId={
+              inspectedStepIndex === 0 ? 1 :
+              inspectedStepIndex === 1 ? 2 :
+              inspectedStepIndex === 2 ? 3 :
+              inspectedStepIndex === 3 ? 5 : 1
+            }
+            onStepIdChange={(stepId) => {
+              if (onNegoStepIdChange) {
+                onNegoStepIdChange(stepId);
+              }
+              const newIndex = 
+                stepId === 1 ? 0 :
+                stepId === 2 ? 1 :
+                stepId === 3 || stepId === 4 ? 2 :
+                stepId === 5 ? 3 : 0;
+              setInspectedStepIndex(newIndex);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT COMPONENT: Educational Advisor & Work Authorization */}
         {showEducation && (
@@ -1277,6 +1514,14 @@ export default function InteractiveInfographic({
                             </span>
                           </div>
 
+                           {isEmergencyTakeover && (
+                            <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
+                              <p className="text-[10px] text-amber-300 font-semibold italic">
+                                ✓ Mode Darurat: Peran Owner/Direktur diizinkan mengambil alih &amp; menandatangani tugas Trader.
+                              </p>
+                            </div>
+                          )}
+
                            {!isAuthorizedToClickCurrentInspected && (
                             <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
                               <p className="text-[10px] text-rose-300 italic">
@@ -1289,21 +1534,45 @@ export default function InteractiveInfographic({
                     </div>
 
                     <div className="pt-2 space-y-2.5">
-                      <button
-                        onClick={() => executeStepProgression(inspectedStepIndex)}
-                        disabled={!isAuthorizedToClickCurrentInspected}
-                        className={`w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                          isAuthorizedToClickCurrentInspected
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg hover:-translate-y-0.5'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                        }`}
-                      >
-                        <UserCheck className="w-4 h-4" />
-                        Tandatangani Secara Sah &amp; Validasi Tahap ini
-                      </button>
-
-
-
+                      {isFullyCompleted ? (
+                        <div className="bg-emerald-950/90 border border-emerald-500/40 p-4 rounded-xl text-center space-y-3.5 shadow-lg">
+                          <div className="flex justify-center">
+                            <span className="p-2 bg-emerald-500 text-white rounded-full block animate-bounce">
+                              <CheckCircle className="w-5 h-5" />
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-white font-black uppercase tracking-wider">
+                              🎉 Transaksi Sukses!
+                            </p>
+                            <p className="text-[11px] text-emerald-300 leading-relaxed">
+                              Dana Letter of Credit (L/C) berhasil dicairkan penuh ke rekening Eksportir. Seluruh riwayat transaksi &amp; berkas dokumen resmi telah diarsipkan dengan aman.
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              onUpdateStep(shipment.id, 'Draft', 'Simulasi diulang kembali dari awal draf (Sales Contract) oleh pengguna.');
+                            }}
+                            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Mulai Ulang Simulasi (Reset ke Tahap 1)
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => executeStepProgression(inspectedStepIndex)}
+                          disabled={!isAuthorizedToClickCurrentInspected}
+                          className={`w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            isAuthorizedToClickCurrentInspected
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg hover:-translate-y-0.5'
+                              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                          }`}
+                        >
+                          <UserCheck className="w-4 h-4" />
+                          {inspectedStepIndex === 10 ? 'Cairkan L/C & Selesaikan Transaksi' : 'Tandatangani Secara Sah & Validasi Tahap ini'}
+                        </button>
+                      )}
                     </div>
 
                   </div>
@@ -1519,7 +1788,7 @@ export default function InteractiveInfographic({
                   
                   <div className="border-b-4 border-double border-slate-900 pb-4 text-center space-y-1.5">
                     <h4 className="text-[15px] font-serif font-black tracking-widest uppercase text-slate-900">
-                      PT NUSANTARA GLOBAL AGRISINDO
+                      PT MULTI RAKSA MADANI
                     </h4>
                     <p className="text-[8.5px] font-mono tracking-wider text-slate-400 font-bold">
                       Menara Karya Lt.12, Jalan HR. Rasuna Said Blok X-5 Kuningan, Jakarta Selatan • Telp: (021) 529-5000
@@ -1574,7 +1843,7 @@ export default function InteractiveInfographic({
 
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[9px] leading-relaxed font-serif text-slate-600">
                     <strong>PERNYATAAN AKREDITASI MULTI-PIHAK:</strong><br />
-                    Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Nusantara Global</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai ekspor Republik Indonesia berganda.
+                    Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Multi Raksa Madani</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai ekspor Republik Indonesia berganda.
                   </div>
 
                   <div className="border-t border-dashed border-slate-250 pt-5 grid grid-cols-2 gap-6 items-end mt-8">
@@ -1637,6 +1906,8 @@ export default function InteractiveInfographic({
         </div>
 
       </div>
+
+      )}
 
     </div>
   );

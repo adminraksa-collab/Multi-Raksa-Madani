@@ -30,7 +30,7 @@ const demoCredentials = [
     email: 'hendry@nusantara-traders.com',
     password: 'trader123',
     name: 'Hendry Kurniawan',
-    company: 'PT Nusantara Global Trader'
+    company: 'PT Multi Raksa Madani'
   },
   {
     role: 'Buyer' as UserRole,
@@ -303,12 +303,13 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col md:flex-row my-8"
-      >
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs">
+      <div className="flex min-h-full items-center justify-center p-4 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col md:flex-row my-4 sm:my-8 text-left"
+        >
           {/* LEFT SIDE: FORM LOGIN */}
           <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6">
             <div className="space-y-4">
@@ -744,5 +745,6 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
           </div>
         </motion.div>
       </div>
+    </div>
   );
 }

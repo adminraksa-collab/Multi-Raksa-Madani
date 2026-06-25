@@ -10,8 +10,6 @@ import {
   mockProducts
 } from './mockData';
 import LoginModal from './components/LoginModal';
-import CatalogSection from './components/CatalogSection';
-import NotificationPanel from './components/NotificationPanel';
 import DocumentEditor from './components/DocumentEditor';
 import DocumentViewer from './components/DocumentViewer';
 import ShipmentWorkflowTracker from './components/ShipmentWorkflowTracker';
@@ -24,26 +22,78 @@ import {
   Bell, Globe, Activity, ShieldCheck, FileText, 
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
-  Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert
+  Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings
 } from 'lucide-react';
 
 export default function App() {
   // 1. Initial State Initialization
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    const stored = localStorage.getItem('exportflow_current_user');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {}
+    }
+    return null;
+  });
 
   const [shipments, setShipments] = useState<ExportShipment[]>(() => {
+    const stored = localStorage.getItem('exportflow_shipments');
+    if (stored) {
+      try {
+        let parsed: ExportShipment[] = JSON.parse(stored);
+        // Correct legacy localStorage data where Frankie Shippers (ship-1003) or others had conflicting buyerId 'usr-buyer'
+        let changed = false;
+        parsed = parsed.map(s => {
+          if (s.id === 'ship-1003' && s.buyerId === 'usr-buyer') {
+            changed = true;
+            return { ...s, buyerId: 'usr-buyer-frankie' };
+          }
+          if (s.buyerId === 'usr-buyer' && s.buyerCompany && !s.buyerCompany.toLowerCase().includes('eurofoods') && !s.buyerName.toLowerCase().includes('mueller')) {
+            changed = true;
+            const slug = s.buyerCompany.toLowerCase().trim()
+              .replace(/[^a-z0-9]/g, '-')
+              .replace(/-+/g, '-')
+              .replace(/^-|-$/g, '');
+            return { ...s, buyerId: `usr-buyer-${slug || 'generic'}` };
+          }
+          return s;
+        });
+        if (changed) {
+          localStorage.setItem('exportflow_shipments', JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch (e) {}
+    }
     const base = initialShipments();
-    return base.map(s => ({
+    const initial = base.map(s => ({
       ...s,
       documents: createMockDocuments(s.id, s.totalValue, s.quantity, s.unit, s.productName, s.hsCode),
       certifications: mockCertificationsList(s.id)
     }));
+    localStorage.setItem('exportflow_shipments', JSON.stringify(initial));
+    return initial;
   });
 
+  // Save current user to local storage whenever it changes
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('exportflow_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('exportflow_current_user');
+    }
+  }, [currentUser]);
+
+  // Save shipments to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('exportflow_shipments', JSON.stringify(shipments));
+  }, [shipments]);
+
   const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => initialAlerts);
-  const [activeShipmentId, setActiveShipmentId] = useState<string>('ship-1005');
-  const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'catalog' | 'notifications' | 'guide' | 'negotiation' | 'users'>('home');
-  const [workflowViewMode, setWorkflowViewMode] = useState<'infographic' | 'checklist'>('infographic');
+  const [activeShipmentId, setActiveShipmentId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'guide' | 'negotiation' | 'users'>('home');
+  const [negoStepId, setNegoStepId] = useState<number>(1);
   const [negotiationProduct, setNegotiationProduct] = useState<ExportProduct | undefined>(undefined);
   const [showRestrictedAlert, setShowRestrictedAlert] = useState<string | null>(null);
 
@@ -60,22 +110,304 @@ export default function App() {
     return initial;
   });
 
+  // Local storage based products state
+  const [products, setProducts] = useState<ExportProduct[]>(() => {
+    const stored = localStorage.getItem('exportflow_products');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {}
+    }
+    return mockProducts;
+  });
+
+  // Local storage based company profile
+  const [companyProfile, setCompanyProfile] = useState(() => {
+    const stored = localStorage.getItem('exportflow_company_profile');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {}
+    }
+    return {
+      nib: 'No. NIB 0122110034455 / SIUP 452/32.10/2026',
+      nibNotes: '(Izin Ekspor Pertanian & Agro-Industri Aktif)',
+      address: 'Gedung Graha Dirgantara Lt. 5, Jl. Jend. Sudirman No. 45, Jakarta Selatan 12190',
+      telephone: '+62 21 8089 7788',
+      email: 'support@multiraksamaradani.co.id',
+    };
+  });
+
+  useEffect(() => {
+    // Migrate legacy users and currentUser from older company names to 'PT Multi Raksa Madani'
+    let usersChanged = false;
+    const updatedUsers = users.map(u => {
+      if (u.companyName === 'PT Nusantara Global Trader' || u.companyName === 'PT Nusantara Global Agrisindo') {
+        usersChanged = true;
+        return { ...u, companyName: 'PT Multi Raksa Madani' };
+      }
+      return u;
+    });
+    if (usersChanged) {
+      setUsers(updatedUsers);
+      localStorage.setItem('exportflow_users', JSON.stringify(updatedUsers));
+    }
+
+    if (currentUser && (currentUser.companyName === 'PT Nusantara Global Trader' || currentUser.companyName === 'PT Nusantara Global Agrisindo')) {
+      const updatedCurrentUser = { ...currentUser, companyName: 'PT Multi Raksa Madani' };
+      setCurrentUser(updatedCurrentUser);
+      localStorage.setItem('exportflow_current_user', JSON.stringify(updatedCurrentUser));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('exportflow_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('exportflow_company_profile', JSON.stringify(companyProfile));
+  }, [companyProfile]);
+
+  // States for Change Password Modal
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [changePasswordError, setChangePasswordError] = useState('');
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+
+  // States for Edit Profile Modal
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileCompany, setProfileCompany] = useState('');
+  const [profileAddress, setProfileAddress] = useState('');
+  const [profileCountry, setProfileCountry] = useState('');
+  const [profileAvatar, setProfileAvatar] = useState('');
+  const [profileCurrentPassword, setProfileCurrentPassword] = useState('');
+  const [profileNewPassword, setProfileNewPassword] = useState('');
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [showProfileCurrentPassword, setShowProfileCurrentPassword] = useState(false);
+  const [showProfileNewPassword, setShowProfileNewPassword] = useState(false);
+  const [showProfileConfirmPassword, setShowProfileConfirmPassword] = useState(false);
+
+  const openEditProfile = () => {
+    if (!currentUser) return;
+    setProfileName(currentUser.name);
+    setProfileEmail(currentUser.email);
+    setProfileCompany(currentUser.companyName);
+    setProfileAddress(currentUser.address || '');
+    setProfileCountry(currentUser.country || '');
+    setProfileAvatar(currentUser.avatar);
+    setProfileCurrentPassword('');
+    setProfileNewPassword('');
+    setProfileConfirmPassword('');
+    setProfileError('');
+    setProfileSuccess('');
+    setShowProfileCurrentPassword(false);
+    setShowProfileNewPassword(false);
+    setShowProfileConfirmPassword(false);
+    setIsEditProfileOpen(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+
+    if (!currentUser) {
+      setProfileError('Sesi login kedaluwarsa. Silakan masuk kembali.');
+      return;
+    }
+
+    if (!profileName.trim() || !profileEmail.trim() || !profileCompany.trim()) {
+      setProfileError('Nama, Email, dan Nama Perusahaan wajib diisi.');
+      return;
+    }
+
+    const emailLower = profileEmail.trim().toLowerCase();
+
+    // Check if email is already taken by another user
+    const emailExists = users.some(u => u.id !== currentUser.id && u.email.toLowerCase() === emailLower);
+    if (emailExists) {
+      setProfileError('Email ini sudah terdaftar oleh pengguna lain.');
+      return;
+    }
+
+    // Load credentials from localStorage to check/update password or email
+    const storedCreds = localStorage.getItem('exportflow_credentials');
+    let creds: any[] = [];
+    if (storedCreds) {
+      try {
+        creds = JSON.parse(storedCreds);
+      } catch (err) {}
+    }
+
+    let userCredIndex = creds.findIndex((c: any) => c.email.toLowerCase() === currentUser.email.toLowerCase());
+    if (userCredIndex === -1) {
+      userCredIndex = creds.findIndex((c: any) => c.name.toLowerCase() === currentUser.name.toLowerCase() && c.role === currentUser.role);
+    }
+
+    const isChangingPassword = profileNewPassword.length > 0;
+
+    if (isChangingPassword) {
+      if (!profileCurrentPassword) {
+        setProfileError('Harap masukkan kata sandi saat ini untuk mengubah kata sandi.');
+        return;
+      }
+      if (userCredIndex !== -1 && creds[userCredIndex].password !== profileCurrentPassword) {
+        setProfileError('Kata sandi saat ini salah.');
+        return;
+      }
+      if (profileNewPassword.length < 6) {
+        setProfileError('Kata sandi baru minimal harus 6 karakter.');
+        return;
+      }
+      if (profileNewPassword !== profileConfirmPassword) {
+        setProfileError('Konfirmasi kata sandi baru tidak cocok.');
+        return;
+      }
+    }
+
+    // Update credentials
+    if (userCredIndex !== -1) {
+      creds[userCredIndex].name = profileName.trim();
+      creds[userCredIndex].email = emailLower;
+      creds[userCredIndex].company = profileCompany.trim();
+      if (isChangingPassword) {
+        creds[userCredIndex].password = profileNewPassword;
+      }
+    } else {
+      creds.push({
+        role: currentUser.role,
+        email: emailLower,
+        password: isChangingPassword ? profileNewPassword : 'user123',
+        name: profileName.trim(),
+        company: profileCompany.trim()
+      });
+    }
+    localStorage.setItem('exportflow_credentials', JSON.stringify(creds));
+
+    // Update users list state and localStorage
+    const updatedUsers = users.map(u => {
+      if (u.id === currentUser.id) {
+        return {
+          ...u,
+          name: profileName.trim(),
+          email: emailLower,
+          companyName: profileCompany.trim(),
+          address: profileAddress.trim(),
+          country: profileCountry.trim(),
+          avatar: profileAvatar
+        };
+      }
+      return u;
+    });
+    setUsers(updatedUsers);
+    localStorage.setItem('exportflow_users', JSON.stringify(updatedUsers));
+
+    // Update current user state
+    const updatedCurrentUser = {
+      ...currentUser,
+      name: profileName.trim(),
+      email: emailLower,
+      companyName: profileCompany.trim(),
+      address: profileAddress.trim(),
+      country: profileCountry.trim(),
+      avatar: profileAvatar
+    };
+    setCurrentUser(updatedCurrentUser);
+    localStorage.setItem('exportflow_current_user', JSON.stringify(updatedCurrentUser));
+
+    setProfileSuccess('Profil & kata sandi berhasil diperbarui!');
+    
+    setTimeout(() => {
+      setIsEditProfileOpen(false);
+      setProfileSuccess('');
+    }, 1500);
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePasswordError('');
+    setChangePasswordSuccess('');
+
+    if (!currentUser) {
+      setChangePasswordError('Sesi login kedaluwarsa. Silakan masuk kembali.');
+      return;
+    }
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setChangePasswordError('Semua kolom wajib diisi.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setChangePasswordError('Sandi baru minimal harus 6 karakter.');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setChangePasswordError('Konfirmasi sandi baru tidak cocok.');
+      return;
+    }
+
+    // Load credentials from localStorage
+    const storedCreds = localStorage.getItem('exportflow_credentials');
+    let creds = [];
+    if (storedCreds) {
+      try {
+        creds = JSON.parse(storedCreds);
+      } catch (err) {}
+    }
+
+    // Find current user's credentials
+    const userCredIndex = creds.findIndex((c: any) => c.email.toLowerCase() === currentUser.email.toLowerCase());
+    
+    if (userCredIndex === -1) {
+      setChangePasswordError('Data kredensial akun Anda tidak ditemukan.');
+      return;
+    }
+
+    if (creds[userCredIndex].password !== currentPassword) {
+      setChangePasswordError('Sandi saat ini salah.');
+      return;
+    }
+
+    // Update password
+    creds[userCredIndex].password = newPassword;
+    localStorage.setItem('exportflow_credentials', JSON.stringify(creds));
+
+    setChangePasswordSuccess('Sandi berhasil diperbarui secara aman!');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    
+    // Auto close after 2 seconds
+    setTimeout(() => {
+      setIsChangePasswordOpen(false);
+      setChangePasswordSuccess('');
+    }, 2000);
+  };
+
   // Helper values for restrictions (Public guests are restricted to home)
   const isRestricted = !currentUser;
 
   const getFriendlyTabName = (tabName: string) => {
     switch (tabName) {
-      case 'workflow': return 'Dashboard Alur Kerja Logistik';
-      case 'catalog': return 'Katalog Komoditi Unggul';
-      case 'negotiation': return 'Alur Negosiasi & Proforma Invoice (PI)';
-      case 'guide': return 'Hub Regulasi & Panduan Ekspor';
-      case 'notifications': return 'Pemberitahuan & Notifikasi';
-      case 'users': return 'Manajemen Akun Terdaftar';
+      case 'workflow': return 'Transaksi';
+      case 'guide': return 'Hub Regulasi & Panduan';
+      case 'users': return 'Atur Akun';
       default: return tabName;
     }
   };
 
-  const handleTabClick = (tab: 'home' | 'workflow' | 'catalog' | 'notifications' | 'guide' | 'negotiation' | 'users') => {
+  const handleTabClick = (tab: 'home' | 'workflow' | 'guide' | 'negotiation' | 'users') => {
     if (isRestricted && tab !== 'home') {
       setShowRestrictedAlert(tab);
       // Auto-hide alert after 8 seconds
@@ -84,6 +416,9 @@ export default function App() {
     }
     setShowRestrictedAlert(null);
     setActiveTab(tab);
+    if (tab === 'workflow') {
+      setActiveShipmentId('');
+    }
   };
 
   // Enforce the rule: if restricted, they can never land on other tabs
@@ -119,8 +454,19 @@ export default function App() {
     hsCode: '4402.20.10'
   });
 
+  // Autofill new contract builder form if currentUser is a Buyer
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'Buyer') {
+      setNewContractForm(prev => ({
+        ...prev,
+        buyerName: currentUser.name,
+        buyerCompany: currentUser.companyName
+      }));
+    }
+  }, [currentUser, isNewContractModalOpen]);
+
   const handleProductChange = (prodId: string) => {
-    const prod = mockProducts.find(p => p.id === prodId);
+    const prod = products.find(p => p.id === prodId);
     if (!prod) return;
     const priceNum = parseFloat(prod.price.replace(/,/g, '')) || 1000;
     const defaultQty = newContractForm.quantity;
@@ -137,7 +483,7 @@ export default function App() {
   };
 
   const handleQuantityChange = (qty: number) => {
-    const prod = mockProducts.find(p => p.id === newContractForm.productId);
+    const prod = products.find(p => p.id === newContractForm.productId);
     const priceNum = prod ? (parseFloat(prod.price.replace(/,/g, '')) || 1000) : 1000;
     setNewContractForm(prev => ({
       ...prev,
@@ -146,8 +492,23 @@ export default function App() {
     }));
   };
 
+  // Filtering shipments by role (Buyer, Supplier, Forwarder can only see/edit their own transactions)
+  const visibleShipments = shipments.filter(s => {
+    if (!currentUser) return true;
+    if (currentUser.role === 'Buyer') {
+      return s.buyerId === currentUser.id;
+    }
+    if (currentUser.role === 'Supplier') {
+      return s.supplierId === currentUser.id;
+    }
+    if (currentUser.role === 'Forwarder') {
+      return s.forwarderId === currentUser.id;
+    }
+    return true;
+  });
+
   // Active Shipment Ref Helper
-  const activeShipment = shipments.find(s => s.id === activeShipmentId) || shipments[0];
+  const activeShipment = visibleShipments.find(s => s.id === activeShipmentId) || (visibleShipments.length > 0 ? visibleShipments[0] : undefined);
 
   // 2. Real-time / IoT event simulator handlers
   const handleSimulateEvent = (type: 'ship-movement' | 'customs-approved' | 'phytosanitary-issued' | 'supplier-ready') => {
@@ -305,7 +666,7 @@ export default function App() {
       shipmentId: newDoc.shipmentId,
       contractNumber: activeShipment.contractNumber,
       title: 'Penerbitan Dokumen Baru',
-      message: `${newDoc.type} ekspor berhasil dirilis oleh Trader (${currentUser?.name}) dengan nomor formal ${newDoc.code}.`,
+      message: `${newDoc.type} ekspor berhasil dirilis oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'} (${currentUser?.name}) dengan nomor formal ${newDoc.code}.`,
       type: 'info',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -379,6 +740,70 @@ export default function App() {
     setAlerts(prev => [newAlert, ...prev]);
   };
 
+  const handleUpdateShipmentFromDeal = (
+    shipmentId: string, 
+    updatedData: {
+      quantity: number;
+      pricePerUnit: number;
+      paymentTerms: string;
+      incoterms: string;
+      portOfDischarge: string;
+      buyerCompany: string;
+      nextStep: ShipmentStep;
+      comments: string;
+    }
+  ) => {
+    // Find active shipment's total calculated value
+    const calculatedValue = updatedData.quantity * updatedData.pricePerUnit;
+
+    setShipments(prev => prev.map(s => {
+      if (s.id === shipmentId) {
+        // Also update documents status
+        const updatedDocs = s.documents.map(d => {
+          if (d.type === 'Sales Contract' || d.type === 'Proforma Invoice') {
+            return { ...d, status: 'Approved' as const };
+          }
+          return d;
+        });
+
+        return {
+          ...s,
+          quantity: updatedData.quantity,
+          totalValue: calculatedValue,
+          portOfDischarge: updatedData.portOfDischarge,
+          buyerCompany: updatedData.buyerCompany,
+          incoterms: updatedData.incoterms,
+          paymentTerms: updatedData.paymentTerms,
+          currentStep: updatedData.nextStep,
+          documents: updatedDocs,
+          stepHistory: [
+            ...s.stepHistory,
+            {
+              step: updatedData.nextStep,
+              timestamp: new Date().toISOString(),
+              updatedBy: currentUser?.id || 'sim',
+              comments: updatedData.comments
+            }
+          ]
+        };
+      }
+      return s;
+    }));
+
+    // Trigger success alert
+    const newAlert: RealTimeAlert = {
+      id: `alt-dealConfirm-${Date.now()}`,
+      shipmentId,
+      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
+      title: 'Kesepakatan Deal PI Tercapai!',
+      message: `Kontrak Penjualan dan Proforma Invoice disahkan secara bilateral untuk ${activeShipment?.productName}. Nominal total: $${calculatedValue.toLocaleString('id-ID')} USD.`,
+      type: 'success',
+      timestamp: new Date().toISOString(),
+      readBy: []
+    };
+    setAlerts(prev => [newAlert, ...prev]);
+  };
+
   const handleUpdateStep = (shipmentId: string, nextStep: ShipmentStep, comments: string) => {
     setShipments(prev => prev.map(s => {
       if (s.id === shipmentId) {
@@ -442,7 +867,7 @@ export default function App() {
       shipmentId,
       contractNumber: activeShipment.contractNumber,
       title: 'Sertifikasi Tambahan Diterbitkan',
-      message: `Sertifikasi tambahan "${name}" dilampirkan oleh Trader.`,
+      message: `Sertifikasi tambahan "${name}" dilampirkan oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'}.`,
       type: 'info',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -450,15 +875,49 @@ export default function App() {
     setAlerts(prev => [newAlert, ...prev]);
   };
 
+  const getBuyerIdForNewTransaction = (buyerCompany: string, buyerName?: string) => {
+    if (currentUser && currentUser.role === 'Buyer') {
+      return currentUser.id;
+    }
+    const cleanCompany = (buyerCompany || '').toLowerCase().trim();
+    const cleanName = (buyerName || '').toLowerCase().trim();
+    
+    // Primary: look up in registered users list
+    const foundUser = users.find(u => 
+      u.role === 'Buyer' && 
+      (
+        (u.companyName && cleanCompany && (u.companyName.toLowerCase().includes(cleanCompany) || cleanCompany.includes(u.companyName.toLowerCase()))) ||
+        (u.name && cleanName && (u.name.toLowerCase().includes(cleanName) || cleanName.includes(u.name.toLowerCase())))
+      )
+    );
+    if (foundUser) {
+      return foundUser.id;
+    }
+    
+    // Fallback: If it's Eurofoods, use the default usr-buyer
+    if (cleanCompany.includes('eurofoods') || cleanName.includes('mueller')) {
+      return 'usr-buyer';
+    }
+    
+    // Otherwise, generate a clean slug-based buyerId to isolate it
+    const slug = cleanCompany
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `usr-buyer-${slug || 'generic'}`;
+  };
+
   const handleInitiateContractFromCatalog = (product: ExportProduct) => {
     // Generate new shipment
     const newShipmentId = `ship-${1000 + shipments.length + 1}`;
+    const defaultBuyerCompany = (currentUser && currentUser.role === 'Buyer') ? currentUser.companyName : 'EuroFoods Import GmbH (München)';
+    const defaultBuyerName = (currentUser && currentUser.role === 'Buyer') ? currentUser.name : 'EuroFoods Import GmbH';
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${product.id.toUpperCase()}-2026`,
-      buyerId: 'usr-buyer',
-      buyerName: 'EuroFoods Import GmbH',
-      buyerCompany: 'EuroFoods Import GmbH (München)',
+      buyerId: getBuyerIdForNewTransaction(defaultBuyerCompany, defaultBuyerName),
+      buyerName: defaultBuyerName,
+      buyerCompany: defaultBuyerCompany,
       supplierId: 'usr-supplier',
       supplierName: product.supplierName,
       supplierCompany: product.supplierName,
@@ -518,7 +977,7 @@ export default function App() {
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${prodCode}-2026-${randNum}`,
-      buyerId: 'usr-buyer',
+      buyerId: getBuyerIdForNewTransaction(formData.buyerCompany, formData.buyerName),
       buyerName: formData.buyerName,
       buyerCompany: formData.buyerCompany,
       supplierId: 'usr-supplier',
@@ -608,8 +1067,58 @@ export default function App() {
   };
 
   const handleStartNegotiation = (product: ExportProduct) => {
+    // Generate new active shipment in draft mode
+    const newShipmentId = `ship-${1000 + shipments.length + 1}`;
+    const defaultBuyerCompany = (currentUser && currentUser.role === 'Buyer') ? currentUser.companyName : 'YOSHIHIDE TRADING CO., LTD.';
+    const defaultBuyerName = (currentUser && currentUser.role === 'Buyer') ? currentUser.name : 'Kenji Yoshihide';
+    const newShip: ExportShipment = {
+      id: newShipmentId,
+      contractNumber: `SC/NGL/${product.id.toUpperCase()}-2026-NEGO`,
+      buyerId: getBuyerIdForNewTransaction(defaultBuyerCompany, defaultBuyerName),
+      buyerName: defaultBuyerName,
+      buyerCompany: defaultBuyerCompany,
+      supplierId: 'usr-supplier',
+      supplierName: product.supplierName,
+      supplierCompany: product.supplierName,
+      forwarderId: 'usr-forwarder',
+      forwarderName: 'Siti Aminah',
+      forwarderCompany: 'PT Samudera Logistik Internasional',
+      traderId: 'usr-trader',
+      traderName: currentUser?.name || 'Hendry Kurniawan',
+      productName: product.name,
+      quantity: 15,
+      unit: product.unit,
+      totalValue: parseFloat(product.price.replace(/,/g, '')) * 15,
+      currency: 'USD',
+      hsCode: product.hsCode,
+      portOfLoading: 'Tanjung Priok, Jakarta',
+      portOfDischarge: 'Port of Yokohama, Japan',
+      vesselName: 'MV Samudera Pasifik V.204',
+      voyageNumber: 'V.204',
+      etd: new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString().split('T')[0],
+      eta: new Date(Date.now() + 50 * 24 * 3600 * 1000).toISOString().split('T')[0],
+      trackingNumber: `SMDR-TR-${Math.floor(100000 + Math.random() * 900000)}`,
+      currentStep: 'Draft',
+      stepHistory: [
+        { 
+          step: 'Draft', 
+          timestamp: new Date().toISOString(), 
+          updatedBy: 'usr-buyer', 
+          comments: 'Inisiasi minat pembeli asing (Letter of Intent / LOI) dari Halaman Katalog.' 
+        }
+      ],
+      documents: [],
+      certifications: []
+    };
+
+    // Populate initial documents & certifications
+    newShip.documents = createMockDocuments(newShip.id, newShip.totalValue, newShip.quantity, newShip.unit, newShip.productName, newShip.hsCode);
+    newShip.certifications = mockCertificationsList(newShip.id);
+
+    setShipments(prev => [newShip, ...prev]);
+    setActiveShipmentId(newShipmentId);
     setNegotiationProduct(product);
-    setActiveTab('negotiation');
+    setActiveTab('workflow'); // Go straight to the combined workflow dashboard!
   };
 
   const handleSelectUser = (profile: UserProfile | null) => {
@@ -655,7 +1164,7 @@ export default function App() {
     if (userObj) {
       const newAlert: RealTimeAlert = {
         id: 'alert-' + Date.now(),
-        type: 'danger',
+        type: 'alert',
         title: 'Akun Terhapus',
         message: `Akun pendaftaran atas nama ${userObj.name} (${userObj.role}) telah dihapus dari database pabean oleh Direktur.`,
         timestamp: new Date().toISOString(),
@@ -697,6 +1206,11 @@ export default function App() {
     }
   };
 
+  const handleUpdateUsersList = (newUsers: UserProfile[]) => {
+    setUsers(newUsers);
+    localStorage.setItem('exportflow_users', JSON.stringify(newUsers));
+  };
+
   const handleCloseLoginModal = () => {
     setIsLoginOpen(false);
     if (openedLoginFromCalculator) {
@@ -718,11 +1232,12 @@ export default function App() {
     const newShipmentId = `ship-gps-${Date.now().toString().slice(-4)}`;
     const trackingNumber = `SMDR-GPS-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    const defaultBuyerName = (currentUser && currentUser.role === 'Buyer') ? currentUser.name : 'Kenji Yoshihide';
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${dealData.product.id.toUpperCase().replace('PROD-', 'PR')}-2026-GPS`,
-      buyerId: 'usr-buyer',
-      buyerName: 'Kenji Yoshihide',
+      buyerId: getBuyerIdForNewTransaction(dealData.buyerCompany, defaultBuyerName),
+      buyerName: defaultBuyerName,
       buyerCompany: dealData.buyerCompany,
       supplierId: 'usr-supplier',
       supplierName: dealData.product.supplierName,
@@ -813,7 +1328,6 @@ export default function App() {
     setShipments(prev => [newShip, ...prev]);
     setActiveShipmentId(newShipmentId);
     setActiveTab('workflow');
-    setWorkflowViewMode('infographic');
 
     // Create a real-time notification alert
     const newAlert: RealTimeAlert = {
@@ -832,13 +1346,72 @@ export default function App() {
   // 4. Counts and Analytics Calculation
   const unreadAlertsCount = alerts.filter(a => !currentUser || !a.readBy.includes(currentUser.id)).length;
   
-  const completedShipmentsValue = shipments
+  const completedShipmentsValue = visibleShipments
     .filter(s => s.currentStep === 'Completed')
     .reduce((sum, s) => sum + s.totalValue, 0);
 
-  const activeShipmentsCount = shipments.filter(s => s.currentStep !== 'Completed').length;
+  const activeShipmentsCount = visibleShipments.filter(s => s.currentStep !== 'Completed').length;
   
-  const totalVolumeExported = shipments.reduce((sum, s) => sum + s.quantity, 0);
+  const totalVolumeExported = visibleShipments.reduce((sum, s) => sum + s.quantity, 0);
+
+  const getStepDetails = (step: ShipmentStep) => {
+    switch (step) {
+      case 'Draft':
+        return { 
+          label: 'Negosiasi & PI', 
+          color: 'text-amber-750 bg-amber-50/70 border-amber-200', 
+          percent: 12.5
+        };
+      case 'Sourcing':
+        return { 
+          label: 'Penyediaan Barang', 
+          color: 'text-slate-750 bg-slate-50 border-slate-200', 
+          percent: 25
+        };
+      case 'Verification':
+        return { 
+          label: 'Uji Mutu & Lab', 
+          color: 'text-cyan-750 bg-cyan-50/70 border-cyan-200', 
+          percent: 37.5
+        };
+      case 'Documents':
+        return { 
+          label: 'Penyusunan COO/PEB', 
+          color: 'text-blue-750 bg-blue-50/70 border-blue-200', 
+          percent: 50
+        };
+      case 'Customs':
+        return { 
+          label: 'Kliring Bea Cukai', 
+          color: 'text-purple-750 bg-purple-50/70 border-purple-200', 
+          percent: 62.5
+        };
+      case 'Loading':
+        return { 
+          label: 'Stuffing Kontainer', 
+          color: 'text-pink-750 bg-pink-50/70 border-pink-200', 
+          percent: 75
+        };
+      case 'Shipping':
+        return { 
+          label: 'Kapal Berlayar (GPS)', 
+          color: 'text-emerald-750 bg-emerald-50/70 border-emerald-200', 
+          percent: 87.5
+        };
+      case 'Completed':
+        return { 
+          label: 'Tiba & Cair L/C', 
+          color: 'text-green-750 bg-green-50/70 border-green-200', 
+          percent: 100
+        };
+      default:
+        return { 
+          label: step, 
+          color: 'text-gray-750 bg-gray-50 border-gray-250', 
+          percent: 0
+        };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-gray-900 font-sans antialiased pb-12">
@@ -866,81 +1439,49 @@ export default function App() {
             {currentUser ? (
               <nav className="hidden md:flex space-x-1 items-center">
                 <button
+                  onClick={() => handleTabClick('home')}
+                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'home'
+                      ? 'bg-slate-900 text-white shadow-sm font-extrabold'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  <span>Beranda</span>
+                </button>
+                <button
                   onClick={() => handleTabClick('workflow')}
-                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                     activeTab === 'workflow'
                       ? 'bg-slate-900 text-white shadow-sm font-extrabold'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <span>Dashboard Alur Kerja</span>
-                </button>
-                <button
-                  onClick={() => handleTabClick('catalog')}
-                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
-                    activeTab === 'catalog'
-                      ? 'bg-slate-900 text-white shadow-sm font-extrabold'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
-                >
-                  <span>Katalog Komoditi</span>
-                </button>
-                <button
-                  onClick={() => handleTabClick('notifications')}
-                  className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 relative ${
-                    activeTab === 'notifications'
-                      ? 'bg-slate-900 text-white shadow-sm font-extrabold'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
-                >
-                  <span>Notifikasi</span>
-                  {unreadAlertsCount > 0 && (
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleTabClick('negotiation')}
-                  className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
-                    activeTab === 'negotiation'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200'
-                  }`}
-                >
                   <FileSignature className="w-3.5 h-3.5" />
-                  <span>Alur Kerja &amp; PI</span>
+                  <span>Transaksi</span>
                 </button>
                 <button
                   onClick={() => handleTabClick('guide')}
-                  className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                     activeTab === 'guide'
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250'
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>Panduan Ekspor</span>
+                  <span>Panduan</span>
                 </button>
                 {currentUser.role === 'Owner/Direktur' && (
                   <button
                     onClick={() => handleTabClick('users')}
-                    className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       activeTab === 'users'
                         ? 'bg-purple-700 text-white shadow-sm'
                         : 'text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200'
                     }`}
                   >
                     <Users className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
-                    <span>Manajemen Akun</span>
-                  </button>
-                )}
-                {activeTab !== 'home' && (
-                  <button
-                    onClick={() => handleTabClick('home')}
-                    className="ml-2 px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-all flex items-center gap-1 border border-gray-200 cursor-pointer"
-                    title="Kembali ke Beranda Utama"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Beranda</span>
+                    <span>Atur Akun</span>
                   </button>
                 )}
               </nav>
@@ -960,19 +1501,16 @@ export default function App() {
 
             {/* Right side controls user actions with dynamic Logout for testability */}
             <div className="flex items-center gap-3">
-              {currentUser && (
-                <button
-                  onClick={() => handleTabClick('notifications')}
-                  className="relative p-2 text-gray-500 hover:bg-gray-50 rounded-full transition-colors"
-                  title={`${unreadAlertsCount} Notifikasi Belum Dibaca`}
-                >
-                  <Bell className="w-5 h-5" />
-                  {unreadAlertsCount > 0 && !isRestricted && (
-                    <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white">
-                      {unreadAlertsCount}
-                    </span>
-                  )}
-                </button>
+              {activeTab === 'workflow' && activeShipmentId && activeShipment && (
+                <div className="flex items-center gap-2 select-none">
+                  <div className="hidden sm:flex items-center gap-2 bg-indigo-50 border border-indigo-150 text-indigo-700 px-2.5 py-1.5 rounded-lg font-mono text-[11px] font-bold uppercase">
+                    <span className="text-[9px] text-indigo-500 font-sans font-semibold">Aktif:</span>
+                    <span>{activeShipment.contractNumber}</span>
+                  </div>
+                  <span className="text-[11px] font-mono font-black text-blue-700 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100 uppercase animate-pulse">
+                    {activeShipment.currentStep}
+                  </span>
+                </div>
               )}
 
               <div className="hidden sm:flex items-center gap-2 border-l border-gray-250 pl-3">
@@ -995,6 +1533,13 @@ export default function App() {
                           title="Keluar"
                         >
                           Keluar
+                        </button>
+                        <button 
+                          onClick={openEditProfile}
+                          className="text-indigo-600 hover:text-indigo-800 p-0.5 bg-indigo-50 hover:bg-indigo-100 rounded hover:underline flex items-center justify-center"
+                          title="Edit Profil & Sandi"
+                        >
+                          <Settings className="w-3 h-3 text-indigo-500 hover:rotate-90 transition-transform duration-300" />
                         </button>
                       </p>
                       <p className="text-[10px] text-gray-400 font-extrabold capitalize leading-none pt-0.5">{currentUser.role === 'Owner/Direktur' ? 'Owner/Direktur' : currentUser.role}</p>
@@ -1068,41 +1613,22 @@ export default function App() {
         {/* Mobile Navigation */}
         {currentUser ? (
           <div className="block md:hidden bg-white p-1.5 rounded-xl border border-gray-150 shadow-sm">
-            <div className={`grid ${currentUser?.role === 'Owner/Direktur' ? 'grid-cols-6' : 'grid-cols-5'} gap-1`}>
+            <div className={`grid ${currentUser?.role === 'Owner/Direktur' ? 'grid-cols-4' : 'grid-cols-3'} gap-1`}>
+              <button
+                onClick={() => handleTabClick('home')}
+                className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
+                  activeTab === 'home' ? 'bg-slate-900 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                Beranda
+              </button>
               <button
                 onClick={() => handleTabClick('workflow')}
                 className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
                   activeTab === 'workflow' ? 'bg-slate-950 text-white font-black animate-pulse' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                Logistik
-              </button>
-              <button
-                onClick={() => handleTabClick('catalog')}
-                className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
-                  activeTab === 'catalog' ? 'bg-slate-950 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                Katalog
-              </button>
-              <button
-                onClick={() => handleTabClick('negotiation')}
-                className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all ${
-                  activeTab === 'negotiation' ? 'bg-indigo-650 text-white font-black' : 'text-indigo-750 hover:bg-indigo-50'
-                }`}
-              >
-                Negosiasi
-              </button>
-              <button
-                onClick={() => handleTabClick('notifications')}
-                className={`text-center py-2 px-1 text-[9px] font-bold rounded-lg transition-all relative ${
-                  activeTab === 'notifications' ? 'bg-slate-950 text-white font-black' : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                Notif
-                {unreadAlertsCount > 0 && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
-                )}
+                Transaksi
               </button>
               <button
                 onClick={() => handleTabClick('guide')}
@@ -1123,15 +1649,6 @@ export default function App() {
                 </button>
               )}
             </div>
-            {activeTab !== 'home' && (
-              <button
-                onClick={() => handleTabClick('home')}
-                className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-[10px] rounded-lg uppercase tracking-wider transition-all border border-gray-200 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
-                <span>← Kembali ke Beranda Utama</span>
-              </button>
-            )}
           </div>
         ) : (
           activeTab !== 'home' && (
@@ -1152,9 +1669,9 @@ export default function App() {
           <LandingPage
             onNavigate={(tab) => setActiveTab(tab)}
             onStartNegotiation={handleStartNegotiation}
-            shipmentsCount={shipments.length}
+            shipmentsCount={visibleShipments.length}
             totalVolume={totalVolumeExported}
-            totalValue={shipments.reduce((sum, s) => sum + s.totalValue, 0)}
+            totalValue={visibleShipments.reduce((sum, s) => sum + s.totalValue, 0)}
             currentUser={currentUser}
             onOpenProfile={(mode, fromCalc) => {
               setLoginModalMode(mode || 'login');
@@ -1167,125 +1684,634 @@ export default function App() {
             }}
             isCalcOpen={isCalcOpen}
             setIsCalcOpen={setIsCalcOpen}
+            products={products}
+            onUpdateProducts={setProducts}
+            companyProfile={companyProfile}
+            onUpdateCompanyProfile={setCompanyProfile}
           />
         ) : activeTab === 'workflow' ? (
           <div className="space-y-6">
-            {/* Shipment selector drop down block */}
-            <div className="p-5 bg-white rounded-xl border border-gray-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-base font-bold text-gray-900">Pilih Dokumen & Transaksi Berjalan :</h2>
-                <p className="text-xs text-gray-400">Alur kerja memajukan langkah logistik demi memantau status ekspor secara mandiri</p>
-              </div>
-              <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 font-semibold uppercase">Transaksi:</span>
-                  <select
-                    value={activeShipmentId}
-                    onChange={(e) => setActiveShipmentId(e.target.value)}
-                    className="p-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50/50"
-                  >
-                    {shipments.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.contractNumber} - {s.productName} ({s.currentStep})
-                      </option>
-                    ))}
-                  </select>
+            {(activeShipmentId === '' || !activeShipment) ? (
+              /* ================= OPTION B: ALL TRANSACTIONS DASHBOARD OVERVIEW ================= */
+              <div className="space-y-6">
+                {/* Header Banner */}
+                <div className="bg-slate-900 text-white rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-sm border border-slate-850 text-left">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none hidden md:block animate-spin-slow">
+                    <Globe className="w-32 h-32 text-indigo-400" />
+                  </div>
+                  <div className="relative z-10 max-w-3xl space-y-2">
+                    <span className="px-2.5 py-1 bg-indigo-500/25 text-indigo-300 rounded-lg text-[10px] uppercase font-mono font-bold tracking-wider border border-indigo-500/20 inline-block">
+                      Sistem Ekspor Terintegrasi • Opsi B
+                    </span>
+                    <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
+                      Hub Negosiasi &amp; Pelacakan Transaksi
+                    </h1>
+                    <p className="text-xs text-slate-300/90 leading-relaxed">
+                      Sistem monitoring real-time berbasis kontrak. Pilih salah satu transaksi aktif di bawah untuk menyetujui Proforma Invoice bilateral, melacak pergerakan kontainer pelabuhan, atau meninjau draf sertifikat karantina ekspor pertanian Anda.
+                    </p>
+                  </div>
                 </div>
-                
-                {/* View switcher buttons! */}
-                <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+
+                {/* Dashboard Stats Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-650 rounded-lg">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Total Nilai Kontrak</p>
+                        <h3 className="text-base font-black text-slate-900 mt-0.5">
+                          ${visibleShipments.reduce((sum, s) => sum + s.totalValue, 0).toLocaleString('id-ID')} <span className="text-[10px] text-gray-500 font-bold">USD</span>
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Transaksi Ekspor Berjalan</p>
+                        <h3 className="text-base font-black text-slate-900 mt-0.5">
+                          {visibleShipments.filter(s => s.currentStep !== 'Completed').length} <span className="text-[10px] text-gray-500 font-bold">Kontrak</span>
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Selesai Dikirim &amp; Cair</p>
+                        <h3 className="text-base font-black text-slate-900 mt-0.5">
+                          {visibleShipments.filter(s => s.currentStep === 'Completed').length} <span className="text-[10px] text-gray-500 font-bold">Transaksi</span>
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Total Volume Dikirim</p>
+                        <h3 className="text-base font-black text-slate-900 mt-0.5">
+                          {totalVolumeExported} <span className="text-[10px] text-gray-500 font-bold">Metric Ton (MT)</span>
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subtitle with Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 border-b border-gray-150 pb-3 text-left">
+                  <div>
+                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">Negosiasi &amp; Kontrak Dagang Anda ({visibleShipments.length})</h2>
+                    <p className="text-xs text-slate-400">Silakan pilih salah satu kargo kontainer atau draf LOI di bawah ini untuk memulai pelacakan alur kerja terpadu.</p>
+                  </div>
                   <button
-                    onClick={() => setWorkflowViewMode('infographic')}
-                    className={`px-3 py-1.5 text-[10.5px] font-bold rounded-md transition-all ${
-                      workflowViewMode === 'infographic'
-                        ? 'bg-slate-950 text-white shadow-xs font-black'
-                        : 'text-gray-500 hover:text-slate-800'
-                    }`}
+                    onClick={() => setIsNewContractModalOpen(true)}
+                    className="self-start sm:self-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm hover:-translate-y-0.5 z-10"
                   >
-                    Infografis
-                  </button>
-                  <button
-                    onClick={() => setWorkflowViewMode('checklist')}
-                    className={`px-3 py-1.5 text-[10.5px] font-bold rounded-md transition-all ${
-                      workflowViewMode === 'checklist'
-                        ? 'bg-slate-950 text-white shadow-xs font-black'
-                        : 'text-gray-500 hover:text-slate-800'
-                    }`}
-                  >
-                    Tabel Detail
+                    <Plus className="w-4 h-4 shrink-0" />
+                    Mulai Kontrak Penjualan Baru
                   </button>
                 </div>
 
-                <button
-                  onClick={() => setIsNewContractModalOpen(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 whitespace-nowrap"
-                >
-                  <Plus className="w-4 h-4 shrink-0" />
-                  Mulai Kontrak Penjualan Baru
-                </button>
-              </div>
-            </div>
+                {/* Grid list of shipments */}
+                {visibleShipments.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto space-y-4 shadow-3xs">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
+                      <FileSignature className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Belum Ada Kontrak Dagang</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Anda saat ini masuk sebagai <strong>{currentUser?.role === 'Buyer' ? 'Buyer' : currentUser?.role || 'Pengguna'} ({currentUser?.name})</strong>. Belum ada draf negosiasi atau draf kontrak dagang aktif yang terkait dengan akun Anda.
+                      </p>
+                    </div>
+                    <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+                      <button
+                        onClick={() => setActiveTab('home')}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-3xs"
+                      >
+                        Pilih Produk di Katalog
+                      </button>
+                      <button
+                        onClick={() => setIsNewContractModalOpen(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-3xs"
+                      >
+                        Mulai Kontrak Baru
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {visibleShipments.map(s => {
+                      const stepInfo = getStepDetails(s.currentStep);
+                      return (
+                        <div 
+                          key={s.id} 
+                          className="bg-white rounded-2xl border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-3xs text-left"
+                        >
+                          {/* Upper Details Panel */}
+                          <div className="p-5 md:p-6 space-y-4">
+                            <div className="flex items-center justify-between gap-2.5">
+                              <span className="font-mono bg-slate-100 py-1 px-2.5 rounded-lg text-[10px] text-slate-600 font-extrabold tracking-tight">
+                                {s.contractNumber}
+                              </span>
+                              <span className={`px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border flex items-center gap-1 ${stepInfo.color}`}>
+                                {s.currentStep === 'Draft' && <FileSignature className="w-3 h-3" />}
+                                {s.currentStep === 'Sourcing' && <Package className="w-3 h-3" />}
+                                {s.currentStep === 'Verification' && <Activity className="w-3 h-3" />}
+                                {s.currentStep === 'Documents' && <FileText className="w-3 h-3" />}
+                                {s.currentStep === 'Customs' && <ShieldCheck className="w-3.5 h-3.5" />}
+                                {s.currentStep === 'Loading' && <Layers className="w-3 h-3" />}
+                                {s.currentStep === 'Shipping' && <Ship className="w-3 h-3" />}
+                                {s.currentStep === 'Completed' && <CheckCircle className="w-3 h-3" />}
+                                <span>{stepInfo.label}</span>
+                              </span>
+                            </div>
 
-            {/* Document Editor Component (Toggle Mode) */}
-            {isDocEditorOpen ? (
-              <DocumentEditor
-                shipments={shipments}
-                currentUser={currentUser}
-                onSaveDocument={handleSaveNewDocument}
-                onClose={() => setIsDocEditorOpen(false)}
-              />
-            ) : workflowViewMode === 'infographic' ? (
-              <InteractiveInfographic
-                shipment={activeShipment}
-                currentUser={currentUser}
-                onSelectUser={(profile) => setCurrentUser(profile)}
-                onUpdateStep={handleUpdateStep}
-                onOpenDocumentEditor={() => setIsDocEditorOpen(true)}
-                onSimulateEvent={handleSimulateEvent}
-              />
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-black text-slate-900 leading-snug group-hover:text-indigo-650 transition-colors">
+                                {s.productName}
+                              </h4>
+                              <p className="text-xs text-gray-400 font-semibold">
+                                Volume Ekspor: <span className="text-slate-700 font-bold">{s.quantity} {s.unit}</span>
+                              </p>
+                            </div>
+
+                            {/* Detail Grid */}
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 pt-3 border-t border-dashed border-gray-150 text-[11px]">
+                              <div>
+                                <span className="text-gray-400 font-semibold block">Buyer (Importir):</span>
+                                <span className="font-bold text-slate-700 block truncate" title={s.buyerCompany}>{s.buyerCompany}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 font-semibold block">Total Nilai Barang:</span>
+                                <span className="font-extrabold text-indigo-600 block">${s.totalValue.toLocaleString('id-ID')} USD</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 font-semibold block">Pelabuhan Muat (POL):</span>
+                                <span className="font-bold text-slate-700 block truncate" title={s.portOfLoading}>{s.portOfLoading.split(',')[0]}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 font-semibold block">Pelabuhan Bongkar (POD):</span>
+                                <span className="font-bold text-slate-700 block truncate" title={s.portOfDischarge}>{s.portOfDischarge.split(',')[0]}</span>
+                              </div>
+                            </div>
+
+                            {/* Modernized Progress Meter */}
+                            <div className="space-y-1.5 pt-1">
+                              <div className="flex items-center justify-between text-[11px] font-bold select-none text-slate-500">
+                                <span>Perkembangan Regulasi Pabean &amp; Fisik</span>
+                                <span className="text-indigo-650 font-black">{stepInfo.percent}% Selesai</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
+                                <div 
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" 
+                                  style={{ width: `${stepInfo.percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Lower Action bar inside Card */}
+                          <div className="bg-slate-50/50 border-t border-slate-150 px-5 py-3 flex items-center justify-between gap-3 select-none">
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+                              <span>ETD: {s.etd}</span>
+                              <span>•</span>
+                              <span>ETA: {s.eta}</span>
+                            </div>
+                            
+                            <button
+                              onClick={() => {
+                                setActiveShipmentId(s.id);
+                              }}
+                              className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-3xs ${
+                                s.currentStep === 'Draft'
+                                  ? 'bg-amber-600 text-white hover:bg-amber-700 hover:-translate-y-0.5 active:scale-95'
+                                  : 'bg-slate-900 text-white hover:bg-indigo-600 hover:-translate-y-0.5 active:scale-95'
+                              }`}
+                            >
+                              <span>Lacak &amp; Kelola</span>
+                              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             ) : (
-              <ShipmentWorkflowTracker
-                shipment={activeShipment}
-                currentUser={currentUser}
-                onUpdateStep={handleUpdateStep}
-                onOpenDocumentEditor={() => setIsDocEditorOpen(true)}
-                onViewDocument={(doc) => setViewingDocument(doc)}
-                onUploadCertification={handleAddCertToShipment}
-              />
+              /* ================= SELECTED SHIPMENT ALUR DETAILED TRACKING ================= */
+              <div className="space-y-6">
+
+                {/* Document Editor Component (Toggle Mode) */}
+                {isDocEditorOpen ? (
+                  <DocumentEditor
+                    shipments={shipments}
+                    currentUser={currentUser}
+                    onSaveDocument={handleSaveNewDocument}
+                    onClose={() => setIsDocEditorOpen(false)}
+                  />
+                ) : (
+                  <InteractiveInfographic
+                    shipment={activeShipment}
+                    currentUser={currentUser}
+                    onSelectUser={(profile) => setCurrentUser(profile)}
+                    onUpdateStep={handleUpdateStep}
+                    onOpenDocumentEditor={() => setIsDocEditorOpen(true)}
+                    onSimulateEvent={handleSimulateEvent}
+                    negoStepId={negoStepId}
+                    onNegoStepIdChange={(stepId) => setNegoStepId(stepId)}
+                    onUpdateShipmentFromDeal={handleUpdateShipmentFromDeal}
+                  />
+                )}
+              </div>
             )}
           </div>
-        ) : activeTab === 'catalog' ? (
-          <CatalogSection
-            currentUser={currentUser}
-            onInitiateShipment={handleInitiateContractFromCatalog}
-            onStartNegotiation={handleStartNegotiation}
-          />
         ) : activeTab === 'users' ? (
           <AccountManagement
             users={users}
             currentUser={currentUser}
             onDeleteUser={handleDeleteUser}
             onToggleApprove={handleToggleApproveUser}
+            onUpdateUsersList={handleUpdateUsersList}
           />
         ) : activeTab === 'guide' ? (
           <ExportGuide />
-        ) : activeTab === 'negotiation' ? (
-          <NegotiationDashboard
-            initialProduct={negotiationProduct}
-            currentUser={currentUser}
-            onDealCreated={handleDealCreated}
-          />
-        ) : (
-          <NotificationPanel
-            alerts={alerts}
-            currentUser={currentUser}
-            onMarkAsRead={handleMarkAlertAsRead}
-            onClearAll={handleClearAlerts}
-            onSimulateEvent={handleSimulateEvent}
-          />
-        )}
+        ) : null}
 
       </main>
+
+      {/* Change Password Modal */}
+      {isChangePasswordOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 flex flex-col overflow-hidden max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 bg-indigo-900 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-indigo-500 rounded-lg text-white">
+                  <Lock className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm uppercase tracking-wider">Ganti Sandi Akun</h3>
+                  <p className="text-[10px] text-indigo-200">Perbarui kata sandi login untuk peran: {currentUser?.role}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsChangePasswordOpen(false)}
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleChangePassword} className="p-6 space-y-4 text-left overflow-y-auto">
+              {changePasswordError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-semibold flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{changePasswordError}</span>
+                </div>
+              )}
+
+              {changePasswordSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-xs font-semibold flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{changePasswordSuccess}</span>
+                </div>
+              )}
+
+              {/* Current Password Field */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-black uppercase text-slate-600">Sandi Saat Ini</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Masukkan sandi saat ini"
+                    className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password Field */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-black uppercase text-slate-600">Sandi Baru</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Sandi baru (min. 6 karakter)"
+                    className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password Field */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-black uppercase text-slate-600">Konfirmasi Sandi Baru</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmNewPassword ? "text" : "password"}
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Ketik ulang sandi baru"
+                    className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsChangePasswordOpen(false)}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all text-center cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-4 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md text-center cursor-pointer"
+                >
+                  Simpan Sandi Baru
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile & Password Modal */}
+      {isEditProfileOpen && currentUser && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-150 flex flex-col overflow-hidden max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 bg-indigo-950 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-600 rounded-xl text-white">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm uppercase tracking-wider">Edit Profil & Kata Sandi</h3>
+                  <p className="text-[10px] text-indigo-300 font-semibold">Perbarui data profil & sandi login Anda ({currentUser.role})</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsEditProfileOpen(false)}
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveProfile} className="p-6 space-y-5 text-left overflow-y-auto">
+              {profileError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-semibold flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{profileError}</span>
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-xs font-semibold flex items-start gap-2 animate-bounce">
+                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{profileSuccess}</span>
+                </div>
+              )}
+
+              {/* Avatar Selector */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-black uppercase text-slate-500">Pilih Foto Profil</label>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={profileAvatar} 
+                    alt="Current Avatar" 
+                    className="w-12 h-12 rounded-full border-2 border-indigo-500 object-cover p-0.5" 
+                  />
+                  <div className="grid grid-cols-6 gap-2">
+                    {[
+                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+                      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+                      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+                    ].map((url, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setProfileAvatar(url)}
+                        className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all cursor-pointer hover:scale-105 ${
+                          profileAvatar === url ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-transparent opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        <img src={url} alt={`Preset ${idx}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Name Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="Nama Lengkap"
+                    required
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Alamat Surel / Email</label>
+                  <input
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    placeholder="Alamat Email"
+                    required
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Company Name Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Nama Perusahaan</label>
+                  <input
+                    type="text"
+                    value={profileCompany}
+                    onChange={(e) => setProfileCompany(e.target.value)}
+                    placeholder="Nama Perusahaan"
+                    required
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+
+                {/* Country Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Negara Asal (Country)</label>
+                  <input
+                    type="text"
+                    value={profileCountry}
+                    onChange={(e) => setProfileCountry(e.target.value)}
+                    placeholder="Contoh: Indonesia, Jerman"
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Address Field */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-black uppercase text-slate-500">Alamat Perusahaan</label>
+                <textarea
+                  value={profileAddress}
+                  onChange={(e) => setProfileAddress(e.target.value)}
+                  placeholder="Masukkan alamat lengkap perusahaan"
+                  rows={2}
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                />
+              </div>
+
+              {/* Divider for Password Section */}
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-2">Ganti Kata Sandi (Opsional)</span>
+                <div className="flex-grow border-t border-slate-200"></div>
+              </div>
+
+              {/* Current Password Field */}
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Kata Sandi Saat Ini</label>
+                  <span className="text-[9px] text-slate-400 font-semibold italic">Isi jika Anda ingin mengubah sandi</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showProfileCurrentPassword ? "text" : "password"}
+                    value={profileCurrentPassword}
+                    onChange={(e) => setProfileCurrentPassword(e.target.value)}
+                    placeholder="Sandi saat ini untuk autentikasi"
+                    className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileCurrentPassword(!showProfileCurrentPassword)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  >
+                    {showProfileCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* New Password Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Kata Sandi Baru</label>
+                  <div className="relative">
+                    <input
+                      type={showProfileNewPassword ? "text" : "password"}
+                      value={profileNewPassword}
+                      onChange={(e) => setProfileNewPassword(e.target.value)}
+                      placeholder="Minimal 6 karakter"
+                      className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileNewPassword(!showProfileNewPassword)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    >
+                      {showProfileNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Konfirmasi Sandi Baru</label>
+                  <div className="relative">
+                    <input
+                      type={showProfileConfirmPassword ? "text" : "password"}
+                      value={profileConfirmPassword}
+                      onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                      placeholder="Ulangi sandi baru"
+                      className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileConfirmPassword(!showProfileConfirmPassword)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    >
+                      {showProfileConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditProfileOpen(false)}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black transition-all text-center cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-4 bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl text-xs font-black transition-all shadow-md text-center cursor-pointer"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Floating popup login modal component */}
       <LoginModal
@@ -1334,7 +2360,7 @@ export default function App() {
                     onChange={(e) => handleProductChange(e.target.value)}
                     className="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                   >
-                    {mockProducts.map(p => (
+                    {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>

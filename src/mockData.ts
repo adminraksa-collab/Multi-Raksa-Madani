@@ -15,7 +15,7 @@ export const mockUsers: UserProfile[] = [
     role: 'Trader',
     email: 'hendry@nusantara-traders.com',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    companyName: 'PT Nusantara Global Trader',
+    companyName: 'PT Multi Raksa Madani',
     address: 'Sudirman Central Business District, Jakarta',
     country: 'Indonesia',
   },
@@ -179,7 +179,7 @@ export const createMockDocuments = (shipmentId: string, value: number, qty: numb
     updatedAt: '2026-06-02T15:00:00Z',
     issuedDate: '2026-06-02',
     details: {
-      exporter: 'PT Nusantara Global Trader\nSudirman Central Business District, Jakarta, Indonesia',
+      exporter: 'PT Multi Raksa Madani\nSudirman Central Business District, Jakarta, Indonesia',
       importer: 'EuroFoods Import GmbH\nKaiserstraße 12, Frankfurt am Main, Germany',
       paymentTerms: 'L/C (Letter of Credit) at sight',
       items: [
@@ -208,7 +208,7 @@ export const createMockDocuments = (shipmentId: string, value: number, qty: numb
     updatedAt: '2026-06-18T11:00:00Z',
     issuedDate: '2026-06-18',
     details: {
-      exporter: 'PT Nusantara Global Trader\nSudirman Central Business District, Jakarta, Indonesia',
+      exporter: 'PT Multi Raksa Madani\nSudirman Central Business District, Jakarta, Indonesia',
       importer: 'EuroFoods Import GmbH\nKaiserstraße 12, Frankfurt am Main, Germany',
       portOfLoading: 'Tanjung Priok, Jakarta (IDTPP)',
       portOfDischarge: 'Port of Hamburg, Germany (DEHAM)',
@@ -243,7 +243,7 @@ export const createMockDocuments = (shipmentId: string, value: number, qty: numb
     updatedAt: '2026-06-18T11:00:00Z',
     issuedDate: '2026-06-18',
     details: {
-      exporter: 'PT Nusantara Global Trader\nSudirman Central Business District, Jakarta, Indonesia',
+      exporter: 'PT Multi Raksa Madani\nSudirman Central Business District, Jakarta, Indonesia',
       importer: 'EuroFoods Import GmbH\nKaiserstraße 12, Frankfurt am Main, Germany',
       portOfLoading: 'Tanjung Priok, Jakarta',
       portOfDischarge: 'Port of Hamburg, Germany',
@@ -276,7 +276,7 @@ export const createMockDocuments = (shipmentId: string, value: number, qty: numb
     createdAt: '2026-06-17T09:00:00Z',
     updatedAt: '2026-06-18T17:00:00Z',
     details: {
-      exporter: 'PT Nusantara Global Trader\nSudirman Central Business District, Jakarta, Indonesia',
+      exporter: 'PT Multi Raksa Madani\nSudirman Central Business District, Jakarta, Indonesia',
       importer: 'EuroFoods Import GmbH\nKaiserstraße 12, Frankfurt am Main, Germany',
       portOfLoading: 'Tanjung Priok, Jakarta (IDTPP)',
       portOfDischarge: 'Port of Hamburg, Germany (DEHAM)',
@@ -381,7 +381,7 @@ export const initialShipments = (): ExportShipment[] => [
   {
     id: 'ship-1003',
     contractNumber: 'SC/NGL/CHR-2026-003',
-    buyerId: 'usr-buyer',
+    buyerId: 'usr-buyer-frankie',
     buyerName: 'Frankie Shippers Inc.',
     buyerCompany: 'Anatolia Charcoal Distrib',
     supplierId: 'usr-supplier',
