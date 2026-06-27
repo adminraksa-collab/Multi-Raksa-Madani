@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Globe, ArrowRight, ShieldCheck, FileText, 
   ChevronRight, Ship, FileSignature, Calculator, Info, X,
-  Lock, UserPlus, Edit, Trash2, Save, Plus, Award, MapPin, Calendar
+  Lock, UserPlus, Edit, Trash2, Save, Plus, Award, MapPin, Calendar,
+  Upload, Image
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -14,11 +15,12 @@ interface CompanyProfileData {
   address: string;
   telephone: string;
   email: string;
+  bannerImage?: string;
 }
 
 interface LandingPageProps {
   onNavigate: (tab: any) => void;
-  onStartNegotiation: (product: ExportProduct) => void;
+  onStartNegotiation: (product: ExportProduct, quantity: number) => void;
   shipmentsCount: number;
   totalVolume: number;
   totalValue: number;
@@ -203,8 +205,13 @@ export default function LandingPage({
     <div className="space-y-12 pb-16 animate-fade-in">
       
       {/* 1. HERO SECTION */}
-      <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/15 via-blue-500/5 to-transparent pointer-events-none" />
+      <div 
+        className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-cover bg-center"
+        style={{ 
+          backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.92) 45%, rgba(15, 23, 42, 0.75) 100%), url(${companyProfile.bannerImage || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80'})` 
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-transparent pointer-events-none" />
 
         <div className="p-8 sm:p-12 relative z-15 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 text-left space-y-4">
@@ -556,7 +563,7 @@ export default function LandingPage({
                           const targetProdObj = activeProduct.rawProduct;
                           if (targetProdObj) {
                             setIsCalcOpen(false);
-                            onStartNegotiation(targetProdObj);
+                            onStartNegotiation(targetProdObj, orderVolume);
                           }
                         }}
                         disabled={currentUser?.role !== 'Buyer'}
@@ -594,7 +601,7 @@ export default function LandingPage({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-y-auto text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
+              className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
             >
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
                 <div className="flex items-center gap-2">
@@ -663,6 +670,112 @@ export default function LandingPage({
                     onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold"
                   />
+                </div>
+
+                <div className="space-y-2.5 border-t border-slate-800 pt-3">
+                  <span className="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Gambar Banner Hero</span>
+                  
+                  {/* Banner Image Preview */}
+                  <div className="relative h-20 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                    {tempProfile.bannerImage ? (
+                      <>
+                        <img 
+                          src={tempProfile.bannerImage} 
+                          alt="Banner Preview" 
+                          className="absolute inset-0 w-full h-full object-cover opacity-75"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=600&q=80';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-slate-950/40" />
+                        <span className="relative z-10 text-[9px] font-black uppercase bg-black/75 px-2.5 py-1 rounded border border-white/10 tracking-widest text-slate-100">Pratinjau Banner Aktif</span>
+                      </>
+                    ) : (
+                      <div className="text-center p-2 text-slate-500">
+                        <Image className="w-5 h-5 mx-auto mb-1 text-slate-600" />
+                        <span className="text-[10px] font-bold">Belum Ada Banner Kustom (Menggunakan Default)</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload File & Link URL */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    {/* File Upload Selector */}
+                    <div className="relative group border border-dashed border-slate-800 rounded-xl bg-slate-950/40 hover:bg-slate-950 hover:border-indigo-500/50 transition-all p-3 text-center cursor-pointer">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === 'string') {
+                                setTempProfile({ ...tempProfile, bannerImage: reader.result });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      />
+                      <Upload className="w-4 h-4 mx-auto mb-1 text-indigo-400 group-hover:scale-110 transition-transform" />
+                      <span className="block text-[10px] font-bold text-slate-300">Pilih Berkas Gambar</span>
+                      <span className="block text-[9px] text-slate-500 mt-0.5">PNG, JPG (Maks. 2MB)</span>
+                    </div>
+
+                    {/* Presets Grid */}
+                    <div className="border border-slate-800 rounded-xl p-2 bg-slate-950/30">
+                      <span className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Preset Cepat Premium</span>
+                      <div className="grid grid-cols-3 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setTempProfile({ ...tempProfile, bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80' })}
+                          className="h-10 rounded-lg overflow-hidden relative border border-slate-800 hover:border-indigo-500 transition-colors cursor-pointer group"
+                          title="Pelabuhan Cargo Kontainer"
+                        >
+                          <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Kargo</span>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTempProfile({ ...tempProfile, bannerImage: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=1600&q=80' })}
+                          className="h-10 rounded-lg overflow-hidden relative border border-slate-800 hover:border-indigo-500 transition-colors cursor-pointer group"
+                          title="Hasil Bumi Rempah Indonesia"
+                        >
+                          <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Rempah</span>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTempProfile({ ...tempProfile, bannerImage: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&q=80' })}
+                          className="h-10 rounded-lg overflow-hidden relative border border-slate-800 hover:border-indigo-500 transition-colors cursor-pointer group"
+                          title="Gudang Logistik Modern"
+                        >
+                          <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Gudang</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Manual URL Input */}
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Atau Tempel Tautan URL Gambar</label>
+                    <input
+                      type="url"
+                      value={tempProfile.bannerImage || ''}
+                      onChange={(e) => setTempProfile({ ...tempProfile, bannerImage: e.target.value })}
+                      placeholder="https://images.unsplash.com/... atau tautan gambar lainnya"
+                      className="w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-mono text-[9px]"
+                    />
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-800 flex justify-end gap-2.5">

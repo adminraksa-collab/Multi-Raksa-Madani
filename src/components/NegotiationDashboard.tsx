@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExportProduct, UserProfile, ExportShipment } from '../types';
+import { ExportProduct, UserProfile, ExportShipment, ShipmentStep } from '../types';
 import { 
   FileText, Calendar, Check, Send, AlertTriangle, UserCheck, 
   HelpCircle, ChevronRight, CheckCircle2, RefreshCw, FileSignature, 
   Download, ArrowRight, User, Building2, Landmark, ShieldAlert, BadgeInfo,
-  ZoomIn, ZoomOut, Printer, Lock
+  ZoomIn, ZoomOut, Printer, Lock, Eye, X
 } from 'lucide-react';
-import { mockProducts } from '../mockData';
+import { mockProducts, mockUsers } from '../mockData';
 
 interface NegotiationStep {
   id: number;
@@ -41,11 +41,14 @@ interface NegotiationDashboardProps {
     incoterms: string;
     portOfDischarge: string;
     buyerCompany: string;
-    nextStep: 'Sourcing';
+    nextStep: ShipmentStep;
     comments: string;
   }) => void;
   forcedStepId?: number;
   onStepIdChange?: (stepId: number) => void;
+  autoOpenLoi?: boolean;
+  onResetAutoOpenLoi?: () => void;
+  onSelectUser?: (user: UserProfile) => void;
 }
 
 export default function NegotiationDashboard({ 
@@ -55,10 +58,13 @@ export default function NegotiationDashboard({
   shipment,
   onUpdateShipmentFromDeal,
   forcedStepId,
-  onStepIdChange
+  onStepIdChange,
+  autoOpenLoi,
+  onResetAutoOpenLoi,
+  onSelectUser
 }: NegotiationDashboardProps) {
   // 1. Negotiation States
-  const [currentStepId, setCurrentStepId] = useState<number>(1); // Default to Step 1: Letter of Intent (LOI) to experience the full flow!
+  const [currentStepId, setCurrentStepId] = useState<number>(2); // Default to Step 2: Offer Sheet & Quotation (LOI stage has been removed)
   
   // Helper to change step internally and bubble to parent safely during user action clicks
   const updateStepIdAndBubble = (newStep: number) => {
@@ -86,11 +92,234 @@ export default function NegotiationDashboard({
   ]);
   const [dragOver, setDragOver] = useState(false);
 
+  // Print blocked warning banner state
+  const [printBlockedError, setPrintBlockedError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'PRINT_BLOCKED') {
+        setPrintBlockedError(true);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Modal display states for LOI & Interactive Offer flow
+  const [isLoiModalOpen, setIsLoiModalOpen] = useState<boolean>(false);
+  const [isTawaranModalOpen, setIsTawaranModalOpen] = useState<boolean>(false);
+  const [showPreviewInModal, setShowPreviewInModal] = useState<boolean>(true);
+
+  // Specialized Print & Download for LOI Popup Modal
+  const handlePrintLoi = () => {
+    setPrintBlockedError(false);
+    const paperElement = document.getElementById('loi-document-paper');
+    if (!paperElement) return;
+
+    const docClone = paperElement.cloneNode(true) as HTMLElement;
+    const buttons = docClone.querySelectorAll('button');
+    buttons.forEach(btn => btn.remove());
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Letter of Intent - Yoshihide Trading Co.</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <script>
+              tailwind.config = {
+                theme: {
+                  extend: {
+                    colors: {
+                      slate: {
+                        150: '#e2e8f0',
+                        850: '#1e293b',
+                      }
+                    }
+                  }
+                }
+              }
+            </script>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+              
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-sizing: border-box !important;
+              }
+
+              body { 
+                padding: 30px; 
+                font-family: 'JetBrains Mono', monospace; 
+                font-size: 11px; 
+                background: white; 
+                color: #1e293b; 
+                line-height: 1.5;
+              }
+
+              @media print {
+                body { margin: 1.2cm !important; padding: 0 !important; background: white !important; color: black !important; }
+                .no-print { display: none !important; }
+              }
+            </style>
+          </head>
+          <body class="bg-white text-slate-900">
+            <div class="max-w-2xl mx-auto p-4 bg-white">
+              <div class="text-[11px] leading-relaxed">
+                ${docClone.outerHTML}
+              </div>
+            </div>
+            <script>
+              window.onload = function() {
+                setTimeout(() => {
+                  try {
+                    window.print();
+                  } catch (e) {
+                    console.error("Print blocked:", e);
+                    window.parent.postMessage({ type: 'PRINT_BLOCKED' }, '*');
+                  }
+                  setTimeout(() => {
+                    window.parent.document.body.removeChild(window.frameElement);
+                  }, 800);
+                }, 800);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      doc.close();
+    }
+
+    // Proactively show print blocked notice
+    setTimeout(() => {
+      setPrintBlockedError(true);
+    }, 100);
+  };
+
+  const handleDownloadLoiHTML = () => {
+    const paperElement = document.getElementById('loi-document-paper');
+    if (!paperElement) return;
+
+    const docClone = paperElement.cloneNode(true) as HTMLElement;
+    const buttons = docClone.querySelectorAll('button');
+    buttons.forEach(btn => btn.remove());
+
+    const cleanHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Letter of Intent - Yoshihide Trading Co.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              150: '#e2e8f0',
+              850: '#1e293b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+    
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      box-sizing: border-box !important;
+    }
+
+    body { 
+      padding: 40px; 
+      background: #f1f5f9; 
+      font-family: 'JetBrains Mono', monospace; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start; 
+      min-height: 100vh;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+
+    .paper-container { 
+      width: 100%; 
+      max-width: 800px;
+    }
+
+    @media print {
+      body { background: white !important; padding: 0 !important; }
+      .paper-container { max-width: 100% !important; }
+      .print-btn { display: none !important; }
+    }
+
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 13px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+      z-index: 9999;
+    }
+    .print-btn:hover { background: #4338ca; }
+  </style>
+</head>
+<body class="bg-slate-100">
+  <button class="print-btn" onclick="window.print()">Cetak / Simpan PDF</button>
+  <div class="paper-container">
+    ${docClone.outerHTML}
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(() => {
+        window.print();
+      }, 800);
+    };
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([cleanHTML], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Letter_of_Intent_Yoshihide.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Sync state if initialProduct changes
   useEffect(() => {
     if (initialProduct) {
       setSelectedProduct(initialProduct);
-      setCurrentStepId(1); // Begin from step 1
+      setCurrentStepId(2); // Begin from step 2
       const priceVal = parseFloat(initialProduct.price.replace(/,/g, '')) || 1000;
       setPricePerUnit(priceVal);
       setIsExporterSigned(false);
@@ -135,7 +364,7 @@ export default function NegotiationDashboard({
       } else {
         // If draft, reset signature states to let them click through steps
         if (forcedStepId === undefined) {
-          setCurrentStepId(1);
+          setCurrentStepId(2);
         }
         setIsExporterSigned(false);
         setIsBuyerSigned(false);
@@ -150,9 +379,40 @@ export default function NegotiationDashboard({
     }
   }, [forcedStepId]);
 
+  // Auto open the Quotation modal if requested from parent (e.g. redirected from calculator)
+  useEffect(() => {
+    if (autoOpenLoi) {
+      setIsTawaranModalOpen(true);
+      if (onResetAutoOpenLoi) {
+        onResetAutoOpenLoi();
+      }
+    }
+  }, [autoOpenLoi, onResetAutoOpenLoi]);
+
+  // Auto-progress shipment to Shipping once both parties have signed the contract/PI in the Draft step
+  useEffect(() => {
+    if (isExporterSigned && isBuyerSigned && shipment && shipment.currentStep === 'Draft') {
+      if (onUpdateShipmentFromDeal) {
+        onUpdateShipmentFromDeal(shipment.id, {
+          quantity,
+          pricePerUnit,
+          paymentTerms,
+          incoterms,
+          portOfDischarge,
+          buyerCompany,
+          nextStep: 'Shipping',
+          comments: 'Kontrak Penjualan & Proforma Invoice (PI) resmi disahkan secara bilateral karena tanda tangan lengkap dari kedua belah pihak.'
+        });
+      }
+    }
+  }, [isExporterSigned, isBuyerSigned, shipment, quantity, pricePerUnit, paymentTerms, incoterms, portOfDischarge, buyerCompany, onUpdateShipmentFromDeal]);
+
   // Bubble up is now handled directly by the event handlers utilizing the `updateStepIdAndBubble` function.
 
-  const isLocked = !!(shipment && shipment.currentStep !== 'Draft');
+  const isContractSigned = shipment?.documents.some(d => d.type === 'Sales Contract' && d.status === 'Approved');
+  const isLocked = !!(shipment && (shipment.currentStep !== 'Draft' || isContractSigned));
+  const canSignExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur';
+  const canSignBuyer = currentUser?.role === 'Buyer';
 
   // Zoom and Pan States for Interactive Document Viewport
   const [scale, setScale] = useState<number>(1.0);
@@ -221,6 +481,7 @@ export default function NegotiationDashboard({
 
   // Print & Download Utilities
   const handlePrint = () => {
+    setPrintBlockedError(false);
     const paperElement = document.getElementById('negotiation-document-paper');
     if (!paperElement) return;
 
@@ -247,6 +508,21 @@ export default function NegotiationDashboard({
         <html>
           <head>
             <title>Dokumen Negosiasi - PT MULTI RAKSA MADANI</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <script>
+              tailwind.config = {
+                theme: {
+                  extend: {
+                    colors: {
+                      slate: {
+                        150: '#e2e8f0',
+                        850: '#1e293b',
+                      }
+                    }
+                  }
+                }
+              }
+            </script>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
               
@@ -266,111 +542,12 @@ export default function NegotiationDashboard({
               }
 
               @media print {
-                body { margin: 1.2cm !important; padding: 0 !important; background: white; color: black; }
+                body { margin: 1.2cm !important; padding: 0 !important; background: white !important; color: black !important; }
                 .no-print { display: none !important; }
               }
-
-              /* High-fidelity layout classes */
-              .flex { display: flex !important; }
-              .flex-col { flex-direction: column !important; }
-              .justify-between { justify-content: space-between !important; }
-              .justify-center { justify-content: center !important; }
-              .items-center { align-items: center !important; }
-              .items-start { align-items: flex-start !important; }
-              .text-right { text-align: right !important; }
-              .text-center { text-align: center !important; }
-              .text-left { text-align: left !important; }
-
-              /* Grid & columns mimicking Tailwind */
-              .grid { display: grid !important; }
-              .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-              .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-              .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
-              .gap-1 { gap: 0.25rem !important; }
-              .gap-2 { gap: 0.5rem !important; }
-              .gap-3 { gap: 0.75rem !important; }
-              .gap-4 { gap: 1rem !important; }
-
-              .col-span-2 { grid-column: span 2 / span 2 !important; }
-              .col-span-4 { grid-column: span 4 / span 4 !important; }
-              .col-span-6 { grid-column: span 6 / span 6 !important; }
-              .col-span-8 { grid-column: span 8 / span 8 !important; }
-              .col-span-12 { grid-column: span 12 / span 12 !important; }
-
-              /* Spacing & Margin */
-              .space-y-4 > * + * { margin-top: 1rem !important; }
-              .space-y-2 > * + * { margin-top: 0.5rem !important; }
-              .space-y-1.5 > * + * { margin-top: 0.375rem !important; }
-              .space-y-1 > * + * { margin-top: 0.25rem !important; }
-
-              .p-2 { padding: 0.5rem !important; }
-              .p-3 { padding: 0.75rem !important; }
-              .p-4 { padding: 1rem !important; }
-              .px-2 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-              .py-1.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
-              .pb-3 { padding-bottom: 0.75rem !important; }
-              .pt-4 { padding-top: 1rem !important; }
-              .pt-2 { padding-top: 0.5rem !important; }
-              .pb-1 { padding-bottom: 0.25rem !important; }
-              .pb-2 { padding-bottom: 0.5rem !important; }
-              .mt-0.5 { margin-top: 0.125rem !important; }
-              .mb-1 { margin-bottom: 0.25rem !important; }
-              .mb-2 { margin-bottom: 0.5rem !important; }
-              .ml-auto { margin-left: auto !important; }
-
-              /* Colors */
-              .bg-slate-50 { background-color: #f8fafc !important; }
-              .bg-slate-100 { background-color: #f1f5f9 !important; }
-              .bg-white { background-color: #ffffff !important; }
-              .bg-slate-900 { background-color: #0f172a !important; }
-              .text-indigo-900 { color: #312e81 !important; }
-              .text-indigo-950 { color: #1e1b4b !important; }
-              .text-indigo-600 { color: #4f46e5 !important; }
-              .text-slate-900 { color: #0f172a !important; }
-              .text-slate-800 { color: #1e293b !important; }
-              .text-slate-705 { color: #334155 !important; }
-              .text-slate-400 { color: #94a3b8 !important; }
-              .text-slate-500 { color: #64748b !important; }
-
-              /* Borders */
-              .border { border: 1px solid #cbd5e1 !important; }
-              .border-b { border-bottom: 1px solid #cbd5e1 !important; }
-              .border-t { border-top: 1px solid #cbd5e1 !important; }
-              .border-dashed { border-style: dashed !important; }
-              .border-slate-150 { border-color: #e2e8f0 !important; }
-              .border-slate-205 { border-color: #e2e8f0 !important; }
-              .border-slate-200 { border-color: #cbd5e1 !important; }
-              .border-slate-300 { border-color: #cbd5e1 !important; }
-              .rounded { border-radius: 0.25rem !important; }
-              .rounded-md { border-radius: 0.375rem !important; }
-              .rounded-lg { border-radius: 0.5rem !important; }
-              .rounded-xl { border-radius: 0.75rem !important; }
-
-              /* Typography */
-              .font-bold { font-weight: 700 !important; }
-              .font-semibold { font-weight: 600 !important; }
-              .font-black { font-weight: 800 !important; }
-              .text-xs { font-size: 0.75rem !important; }
-              .text-sm { font-size: 0.875rem !important; }
-              .text-[9px] { font-size: 9px !important; }
-              .text-[10px] { font-size: 10px !important; }
-              .text-[11px] { font-size: 11px !important; }
-              .text-[8px] { font-size: 8px !important; }
-              .underline { text-decoration: underline !important; }
-              .italic { font-style: italic !important; }
-              .uppercase { text-transform: uppercase !important; }
-
-              /* Sign Stamp */
-              .transform { display: inline-block !important; }
-              .-rotate-12 { transform: rotate(-12deg) !important; }
-              .rotate-6 { transform: rotate(6deg) !important; }
-              .border-2 { border-width: 2px !important; }
-              .border-emerald-500 { border-color: #10b981 !important; }
-              .border-indigo-500 { border-color: #6366f1 !important; }
-              .text-emerald-600 { color: #059669 !important; }
             </style>
           </head>
-          <body class="bg-white">
+          <body class="bg-white text-slate-900">
             <div class="max-w-2xl mx-auto p-4 bg-white">
               <div class="text-[11px] leading-relaxed">
                 ${docClone.outerHTML}
@@ -379,11 +556,16 @@ export default function NegotiationDashboard({
             <script>
               window.onload = function() {
                 setTimeout(() => {
-                  window.print();
+                  try {
+                    window.print();
+                  } catch (e) {
+                    console.error("Print blocked:", e);
+                    window.parent.postMessage({ type: 'PRINT_BLOCKED' }, '*');
+                  }
                   setTimeout(() => {
                     window.parent.document.body.removeChild(window.frameElement);
-                  }, 500);
-                }, 500);
+                  }, 800);
+                }, 800);
               };
             </script>
           </body>
@@ -391,6 +573,11 @@ export default function NegotiationDashboard({
       `);
       doc.close();
     }
+
+    // Proactively show print blocked notice
+    setTimeout(() => {
+      setPrintBlockedError(true);
+    }, 100);
   };
 
   const handleDownloadHTML = () => {
@@ -413,6 +600,21 @@ export default function NegotiationDashboard({
 <head>
   <meta charset="utf-8">
   <title>${docTitle.replace(/_/g, ' ')}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              150: '#e2e8f0',
+              850: '#1e293b',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
     
@@ -436,17 +638,12 @@ export default function NegotiationDashboard({
 
     .paper-container { 
       width: 100%; 
-      max-w: 700px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      max-width: 800px;
     }
 
     @media print {
-      body { padding: 0; background: none; }
-      .paper-container { max-w: 100%; border: none; box-shadow: none; padding: 0; }
+      body { background: white !important; padding: 0 !important; }
+      .paper-container { max-width: 100% !important; }
       .print-btn { display: none !important; }
     }
 
@@ -469,103 +666,20 @@ export default function NegotiationDashboard({
       letter-spacing: 0.5px;
     }
     .print-btn:hover { background: #4338ca; }
-
-    /* Layout, Spacing, and Colors mimicking custom Tailwind utility classes */
-    .flex { display: flex !important; }
-    .flex-col { flex-direction: column !important; }
-    .justify-between { justify-content: space-between !important; }
-    .justify-center { justify-content: center !important; }
-    .items-center { align-items: center !important; }
-    .items-start { align-items: flex-start !important; }
-    .text-right { text-align: right !important; }
-    .text-center { text-align: center !important; }
-    .text-left { text-align: left !important; }
-
-    .grid { display: grid !important; }
-    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-    .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
-    .gap-1 { gap: 0.25rem !important; }
-    .gap-2 { gap: 0.5rem !important; }
-    .gap-4 { gap: 1rem !important; }
-
-    .col-span-2 { grid-column: span 2 / span 2 !important; }
-    .col-span-4 { grid-column: span 4 / span 4 !important; }
-    .col-span-6 { grid-column: span 6 / span 6 !important; }
-    .col-span-8 { grid-column: span 8 / span 8 !important; }
-    .col-span-12 { grid-column: span 12 / span 12 !important; }
-
-    .space-y-4 > * + * { margin-top: 1rem !important; }
-    .space-y-2 > * + * { margin-top: 0.5rem !important; }
-    .space-y-1.5 > * + * { margin-top: 0.375rem !important; }
-    .space-y-1 > * + * { margin-top: 0.25rem !important; }
-
-    .p-2 { padding: 0.5rem !important; }
-    .p-3 { padding: 0.75rem !important; }
-    .p-4 { padding: 1rem !important; }
-    .px-2 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-    .py-1.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
-    .pb-3 { padding-bottom: 0.75rem !important; }
-    .pt-4 { padding-top: 1rem !important; }
-    .pt-2 { padding-top: 0.5rem !important; }
-    .pb-1 { padding-bottom: 0.25rem !important; }
-    .pb-2 { padding-bottom: 0.5rem !important; }
-    .mt-0.5 { margin-top: 0.125rem !important; }
-    .mb-1 { margin-bottom: 0.25rem !important; }
-    .mb-2 { margin-bottom: 0.5rem !important; }
-    .ml-auto { margin-left: auto !important; }
-
-    .font-bold { font-weight: 700 !important; }
-    .font-semibold { font-weight: 600 !important; }
-    .font-black { font-weight: 800 !important; }
-    .text-xs { font-size: 0.75rem !important; }
-    .text-sm { font-size: 0.875rem !important; }
-    .text-[9px] { font-size: 9px !important; }
-    .text-[10px] { font-size: 10px !important; }
-    .text-[11px] { font-size: 11px !important; }
-    .text-[8px] { font-size: 8px !important; }
-    .underline { text-decoration: underline !important; }
-    .italic { font-style: italic !important; }
-    .uppercase { text-transform: uppercase !important; }
-
-    .bg-slate-50 { background-color: #f8fafc !important; }
-    .bg-slate-100 { background-color: #f1f5f9 !important; }
-    .bg-white { background-color: #ffffff !important; }
-    .bg-slate-900 { background-color: #0f172a !important; }
-    .text-indigo-900 { color: #312e81 !important; }
-    .text-indigo-950 { color: #1e1b4b !important; }
-    .text-slate-900 { color: #0f172a !important; }
-    .text-slate-800 { color: #1e293b !important; }
-    .text-slate-705 { color: #334155 !important; }
-    .text-slate-400 { color: #94a3b8 !important; }
-    .text-slate-500 { color: #64748b !important; }
-
-    .border { border: 1px solid #cbd5e1 !important; }
-    .border-b { border-bottom: 1px solid #cbd5e1 !important; }
-    .border-t { border-top: 1px solid #cbd5e1 !important; }
-    .border-dashed { border-style: dashed !important; }
-    .border-slate-150 { border-color: #e2e8f0 !important; }
-    .border-slate-205 { border-color: #e2e8f0 !important; }
-    .border-slate-200 { border-color: #cbd5e1 !important; }
-    .border-slate-300 { border-color: #cbd5e1 !important; }
-    .rounded { border-radius: 0.25rem !important; }
-    .rounded-md { border-radius: 0.375rem !important; }
-    .rounded-lg { border-radius: 0.5rem !important; }
-    .rounded-xl { border-radius: 0.75rem !important; }
-
-    .transform { display: inline-block !important; }
-    .-rotate-12 { transform: rotate(-12deg) !important; }
-    .rotate-6 { transform: rotate(6deg) !important; }
-    .border-2 { border-width: 2px !important; }
-    .border-emerald-500 { border-color: #10b981 !important; }
-    .border-indigo-500 { border-color: #6366f1 !important; }
-    .text-emerald-600 { color: #059669 !important; }
   </style>
 </head>
-<body>
+<body class="bg-slate-100">
   <button class="print-btn" onclick="window.print()">Cetak / Simpan PDF</button>
   <div class="paper-container">
     ${docClone.outerHTML}
   </div>
+  <script>
+    window.onload = function() {
+      setTimeout(() => {
+        window.print();
+      }, 800);
+    };
+  </script>
 </body>
 </html>`;
 
@@ -602,24 +716,13 @@ export default function NegotiationDashboard({
 
   // Reset all steps to test flow
   const handleResetFlow = () => {
-    updateStepIdAndBubble(1);
+    updateStepIdAndBubble(2);
     setIsExporterSigned(false);
     setIsBuyerSigned(false);
   };
 
-  // 5 Negotiation Stages with Explanations
+  // 4 Negotiation Stages with Explanations (Stage 1 LOI removed)
   const negotiationSteps: NegotiationStep[] = [
-    {
-      id: 1,
-      title: "Inquiry (Permintaan Pembukaan)",
-      badge: "Inisiasi Minat",
-      actor: "Buyer (Importir)",
-      sender: "YOSHIHIDE TRADING CO., Japan",
-      receiver: "Exportir Indonesia",
-      description: "Importir luar negeri mengirimkan Letter of Intent (LOI) atau Inquiry/Permintaan resmi mengenai komoditi Indonesia. Pembeli menanyakan ketersediaan, sertifikasi karantina, grade, dan estimasi harga per MT.",
-      importance: "Langkah pembuka gerbang dagang. Berisi spesifikasi teknis mentah yang diinginkan pembeli.",
-      isCompleted: currentStepId > 1
-    },
     {
       id: 2,
       title: "Offer Sheet & Quotation (Brosur Penawaran)",
@@ -627,7 +730,7 @@ export default function NegotiationDashboard({
       actor: "Exporter (Trader/Supplier)",
       sender: "Exportir Indonesia",
       receiver: "YOSHIHIDE TRADING CO., Japan",
-      description: "Eksportir membalas dengan formal Quotation Sheet (Surat Penawaran Harga). Berisi paparan spesifikasi keunggulan komoditas, foto laboratorium, harga usulan awal, dan Pelabuhan Muat yang disiapkan.",
+      description: "Eksportir mengirimkan formal Quotation Sheet (Surat Penawaran Harga) sebagai inisiasi minat pembeli. Berisi paparan spesifikasi keunggulan komoditas, foto laboratorium, harga usulan awal, dan Pelabuhan Muat yang disiapkan.",
       importance: "Berstatus sebagai dokumen penawaran marketing/komersial awal. Belum berkekuatan hukum kontrak.",
       isCompleted: currentStepId > 2
     },
@@ -666,73 +769,456 @@ export default function NegotiationDashboard({
     }
   ];
 
+  const traderUser = mockUsers.find(u => u.role === 'Trader');
+  const buyerUser = mockUsers.find(u => u.role === 'Buyer');
+
+  const renderDocumentContent = (side: 'buyer' | 'trader') => {
+    return (
+      <div className="space-y-4">
+        {/* STAGE 1: INQUIRY (Letter of Intent) */}
+        {currentStepId === 1 && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="border-b border-dashed border-slate-300 pb-3">
+              <h5 className="font-bold text-slate-900 text-xs">YOSHIHIDE TRADING CO., LTD.</h5>
+              <p className="text-[9px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
+              <p className="text-[9px] text-slate-400">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
+            </div>
+            <div className="text-right text-[9px] text-slate-500">
+              <p className="font-bold">Doc Ref: YT-LOI/2026/04</p>
+              <p>Date: June 15, 2026</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold text-slate-900">TO: PT MULTI RAKSA MADANI</p>
+              <p className="font-bold text-[11px] underline text-indigo-900">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
+              <p className="leading-relaxed text-slate-600">
+                Dear Multi Raksa Madani Exports Team,
+              </p>
+              <p className="leading-relaxed text-slate-600">
+                We herewith officially express our strong interest to purchase high-quality Indonesian commodities. Based on your repute, we would like to request a detailed specifications list and a price proposal for:
+              </p>
+              <div className="p-2 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[9.5px]">
+                • Commodity: {selectedProduct.name}<br />
+                • Target Volume: {quantity} MT (Metrik Ton)<br />
+                • Target Incoterms: FOB Jakarta Port<br />
+                • Price Guideline Needed: USD / Metric Ton
+              </div>
+              <p className="leading-relaxed text-slate-600">
+                Kindly send us your Official Quotation Sheet along with laboratory test certifications (COA) and cargo load-time estimates. We look forward to a sustainable mutual trade relationship.
+              </p>
+
+              {/* List attachments in document paper */}
+              {loiAttachment.length > 0 && (
+                <div className="p-2.5 bg-white rounded-lg border border-slate-200 mt-3 space-y-1.5 text-left">
+                  <p className="font-bold text-[8.5px] uppercase text-slate-500 tracking-wider flex items-center gap-1">
+                    <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                    ATTACHED DOCUMENTS (CLIENT-SIDE UPLOADS):
+                  </p>
+                  <div className="space-y-1">
+                    {loiAttachment.map((file, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-slate-700 text-[8.5px] font-bold">
+                        <span className="text-[7.5px] bg-slate-250 text-slate-750 px-1 py-0.2 rounded font-black uppercase font-mono">{file.name.split('.').pop() || 'PDF'}</span>
+                        <span className="truncate max-w-[180px]">{file.name}</span> 
+                        <span className="text-slate-400">({file.size})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              <span className="text-slate-400 text-[8px] italic">Signed digitally by Kenji Yoshihide (Director)</span>
+              {side === 'trader' ? (
+                <button 
+                  onClick={() => updateStepIdAndBubble(2)}
+                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                >
+                  Balas Dengan Quotation →
+                </button>
+              ) : (
+                <span className="text-indigo-600 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">LOI Terkirim ✓</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 2: OFFER SHEET & QUOTATION */}
+        {currentStepId === 2 && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="border-b border-dashed border-slate-300 pb-3">
+              <h5 className="font-bold text-slate-900 text-xs">PT MULTI RAKSA MADANI</h5>
+              <p className="text-[9px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+              <p className="text-[9px] text-slate-400">Email: export@multiraksamaradani.co.id | Tax ID (NPWP): 01.993.44.22</p>
+            </div>
+            <div className="text-right text-[9px] text-slate-500">
+              <p className="font-bold">Doc Ref: AQ-QTN/2026/102</p>
+              <p>Date: June 17, 2026</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-bold text-slate-900">TO: YOSHIHIDE TRADING CO., LTD. (Tokyo, Japan)</p>
+              <p className="font-bold text-[11px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
+              <p className="leading-relaxed text-slate-650">
+                Thank you for your LOI interest YT-LOI/2026/04. We are delighted to submit our best factory offering pricing & parameters below:
+              </p>
+              <div className="bg-white rounded border border-slate-205 overflow-hidden">
+                <div className="p-2 bg-slate-100 border-b border-slate-200 flex justify-between font-bold text-slate-800">
+                  <span>ITEM / SPECIFICATION</span>
+                  <span>OFFER PRICE</span>
+                </div>
+                <div className="p-2 text-[9px] space-y-1 text-left">
+                  <p className="font-bold text-slate-900">{selectedProduct.name}</p>
+                  <p className="text-slate-500 leading-snug text-[8.5px]">Specification: {selectedProduct.specification}</p>
+                  <p className="text-slate-500 font-bold text-[8.5px]">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
+                  <div className="pt-1 flex justify-between border-t border-slate-100 font-bold text-indigo-950">
+                    <span>Quantity: {quantity} MT</span>
+                    <span>USD ${pricePerUnit.toLocaleString('en-US')} / MT</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[8px] text-slate-500 text-left">
+                <div>
+                  <strong>• Port of Loading:</strong> Tanjung Priok Port, Jakarta<br />
+                  <strong>• Delivery Lead time:</strong> 14 Days after Payment
+                </div>
+                <div>
+                  <strong>• Packing Standards:</strong> PP Bags / Outer Carton box<br />
+                  <strong>• Inspection:</strong> SGS or Sucofindo verified
+                </div>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              <span className="text-slate-400 text-[8px] italic">Issued by: Devisa Dagang Ekspor Indonesia</span>
+              {side === 'buyer' ? (
+                <button 
+                  onClick={() => updateStepIdAndBubble(3)}
+                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                >
+                  Naikkan Jadi Proforma Invoice →
+                </button>
+              ) : (
+                <span className="text-indigo-600 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">Quotation Dikirim ✓</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 4: NEGOTIASI & COUNTER-OFFER */}
+        {currentStepId === 4 && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="border-b border-dashed border-slate-300 pb-2">
+              <h5 className="font-bold text-orange-955 text-xs flex items-center gap-1">
+                <span className="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block animate-pulse"></span>
+                TABEL MONITORING NEGOSIASI & COUNTER-OFFER
+              </h5>
+              <p className="text-[9px] text-slate-500">Tawar-menawar klausa dokumen sebelum L/C dibuka secara legal.</p>
+            </div>
+
+            <div className="space-y-2.5 text-left">
+              
+              {/* Live negotiation chat 1 */}
+              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
+                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                  <span>Sanggahan 1: Penurunan Harga Per Unit</span>
+                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[7px]">Menunggu Keputusan</span>
+                </div>
+                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                  &ldquo;Yoshihide Trading Co. meminta diskon khusus. Mereka menawar harga diturunkan ke <strong>USD ${Math.max(10, pricePerUnit - 100).toLocaleString('en-US')} / MT</strong> karena ini merupakan order perdana.&rdquo;
+                </p>
+                <button 
+                  onClick={() => {
+                    setPricePerUnit(Math.max(10, pricePerUnit - 100));
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                >
+                  ✓ Terima Diskon (Ganti Harga Real-time)
+                </button>
+              </div>
+
+              {/* Live negotiation chat 2 */}
+              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
+                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                  <span>Sanggahan 2: Syarat Pengiriman (Incoterms)</span>
+                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[7px]">Menunggu Keputusan</span>
+                </div>
+                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                  &ldquo;Pembeli lebih memilih penawaran <strong>CIF Tokyo Port</strong> agar mereka tidak perlu repot mencari kapal kontainer sendiri di Tanjung Priok.&rdquo;
+                </p>
+                <button 
+                  onClick={() => {
+                    setIncoterms('CIF Tokyo Port, Japan (Incoterms 2020)');
+                    setPortOfDischarge('Port of Tokyo, Japan');
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                >
+                  ✓ Setujui CIF Tokyo (Ubah Struktur Ongkos)
+                </button>
+              </div>
+
+              {/* Live negotiation chat 3 */}
+              <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
+                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                  <span>Sanggahan 3: Pilihan Metode Pembayaran</span>
+                  <span className="bg-emerald-100 text-emerald-850 px-1.5 py-0.2 rounded font-black font-mono text-[7px]">✓ Direkomendasikan Bank</span>
+                </div>
+                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                  &ldquo;Gunakan sistem prabayar/DP atau L/C term di dalam PI agar devisa terjamin otomatis sebelum proses logistik pengiriman.&rdquo;
+                </p>
+                <button 
+                  onClick={() => {
+                    setPaymentTerms('100% Sight Letter of Credit (L/C Irrevocable)');
+                  }}
+                  className="bg-slate-700 hover:bg-slate-850 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                >
+                  ✓ Gunakan 100% L/C Irrevocable
+                </button>
+              </div>
+
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+              <span className="text-[8px] text-slate-400 font-bold">Klausul di atas akan langsung meng-update draf PI ekspor Anda</span>
+              {side === 'trader' ? (
+                <button 
+                  onClick={() => updateStepIdAndBubble(5)}
+                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                >
+                  Kunci & Ke Meja TTD Bilateral →
+                </button>
+              ) : (
+                <span className="text-orange-600 text-[9px] font-bold uppercase tracking-wider bg-orange-50 px-2.5 py-1 rounded border border-orange-150">Dalam Sesi Diskusi 💬</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 3 & 5: PROFORMA INVOICE FRAME */}
+        {(currentStepId === 3 || currentStepId === 5) && (
+          <>
+            {/* Sheet Header */}
+            <div className="flex justify-between items-start border-b border-dashed border-slate-300 pb-3">
+              <div>
+                <h5 className="font-bold text-slate-900 text-xs">PROFORMA INVOICE</h5>
+                <p className="text-[9px] text-slate-400 mt-0.5">PT MULTI RAKSA MADANI</p>
+                <p className="text-[9px] text-slate-400">Jakarta, Indonesia</p>
+              </div>
+              <div className="text-right col-span-4 ml-auto">
+                <p className="font-bold text-slate-900">No: PFI/EFI-2026/8892</p>
+                <p className="text-slate-500">Date: June 20, 2026</p>
+              </div>
+            </div>
+
+            {/* Parties Block */}
+            <div className="grid grid-cols-2 gap-2 text-[9px] text-left">
+              <div className={`bg-white p-2 rounded-md border text-left ${side === 'trader' ? 'border-indigo-400 bg-indigo-50/20' : 'border-slate-200'}`}>
+                <span className="font-black uppercase text-[8px] text-indigo-800 block mb-0.5">1. SELLER / SHIPPER</span>
+                <p className="font-bold text-slate-900 text-[9px]">PT MULTI RAKSA MADANI</p>
+                <p className="text-slate-500 mt-0.5 leading-tight text-[8px]">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+              </div>
+              <div className={`bg-white p-2 rounded-md border text-left ${side === 'buyer' ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200'}`}>
+                <span className="font-black uppercase text-[8px] text-amber-800 block mb-0.5">2. BUYER / IMPORTER</span>
+                <p className="font-bold text-slate-900 text-[9px]">{buyerCompany}</p>
+                <p className="text-slate-500 mt-0.5 leading-tight text-[8px]">{buyerAddress}</p>
+              </div>
+            </div>
+
+            {/* Cargo specs table */}
+            <div className="bg-white rounded-md border border-slate-200 overflow-hidden text-left">
+              <div className="bg-slate-100 px-2 py-1.5 font-bold grid grid-cols-12 border-b border-slate-200 text-slate-800 text-[8px]">
+                <span className="col-span-6 text-left">COMMODITY & SPECIFICATION</span>
+                <span className="col-span-2 text-right font-bold">QTY</span>
+                <span className="col-span-2 text-right font-bold">PRICE</span>
+                <span className="col-span-2 text-right font-bold">TOTAL</span>
+              </div>
+              
+              <div className="p-2 grid grid-cols-12 border-b border-slate-100 items-start text-slate-900 leading-tight">
+                <span className="col-span-6">
+                  <strong className="text-slate-955 block">{selectedProduct.name}</strong>
+                  <span className="text-[8px] text-slate-400 block mt-0.5">H.S. CODE: {selectedProduct.hsCode}</span>
+                  <span className="text-[8px] text-slate-400 block">Origin: {selectedProduct.origin}</span>
+                </span>
+                <span className="col-span-2 text-right font-semibold">{quantity} MT</span>
+                <span className="col-span-2 text-right font-semibold">${pricePerUnit.toLocaleString('en-US')}</span>
+                <span className="col-span-2 text-right font-black text-indigo-900">${totalPrice.toLocaleString('en-US')}</span>
+              </div>
+              
+              <div className="bg-slate-50 px-2 py-1.5 text-right font-bold text-slate-900 text-[9px]">
+                TOTAL AMOUNT ({incoterms.split(' ')[0]}): <span className="text-indigo-900 text-xs font-black">${totalPrice.toLocaleString('en-US')}.00 USD</span>
+              </div>
+            </div>
+
+            {/* Commercial Terms & Banking Details */}
+            <div className="bg-white p-2 rounded-md border border-slate-200 space-y-1.5 text-[8.5px] text-left">
+              <h6 className="font-black text-slate-800 uppercase text-indigo-800 tracking-wider">COMMERCIAL & BANKING CLAUSES :</h6>
+              
+              <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
+                <span className="col-span-4 font-bold text-slate-500">INCOTERMS:</span>
+                <span className="col-span-8 text-slate-900 font-bold">{incoterms}</span>
+              </div>
+
+              <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
+                <span className="col-span-4 font-bold text-slate-500">PAYMENT SYSTEM:</span>
+                <span className="col-span-8 text-indigo-950 font-bold">{paymentTerms}</span>
+              </div>
+
+              <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
+                <span className="col-span-4 font-bold text-slate-500">PORT OF DISCHARGE:</span>
+                <span className="col-span-8 text-slate-900">{portOfDischarge}</span>
+              </div>
+
+              <div className="grid grid-cols-12 gap-1 text-[8px]">
+                <span className="col-span-4 font-bold text-slate-500">BENEFICIARY BANK:</span>
+                <span className="col-span-8 text-slate-750 leading-tight">
+                  <strong>BANK NEGARA INDONESIA (BNIDEJAX)</strong><br />
+                  ACC NO: 1100-2026-9918 USD DEV CORPORATE<br />
+                  BENEFICIARY: PT MULTI RAKSA MADANI
+                </span>
+              </div>
+            </div>
+
+            {/* Bilateral Signature Boxes */}
+            <div className="pt-2">
+              <div className="grid grid-cols-2 gap-4">
+                
+                {/* Seller Sign Box */}
+                <div className={`border rounded-xl p-2 text-center h-[90px] flex flex-col justify-between bg-white relative overflow-hidden transition-all duration-300 ${
+                  isExporterSigned 
+                    ? 'border-emerald-300 bg-emerald-50/10' 
+                    : side === 'trader'
+                      ? 'border-dashed border-indigo-400 ring-2 ring-indigo-200 ring-offset-1'
+                      : 'border-dashed border-slate-200'
+                }`}>
+                  <span className="text-[7.5px] font-black uppercase text-slate-400 block mb-1">APPROVED BY EXPORTER:</span>
+                  
+                  {isExporterSigned ? (
+                    <motion.div 
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="my-auto flex flex-col items-center justify-center text-emerald-600"
+                    >
+                      <span className="font-mono text-[8px] tracking-wide font-black border border-emerald-500 px-1 py-0.5 uppercase transform -rotate-6 bg-white/95 text-center shadow-3xs leading-none">
+                        APPROVED - RAKSA MADANI
+                      </span>
+                      <span className="text-[7px] text-slate-400 mt-1">Eksportir Signed ✓</span>
+                    </motion.div>
+                  ) : (
+                    <div className="my-auto text-[8px] text-slate-350 font-bold animate-pulse">
+                      {side === 'trader' ? '👉 [KLIK TTD DI BAWAH]' : '[Belum Ditandatangani]'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Buyer Sign Box */}
+                <div className={`border rounded-xl p-2 text-center h-[90px] flex flex-col justify-between bg-white relative overflow-hidden transition-all duration-300 ${
+                  isBuyerSigned 
+                    ? 'border-indigo-300 bg-indigo-50/10' 
+                    : side === 'buyer'
+                      ? 'border-dashed border-amber-400 ring-2 ring-amber-200 ring-offset-1'
+                      : 'border-dashed border-slate-200'
+                }`}>
+                  <span className="text-[7.5px] font-black uppercase text-slate-400 block mb-1">COUNTERSIGNED BY BUYER:</span>
+                  
+                  {isBuyerSigned ? (
+                    <motion.div 
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="my-auto flex flex-col items-center justify-center text-indigo-600"
+                    >
+                      <span className="font-mono text-[8px] tracking-wide font-black border border-indigo-500 px-1 py-0.5 uppercase transform rotate-6 bg-white/95 text-center shadow-3xs leading-none">
+                        ACCEPTED - YOSHIHIDE CO.
+                      </span>
+                      <span className="text-[7px] text-slate-400 mt-1">Buyer Signed ✓</span>
+                    </motion.div>
+                  ) : (
+                    <div className="my-auto text-[8px] text-slate-350 font-bold animate-pulse">
+                      {side === 'buyer' ? '👉 [KLIK TTD DI BAWAH]' : '[Belum Ditandatangani]'}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      
-      {/* Dynamic Success Agreement Banner - Goal! */}
-      {isExporterSigned && isBuyerSigned && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-6 rounded-2.5xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border-2 border-emerald-500/50 relative overflow-hidden"
-        >
-          {/* Decorative background circle */}
-          <div className="absolute -right-32 -top-32 w-80 h-80 rounded-full bg-emerald-700/10 animate-spin-slow pointer-events-none"></div>
-          
-          <div className="space-y-2 text-left relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="bg-emerald-950/40 text-emerald-200 border border-emerald-500/20 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-                ✓ DEAL AGREEMENT GOAL!
-              </span>
-            </div>
-            <h4 className="text-base font-black uppercase tracking-wide">
-              Kesepakatan Dagang Selesai Ditandatangani!
-            </h4>
-            <p className="text-xs text-emerald-100/95 leading-relaxed max-w-2xl">
-              Proforma Invoice (PI) telah resmi disahkan oleh eksportir PT Samudera &amp; buyer {buyerCompany} untuk komoditas <strong>{selectedProduct.name} ({quantity} {selectedProduct.unit})</strong>. 
-              {shipment 
-                ? "Klik tombol di samping untuk menyatakan kontrak penjualan sah dan resmi melaju ke tahap persiapan logistik & pengadaan barang oleh para petani!"
-                : "Klik tombol peluncur sekarang untuk mengaktifkan bongkar muat kontainer dan melihat pelayaran kapal GPS aktif secara real-time di laut lepas!"}
-            </p>
+
+      {/* PANDUAN CARA NEGOSIASI DAN QUICK SWITCH AKUN */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-5 shadow-xs text-left">
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200 text-amber-700 shrink-0 mt-0.5">
+            <HelpCircle className="w-6 h-6 text-amber-600 animate-bounce" />
           </div>
-          
-          <button
-            onClick={() => {
-              if (shipment && onUpdateShipmentFromDeal) {
-                onUpdateShipmentFromDeal(shipment.id, {
-                  quantity,
-                  pricePerUnit,
-                  paymentTerms,
-                  incoterms,
-                  portOfDischarge,
-                  buyerCompany,
-                  nextStep: 'Sourcing',
-                  comments: `Kontrak Penjualan & Proforma Invoice (PI) resmi disahkan secara bilateral. Transaksi disepakati dan dialirkan ke tahap penyediaan barang (Sourcing oleh Supplier).`
-                });
-              } else if (onDealCreated) {
-                onDealCreated({
-                  product: selectedProduct,
-                  quantity,
-                  pricePerUnit,
-                  paymentTerms,
-                  incoterms,
-                  portOfDischarge,
-                  buyerCompany
-                });
-              }
-            }}
-            className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-emerald-800 text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95 flex items-center gap-2 shrink-0 hover:-translate-y-0.5 z-10 cursor-pointer"
-          >
-            <span>{shipment ? "Sahkan & Mulai Logistik (Sourcing) →" : "Luncurkan Kapal GPS Aktif →"}</span>
-          </button>
-        </motion.div>
-      )}
+          <div className="space-y-2 flex-1">
+            <h3 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-2">
+              <span>Bagaimana Cara Eksportir &amp; Importir Bernegosiasi di Sini?</span>
+              <span className="text-[10px] bg-amber-200 text-amber-800 font-black px-2 py-0.5 rounded uppercase">Simulasi Bilateral</span>
+            </h3>
+            <p className="text-slate-600 text-xs leading-relaxed font-sans font-medium">
+              Aplikasi ini mensimulasikan perundingan ekspor riil yang bersifat <strong>Bilateral (Dua Arah)</strong>. 
+              Beberapa aksi (seperti merubah harga penawaran balik, mengunggah berkas LOI, atau menandatangani draf Proforma Invoice/Sales Contract) membutuhkan peran akun yang sesuai. 
+              Gunakan tombol di bawah ini untuk <strong>beralih peran secara instan</strong> guna menyelesaikan seluruh rangkaian negosiasi!
+            </p>
+            
+            <div className="bg-white/80 backdrop-blur-3xs rounded-xl p-4 border border-amber-150 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-3">
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-black tracking-wider text-slate-450 block">Akun Anda Saat Ini:</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs text-indigo-600 font-bold shrink-0">
+                    {currentUser?.name?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 text-xs block">{currentUser?.name || 'Belum Login'}</span>
+                    <span className="text-[10px] text-slate-500 font-medium block">
+                      Peran: <strong className="text-indigo-600">{currentUser?.role || 'Umum'}</strong> • {currentUser?.companyName || 'Instansi Umum'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2.5">
+                {traderUser && onSelectUser && (
+                  <button
+                    onClick={() => onSelectUser(traderUser)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                      currentUser?.id === traderUser.id
+                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 shadow-3xs'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${currentUser?.id === traderUser.id ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400'}`} />
+                    <span>Peran: Eksportir (Trader)</span>
+                  </button>
+                )}
+
+                {buyerUser && onSelectUser && (
+                  <button
+                    onClick={() => onSelectUser(buyerUser)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                      currentUser?.id === buyerUser.id
+                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 shadow-3xs'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${currentUser?.id === buyerUser.id ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400'}`} />
+                    <span>Peran: Importir (Buyer)</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Main Grid Layout for Interactive Workstation */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {/* Column 1: Interactive Workflow Pipeline Dashboard (7 Cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* Column 1: Interactive Workflow Pipeline Dashboard (6 Cols) */}
+        <div className="lg:col-span-6 lg:order-2 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs text-left">
             
             {/* Active Step Panel Detail Card */}
@@ -784,51 +1270,55 @@ export default function NegotiationDashboard({
 
                     {/* Buyer File Attachment Flow (Step 1 Special Interactive Feature) */}
                     {step.id === 1 && (
-                      <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                            Lampiran Dokumen Resmi Pembeli (LOI / Inquiry)
-                          </span>
-                          <span className="text-[8px] bg-indigo-50 text-indigo-600 border border-indigo-100 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                            Interactive Attachment
-                          </span>
+                      <div className="space-y-4 pt-1">
+                        {/* Beautiful incoming LOI card */}
+                        <div className="bg-indigo-50 border border-indigo-150 rounded-xl p-4 space-y-3 shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                              Letter of Intent (LOI) Masuk
+                            </span>
+                            <span className="text-[8px] bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              Inquiry Aktif
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-700 leading-relaxed font-semibold">
+                            Importir luar negeri <strong>Yoshihide Trading Co., Ltd. (Japan)</strong> telah mengirimkan dokumen permintaan pembelian resmi untuk komoditi Anda.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setIsLoiModalOpen(true)}
+                            className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-xs rounded-xl tracking-wider flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Buka &amp; Tinjau LOI Resmi
+                          </button>
                         </div>
-                        
-                        <p className="text-[10.5px] text-slate-650 leading-relaxed font-semibold">
-                          Sebagai Buyer, Anda dapat melampirkan file dokumen Letter of Intent resmi (misalkan hasil scan PDF berstempel) langsung di fase awal negosiasi ini untuk ditinjau oleh Trader:
-                        </p>
 
-                        {/* Interactive Dropzone */}
-                        <div 
-                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                          onDragLeave={() => setDragOver(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setDragOver(false);
-                            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                              const file = e.dataTransfer.files[0];
-                              const newFile = {
-                                name: file.name,
-                                size: `${(file.size / 1024).toFixed(0)} KB`,
-                                date: new Date().toLocaleDateString('id-ID')
-                              };
-                              setLoiAttachment(prev => [...prev, newFile]);
-                            }
-                          }}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-250 ${
-                            dragOver 
-                              ? 'border-indigo-600 bg-indigo-50/50 scale-[0.99] shadow-inner' 
-                              : 'border-slate-200 hover:border-indigo-400 bg-slate-50/20 hover:bg-slate-50/60'
-                          }`}
-                        >
-                          <input 
-                            type="file" 
-                            id="loi-file-upload-dashboard" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files.length > 0) {
-                                const file = e.target.files[0];
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                              Lampiran Dokumen Resmi Pembeli (LOI / Inquiry)
+                            </span>
+                            <span className="text-[8px] bg-indigo-50 text-indigo-600 border border-indigo-100 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              Interactive Attachment
+                            </span>
+                          </div>
+                          
+                          <p className="text-[10.5px] text-slate-650 leading-relaxed font-semibold">
+                            Sebagai Buyer, Anda dapat melampirkan file dokumen Letter of Intent resmi (misalkan hasil scan PDF berstempel) langsung di fase awal negosiasi ini untuk ditinjau oleh Trader:
+                          </p>
+
+                          {/* Interactive Dropzone */}
+                          <div 
+                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                            onDragLeave={() => setDragOver(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setDragOver(false);
+                              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                const file = e.dataTransfer.files[0];
                                 const newFile = {
                                   name: file.name,
                                   size: `${(file.size / 1024).toFixed(0)} KB`,
@@ -837,68 +1327,94 @@ export default function NegotiationDashboard({
                                 setLoiAttachment(prev => [...prev, newFile]);
                               }
                             }}
-                          />
-                          <label htmlFor="loi-file-upload-dashboard" className="cursor-pointer block space-y-1.5">
-                            <div className="mx-auto w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
-                              <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                              </svg>
-                            </div>
-                            <p className="text-[10.5px] font-bold text-slate-800">Klik / Seret file PDF atau gambar LOI ke sini</p>
-                            <p className="text-[9px] text-slate-400">PDF, Word, JPG, atau PNG (Maks. 10 MB)</p>
-                          </label>
-                        </div>
-
-                        {/* File Listing block */}
-                        {loiAttachment.length > 0 && (
-                          <div className="space-y-1.5 pt-1">
-                            <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Dokumen Lampiran Aktif ({loiAttachment.length}):</span>
-                            <div className="space-y-1">
-                              {loiAttachment.map((file, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/40 border border-emerald-100 text-slate-800 text-[10px]">
-                                  <div className="flex items-center gap-1.5 truncate pr-3">
-                                    <div className="px-1.5 py-0.5 bg-emerald-600 text-white rounded text-[8px] font-black uppercase tracking-wider shrink-0">
-                                      {file.name.split('.').pop() || 'PDF'}
-                                    </div>
-                                    <span className="truncate font-bold text-slate-800" title={file.name}>{file.name}</span>
-                                    <span className="text-[8.5px] text-slate-400 font-bold shrink-0">({file.size})</span>
-                                  </div>
-                                  <button 
-                                    onClick={() => setLoiAttachment(prev => prev.filter((_, i) => i !== idx))}
-                                    className="text-red-500 hover:text-red-700 font-bold text-[9px] px-2 py-0.5 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    Hapus
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
+                            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-250 ${
+                              dragOver 
+                                ? 'border-indigo-600 bg-indigo-50/50 scale-[0.99] shadow-inner' 
+                                : 'border-slate-200 hover:border-indigo-400 bg-slate-50/20 hover:bg-slate-50/60'
+                            }`}
+                          >
+                            <input 
+                              type="file" 
+                              id="loi-file-upload-dashboard" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  const file = e.target.files[0];
+                                  const newFile = {
+                                    name: file.name,
+                                    size: `${(file.size / 1024).toFixed(0)} KB`,
+                                    date: new Date().toLocaleDateString('id-ID')
+                                  };
+                                  setLoiAttachment(prev => [...prev, newFile]);
+                                }
+                              }}
+                            />
+                            <label htmlFor="loi-file-upload-dashboard" className="cursor-pointer block space-y-1.5">
+                              <div className="mx-auto w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+                                <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                              </div>
+                              <p className="text-[10.5px] font-bold text-slate-800">Klik / Seret file PDF atau gambar LOI ke sini</p>
+                              <p className="text-[9px] text-slate-400">PDF, Word, JPG, atau PNG (Maks. 10 MB)</p>
+                            </label>
                           </div>
-                        )}
+
+                          {/* File Listing block */}
+                          {loiAttachment.length > 0 && (
+                            <div className="space-y-1.5 pt-1">
+                              <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Dokumen Lampiran Aktif ({loiAttachment.length}):</span>
+                              <div className="space-y-1">
+                                {loiAttachment.map((file, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/40 border border-emerald-100 text-slate-800 text-[10px]">
+                                    <div className="flex items-center gap-1.5 truncate pr-3">
+                                      <div className="px-1.5 py-0.5 bg-emerald-600 text-white rounded text-[8px] font-black uppercase tracking-wider shrink-0">
+                                        {file.name.split('.').pop() || 'PDF'}
+                                      </div>
+                                      <span className="truncate font-bold text-slate-800" title={file.name}>{file.name}</span>
+                                      <span className="text-[8.5px] text-slate-400 font-bold shrink-0">({file.size})</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => setIsLoiModalOpen(true)}
+                                        className="text-indigo-650 hover:text-indigo-800 font-extrabold text-[9.5px] px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
+                                      >
+                                        Buka LOI
+                                      </button>
+                                      <button 
+                                        onClick={() => setLoiAttachment(prev => prev.filter((_, i) => i !== idx))}
+                                        className="text-red-500 hover:text-red-700 font-bold text-[9px] px-2 py-0.5 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
+                                      >
+                                        Hapus
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 
                     {/* Step Controls to advance user through simulation */}
-                    <div className="pt-2 flex justify-between items-center">
-                      <button
-                        onClick={() => currentStepId > 1 && updateStepIdAndBubble(currentStepId - 1)}
-                        disabled={currentStepId === 1}
-                        className="text-xs text-slate-550 hover:text-slate-800 disabled:opacity-40 select-none font-bold"
-                      >
-                        ← Tahap Sebelumnya
-                      </button>
-                      
-                      {step.id < 5 ? (
+                    <div className="pt-2 flex flex-col gap-2.5 items-stretch">
+                      {step.id >= 2 && step.id <= 4 && (
                         <button
-                          onClick={() => updateStepIdAndBubble(currentStepId + 1)}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-xs py-2 px-3.5 rounded-lg flex items-center gap-1.5 transition-all"
+                          type="button"
+                          onClick={() => setIsTawaranModalOpen(true)}
+                          className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-xs rounded-xl tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
                         >
-                          Lanjutkan Simulasi
-                          <ChevronRight className="w-4 h-4" />
+                          <Building2 className="w-4 h-4" />
+                          Sesuaikan Parameter / Kirim Penawaran Baru
                         </button>
-                      ) : (
-                        <div className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                      )}
+                      
+                      {step.id >= 5 && (
+                        <div className="text-xs font-bold text-emerald-700 flex items-center justify-center gap-1.5 bg-emerald-50 border border-emerald-150 p-3 rounded-xl">
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          Tahap Final: Hubungkan Hub Tanda Tangan!
+                          Tahap Final: Hubungkan Hub Tanda Tangan Bilateral Di Bawah!
                         </div>
                       )}
                     </div>
@@ -910,7 +1426,9 @@ export default function NegotiationDashboard({
           </div>
 
           {/* Form Configurator: Let users change data on the fly and witness impact */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs text-left">
+          {currentStepId !== 1 && (
+            <>
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs text-left">
             <h3 className="text-sm font-black uppercase text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-500" />
               Sesuaikan Parameter Transaksi (Interactive Negotiator)
@@ -1240,91 +1758,13 @@ export default function NegotiationDashboard({
               })()}
             </div>
           </div>
+            </>
+          )}
 
         </div>
 
-        {/* Column 2: Document Simulator Preview & Joint Signature Control (5 Cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Dual Signature Controls Panel */}
-          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-5 text-white border border-slate-850 shadow-md text-left">
-            <div className="flex items-center gap-2 pb-2.5 border-b border-indigo-850">
-              <FileSignature className="w-4.5 h-4.5 text-indigo-300" />
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-100">Hub Tanda Tangan Bilateral</h3>
-                <p className="text-[10px] text-indigo-300">Harus ditandatangani 2 Pihak agar Proforma Invoice Sah!</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 py-4 text-xs font-medium">
-              
-              {/* Exporter Signature Button */}
-              <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
-                <div>
-                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 1: Eksportir</span>
-                  <span className="font-bold text-slate-100 block">PT MULTI RAKSA MADANI</span>
-                </div>
-                <button
-                  disabled={isLocked}
-                  onClick={() => !isLocked && setIsExporterSigned(!isExporterSigned)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
-                    isLocked 
-                      ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
-                      : isExporterSigned 
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95' 
-                        : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95'
-                  }`}
-                >
-                  {isLocked ? (
-                    <>
-                      <Lock className="w-3 h-3 text-emerald-300" />
-                      <span>Terverifikasi</span>
-                    </>
-                  ) : (
-                    isExporterSigned ? '✓ Sudah TTD' : 'Tanda Tangan'
-                  )}
-                </button>
-              </div>
-
-              {/* Buyer Signature Button */}
-              <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
-                <div>
-                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 2: Buyer</span>
-                  <span className="font-bold text-slate-100 block">{buyerCompany}</span>
-                </div>
-                <button
-                  disabled={isLocked}
-                  onClick={() => !isLocked && setIsBuyerSigned(!isBuyerSigned)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
-                    isLocked 
-                      ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
-                      : isBuyerSigned 
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95' 
-                        : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95'
-                  }`}
-                >
-                  {isLocked ? (
-                    <>
-                      <Lock className="w-3 h-3 text-emerald-300" />
-                      <span>Terverifikasi</span>
-                    </>
-                  ) : (
-                    isBuyerSigned ? '✓ Sudah TTD' : 'Tanda Tangan'
-                  )}
-                </button>
-              </div>
-
-              {/* Joint Signature Info Box */}
-              <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-900 text-[11px] text-indigo-200 leading-relaxed">
-                <div className="flex gap-2 font-black uppercase text-indigo-300 tracking-wider text-[10px] items-center mb-1">
-                  <BadgeInfo className="w-4 h-4 text-indigo-455 shrink-0" />
-                  Bagaimana Bilateral Berdampak?
-                </div>
-                Jika <strong>kedua pihak telah menandatangani</strong>, status Proforma Invoice berubah menjadi <span className="text-emerald-300 font-extrabold uppercase">BILATERALLY AGREED</span>. Lembaran ini sekarang sah diajukan ke Bank Devisa Luar Negeri untuk penerbitan dana pelindung L/C.
-              </div>
-
-            </div>
-          </div>
+        {/* Column 2: Document Simulator Preview & Joint Signature Control (6 Cols) */}
+        <div className="lg:col-span-6 lg:order-1 space-y-6">
 
           {/* Interactive Proforma Invoice Document Frame */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm text-left">
@@ -1372,7 +1812,7 @@ export default function NegotiationDashboard({
                     type="button"
                     title="Zoom Out"
                     onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))}
-                    className="p-1 px-2.5 rounded bg-white hover:bg-slate-50 border border-slate-250 font-black flex items-center justify-center gap-1 transition-colors hover:text-indigo-600 text-slate-705 active:scale-95 shadow-3xs"
+                    className="p-1 px-2.5 rounded bg-white hover:bg-slate-50 border border-slate-250 font-black flex items-center justify-center gap-1 transition-colors hover:text-indigo-600 text-slate-705 active:scale-95 shadow-3xs cursor-pointer"
                   >
                     <ZoomOut className="w-3.5 h-3.5" />
                     <span>Zoom Out</span>
@@ -1381,7 +1821,7 @@ export default function NegotiationDashboard({
                     type="button"
                     title="Zoom In"
                     onClick={() => setScale(prev => Math.min(2.5, prev + 0.1))}
-                    className="p-1 px-2.5 rounded bg-white hover:bg-slate-50 border border-slate-250 font-black flex items-center justify-center gap-1 transition-colors hover:text-indigo-600 text-slate-705 active:scale-95 shadow-3xs"
+                    className="p-1 px-2.5 rounded bg-white hover:bg-slate-50 border border-slate-250 font-black flex items-center justify-center gap-1 transition-colors hover:text-indigo-600 text-slate-705 active:scale-95 shadow-3xs cursor-pointer"
                   >
                     <ZoomIn className="w-3.5 h-3.5" />
                     <span>Zoom In</span>
@@ -1393,7 +1833,7 @@ export default function NegotiationDashboard({
                       setScale(1.0);
                       setPosition({ x: 0, y: 0 });
                     }}
-                    className="p-1 px-2.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-black flex items-center justify-center gap-1 transition-colors active:scale-95 text-[11px]"
+                    className="p-1 px-2.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-black flex items-center justify-center gap-1 transition-colors active:scale-95 text-[11px] cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Reset View</span>
@@ -1401,28 +1841,58 @@ export default function NegotiationDashboard({
                 </div>
               </div>
 
-              {/* Direct Print and Download buttons mapping the user intent */}
+              {/* Direct Print and Download buttons */}
               <div className="flex items-center gap-1.5 self-end md:self-auto">
                 <button
                   type="button"
                   title="Cetak Dokumen"
                   onClick={handlePrint}
-                  className="p-1.5 px-3 rounded-lg bg-emerald-600 font-black uppercase text-white hover:bg-emerald-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs"
+                  className="p-1.5 px-3 rounded-lg bg-emerald-600 font-black uppercase text-white hover:bg-emerald-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Cetak Dokumen</span>
                 </button>
                 <button
                   type="button"
-                  title="Unduh Dokumen HTML"
+                  title="Unduh (.HTML)"
                   onClick={handleDownloadHTML}
-                  className="p-1.5 px-3 rounded-lg bg-indigo-600 font-black uppercase text-white hover:bg-indigo-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs"
+                  className="p-1.5 px-3 rounded-lg bg-indigo-600 font-black uppercase text-white hover:bg-indigo-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Unduh (.HTML)</span>
                 </button>
               </div>
             </div>
+
+            {/* Print/Blocked Popup Warning Banner */}
+            {printBlockedError && (
+              <div className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-900 p-3.5 rounded-xl text-[11px] font-medium flex flex-col md:flex-row items-center justify-between gap-3 shadow-sm border border-amber-250 mb-3 animate-fadeIn text-left leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <span className="text-sm mt-0.5">⚠️</span>
+                  <div>
+                    <strong>Pemberitahuan Sistem Sandbox:</strong> Browser memblokir printer popup karena sandbox keamanan AI Studio.
+                    <div className="mt-1 text-amber-950 font-bold">💡 SOLUSI: Klik tombol abu-abu "Unduh (.HTML)" di kanan, file yang terunduh akan otomatis memicu dialog cetak PDF asli yang sangat rapi saat dibuka di komputer Anda! Atau klik "Buka Tab Baru" untuk cetak langsung.</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all shadow-xs shrink-0 flex items-center gap-1"
+                  >
+                    <span>Tab Baru ↗️</span>
+                  </a>
+                  <button
+                    onClick={() => setPrintBlockedError(false)}
+                    className="p-1 hover:bg-amber-200 rounded text-center text-amber-900 cursor-pointer"
+                    title="Tutup pesan"
+                  >
+                    <X className="w-4 h-4 text-amber-900" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Instruction Banner */}
             <div className="text-[10.5px] text-slate-600 pb-2 select-none flex items-center gap-1 bg-amber-50/50 border border-amber-200/60 rounded-lg p-2.5 mb-3.5">
@@ -1444,367 +1914,587 @@ export default function NegotiationDashboard({
               <div 
                 className="absolute p-4"
                 style={{
-                  width: '100%',
-                  minWidth: '550px',
+                  width: '650px',
+                  minWidth: '650px',
                   transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                   transformOrigin: 'top left',
                   transition: isDragging ? 'none' : 'transform 0.12s ease-out'
                 }}
               >
-
-                {/* Dynamic Simulated Sheet Paper */}
-                <div id="negotiation-document-paper" className="bg-slate-50 p-4 rounded-xl border border-slate-150 font-mono text-[10px] text-slate-700 space-y-4 shadow-3xs">
+                <div 
+                  id="negotiation-document-paper" 
+                  className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 font-mono text-[10px] text-slate-705 space-y-4 relative overflow-hidden min-h-[500px] shadow-xs text-left"
+                >
+                  {/* Subtle Watermark */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.035] select-none">
+                    <div className="text-4xl sm:text-5xl font-black uppercase tracking-widest transform -rotate-45">
+                      {currentUser?.role === 'Buyer' ? 'YOSHIHIDE' : 'RAKSA MADANI'}
+                    </div>
+                  </div>
                   
-                  {/* STAGE 1: INQUIRY (Letter of Intent) */}
-                  {currentStepId === 1 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="border-b border-dashed border-slate-300 pb-3">
-                        <h5 className="font-bold text-slate-900 text-xs">YOSHIHIDE TRADING CO., LTD.</h5>
-                        <p className="text-[9px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
-                        <p className="text-[9px] text-slate-400">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
-                      </div>
-                      <div className="text-right text-[9px] text-slate-500">
-                        <p className="font-bold">Doc Ref: YT-LOI/2026/04</p>
-                        <p>Date: June 15, 2026</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="font-bold text-slate-900">TO: PT MULTI RAKSA MADANI</p>
-                        <p className="font-bold text-[11px] underline">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
-                        <p className="leading-relaxed">
-                          Dear Multi Raksa Madani Exports Team,
-                        </p>
-                        <p className="leading-relaxed">
-                          We herewith officially express our strong interest to purchase high-quality Indonesian commodities. Based on your repute, we would like to request a detailed specifications list and a price proposal for:
-                        </p>
-                        <div className="p-2 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[9.5px]">
-                          • Commodity: {selectedProduct.name}<br />
-                          • Target Volume: {quantity} MT (Metrik Ton)<br />
-                          • Target Incoterms: FOB Jakarta Port<br />
-                          • Price Guideline Needed: USD / Metric Ton
-                        </div>
-                        <p className="leading-relaxed">
-                          Kindly send us your Official Quotation Sheet along with laboratory test certifications (COA) and cargo load-time estimates. We look forward to a sustainable mutual trade relationship.
-                        </p>
-
-                        {/* List attachments in document paper */}
-                        {loiAttachment.length > 0 && (
-                          <div className="p-2.5 bg-white rounded-lg border border-slate-200 mt-3 space-y-1.5 text-left">
-                            <p className="font-bold text-[8.5px] uppercase text-slate-500 tracking-wider flex items-center gap-1">
-                              <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                              ATTACHED DOCUMENTS (CLIENT-SIDE UPLOADS):
-                            </p>
-                            <div className="space-y-1">
-                              {loiAttachment.map((file, i) => (
-                                <div key={i} className="flex items-center gap-1.5 text-slate-700 text-[8.5px] font-bold">
-                                  <span className="text-[7.5px] bg-slate-250 text-slate-750 px-1 py-0.2 rounded font-black uppercase font-mono">{file.name.split('.').pop() || 'PDF'}</span>
-                                  <span className="truncate max-w-[220px]">{file.name}</span> 
-                                  <span className="text-slate-400">({file.size})</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                        <span className="text-slate-400 text-[8px] italic">Signed digitally by Kenji Yoshihide (Director)</span>
-                        <button 
-                          onClick={() => updateStepIdAndBubble(2)}
-                          className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                          Balas Dengan Quotation →
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STAGE 2: OFFER SHEET & QUOTATION */}
-                  {currentStepId === 2 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="border-b border-dashed border-slate-300 pb-3">
-                        <h5 className="font-bold text-slate-900 text-xs">PT MULTI RAKSA MADANI</h5>
-                        <p className="text-[9px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
-                        <p className="text-[9px] text-slate-400">Email: export@multiraksamaradani.co.id | Tax ID (NPWP): 01.993.44.22</p>
-                      </div>
-                      <div className="text-right text-[9px] text-slate-500">
-                        <p className="font-bold">Doc Ref: AQ-QTN/2026/102</p>
-                        <p>Date: June 17, 2026</p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="font-bold text-slate-900">TO: YOSHIHIDE TRADING CO., LTD. (Tokyo, Japan)</p>
-                        <p className="font-bold text-[11px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
-                        <p className="leading-relaxed">
-                          Thank you for your LOI interest YT-LOI/2026/04. We are delighted to submit our best factory offering pricing & parameters below:
-                        </p>
-                        <div className="bg-white rounded border border-slate-205 overflow-hidden">
-                          <div className="p-2 bg-slate-100 border-b border-slate-200 flex justify-between font-bold text-slate-800">
-                            <span>ITEM / SPECIFICATION</span>
-                            <span>OFFER PRICE</span>
-                          </div>
-                          <div className="p-2 text-[9px] space-y-1">
-                            <p className="font-bold text-slate-900">{selectedProduct.name}</p>
-                            <p className="text-slate-500 leading-snug">Specification: {selectedProduct.specification}</p>
-                            <p className="text-slate-500 font-bold">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
-                            <div className="pt-1 flex justify-between border-t border-slate-100 font-bold text-indigo-950">
-                              <span>Quantity: {quantity} MT</span>
-                              <span>USD ${pricePerUnit.toLocaleString('en-US')} / MT</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-[8px] text-slate-500">
-                          <div>
-                            <strong>• Port of Loading:</strong> Tanjung Priok Port, Jakarta<br />
-                            <strong>• Delivery Lead time:</strong> 14 Days after Payment
-                          </div>
-                          <div>
-                            <strong>• Packing Standards:</strong> PP Bags / Outer Carton box<br />
-                            <strong>• Inspection:</strong> SGS or Sucofindo verified
-                          </div>
-                        </div>
-                      </div>
-                      <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                        <span className="text-slate-400 text-[8px] italic">Issued by: Devisa Dagang Ekspor Indonesia</span>
-                        <button 
-                          onClick={() => updateStepIdAndBubble(3)}
-                          className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                          Naikkan Jadi Proforma Invoice →
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STAGE 4: NEGOTIASI & COUNTER-OFFER (Interactive Negotiating Playground) */}
-                  {currentStepId === 4 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="border-b border-dashed border-slate-300 pb-2">
-                        <h5 className="font-bold text-orange-950 text-xs flex items-center gap-1">
-                          <span className="w-2.5 h-2.5 bg-amber-550 rounded-full inline-block animate-pulse"></span>
-                          TABEL MONITORING NEGOSIASI & COUNTER-OFFER
-                        </h5>
-                        <p className="text-[9px] text-slate-455">Tawar-menawar klausa dokumen sebelum L/C dibuka secara legal.</p>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        
-                        {/* Live negotiation chat 1 */}
-                        <div className="bg-white p-3 rounded-lg border border-slate-200">
-                          <div className="flex justify-between items-center text-[8px] font-bold text-indigo-800 mb-1">
-                            <span>Sanggahan 1: Penurunan Harga Per Unit</span>
-                            <span className="bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Menunggu Keputusan</span>
-                          </div>
-                          <p className="text-[9px] text-slate-650 leading-relaxed mb-2">
-                            &ldquo;Yoshihide Trading Co. meminta diskon khusus. Mereka menawar harga diturunkan ke <strong>USD ${Math.max(10, pricePerUnit - 100).toLocaleString('en-US')} / MT</strong> karena ini merupakan order perdana.&rdquo;
-                          </p>
-                          <button 
-                            onClick={() => {
-                              setPricePerUnit(Math.max(10, pricePerUnit - 100));
-                            }}
-                            className="bg-amber-600 hover:bg-amber-700 text-white text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded transition-colors"
-                          >
-                            ✓ Terima Diskon (Ganti Harga Real-time)
-                          </button>
-                        </div>
-
-                        {/* Live negotiation chat 2 */}
-                        <div className="bg-white p-3 rounded-lg border border-slate-200">
-                          <div className="flex justify-between items-center text-[8px] font-bold text-indigo-800 mb-1">
-                            <span>Sanggahan 2: Modifikasi Syarat Pengiriman (Incoterms)</span>
-                            <span className="bg-amber-100 text-amber-800 px-1 py-0.2 rounded">Menunggu Keputusan</span>
-                          </div>
-                          <p className="text-[9px] text-slate-655 leading-relaxed mb-2">
-                            &ldquo;Pembeli lebih memilih penawaran <strong>CIF Tokyo Port</strong> agar mereka tidak perlu repot mencari kapal kontainer sendiri di Tanjung Priok.&rdquo;
-                          </p>
-                          <button 
-                            onClick={() => {
-                              setIncoterms('CIF Tokyo Port, Japan (Incoterms 2020)');
-                              setPortOfDischarge('Port of Tokyo, Japan');
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded transition-colors"
-                          >
-                            ✓ Setujui CIF Tokyo (Ubah Struktur Ongkos)
-                          </button>
-                        </div>
-
-                        {/* Live negotiation chat 3 */}
-                        <div className="bg-white p-3 rounded-lg border border-slate-200">
-                          <div className="flex justify-between items-center text-[8px] font-bold text-indigo-800 mb-1">
-                            <span>Sanggahan 3: Pilihan Metode Pembayaran</span>
-                            <span className="bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded font-black font-mono">✓ Direkomendasikan Bank</span>
-                          </div>
-                          <p className="text-[9px] text-slate-655 leading-relaxed mb-2">
-                            &ldquo;Gunakan sistem prabayar/DP atau L/C term di dalam PI agar devisa terjamin otomatis sebelum proses logistik pengiriman.&rdquo;
-                          </p>
-                          <button 
-                            onClick={() => {
-                              setPaymentTerms('100% Sight Letter of Credit (L/C Irrevocable)');
-                            }}
-                            className="bg-slate-700 hover:bg-slate-850 text-white text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded transition-colors"
-                          >
-                            ✓ Gunakan 100% L/C Irrevocable
-                          </button>
-                        </div>
-
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-                        <span className="text-[8px] text-slate-400 font-bold">Klausul di atas akan langsung meng-update draf PI ekspor Anda</span>
-                        <button 
-                          onClick={() => updateStepIdAndBubble(5)}
-                          className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                          Kunci & Ke Meja TTD Bilateral →
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STAGE 3 & 5: PROFORMA INVOICE FRAME */}
-                  {(currentStepId === 3 || currentStepId === 5) && (
-                    <>
-                      {/* Sheet Header */}
-                      <div className="flex justify-between items-start border-b border-dashed border-slate-300 pb-3">
-                        <div>
-                          <h5 className="font-bold text-slate-900 text-xs">PROFORMA INVOICE</h5>
-                          <p className="text-[9px] text-slate-400 mt-0.5">PT MULTI RAKSA MADANI</p>
-                          <p className="text-[9px] text-slate-400">Jakarta, Indonesia</p>
-                        </div>
-                        <div className="text-right col-span-4 ml-auto">
-                          <p className="font-bold">No: PFI/EFI-2026/8892</p>
-                          <p>Date: June 20, 2026</p>
-                        </div>
-                      </div>
-
-                      {/* Parties Block */}
-                      <div className="grid grid-cols-2 gap-2 text-[9px]">
-                        <div className="bg-white p-2 rounded-md border border-slate-200">
-                          <span className="font-bold uppercase text-indigo-800 block mb-0.5">1. SELLER / SHIPPER</span>
-                          <p className="font-bold text-slate-900">PT MULTI RAKSA MADANI</p>
-                          <p className="text-slate-500 mt-0.5 leading-tight">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
-                        </div>
-                        <div className="bg-white p-2 rounded-md border border-slate-200">
-                          <span className="font-bold uppercase text-indigo-800 block mb-0.5">2. BUYER / IMPORTER</span>
-                          <p className="font-bold text-slate-900">{buyerCompany}</p>
-                          <p className="text-slate-500 mt-0.5 leading-tight">{buyerAddress}</p>
-                        </div>
-                      </div>
-
-                      {/* Cargo specs table */}
-                      <div className="bg-white rounded-md border border-slate-200 overflow-hidden">
-                        <div className="bg-slate-100 px-2 py-1.5 font-bold grid grid-cols-12 border-b border-slate-200 text-slate-800">
-                          <span className="col-span-6 animate-pulse">COMMODITY & SPECIFICATION</span>
-                          <span className="col-span-2 text-right">QTY</span>
-                          <span className="col-span-2 text-right">PRICE (USD)</span>
-                          <span className="col-span-2 text-right">TOTAL</span>
-                        </div>
-                        
-                        <div className="p-2 grid grid-cols-12 border-b border-slate-100 items-start text-slate-900 leading-tight">
-                          <span className="col-span-6 animate-pulse">
-                            <strong className="text-slate-955 block">{selectedProduct.name}</strong>
-                            <span className="text-[8px] text-slate-400 block mt-0.5">H.S. CODE: {selectedProduct.hsCode}</span>
-                            <span className="text-[8px] text-slate-400 block">Origin: {selectedProduct.origin}</span>
-                          </span>
-                          <span className="col-span-2 text-right font-semibold">{quantity} MT</span>
-                          <span className="col-span-2 text-right font-semibold">${pricePerUnit.toLocaleString('en-US')}</span>
-                          <span className="col-span-2 text-right font-black text-indigo-900">${totalPrice.toLocaleString('en-US')}</span>
-                        </div>
-                        
-                        <div className="bg-slate-50 px-2 py-1 text-right font-bold text-slate-900">
-                          TOTAL AMOUNT ({incoterms.split(' ')[0]}): <span className="text-indigo-900 text-xs font-black">${totalPrice.toLocaleString('en-US')}.00 USD</span>
-                        </div>
-                      </div>
-
-                      {/* Commercial Terms & Banking Details (The absolute differentiator from Quotation) */}
-                      <div className="bg-white p-2 rounded-md border border-slate-200 space-y-1.5 text-[8.5px]">
-                        <h6 className="font-bold text-slate-850 uppercase text-indigo-800 tracking-wider">COMMERCIAL & BANKING CLAUSES :</h6>
-                        
-                        <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
-                          <span className="col-span-4 font-bold text-slate-500">INCOTERMS:</span>
-                          <span className="col-span-8 text-slate-900 font-bold">{incoterms}</span>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
-                          <span className="col-span-4 font-bold text-slate-500">PAYMENT SYSTEM:</span>
-                          <span className="col-span-8 text-indigo-950 font-bold">{paymentTerms}</span>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
-                          <span className="col-span-4 font-bold text-slate-500">PORT OF DISCHARGE:</span>
-                          <span className="col-span-8 text-slate-900">{portOfDischarge}</span>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-1">
-                          <span className="col-span-4 font-bold text-slate-500">BENEFICIARY BANK:</span>
-                          <span className="col-span-8 text-slate-700 leading-tight">
-                            <strong>BANK NEGARA INDONESIA (BNIDEJAX)</strong><br />
-                            ACC NO: 1100-2026-9918 USD DEV CORPORATE<br />
-                            BENEFICIARY: PT MULTI RAKSA MADANI
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Bilateral Signature Boxes */}
-                      <div className="pt-2">
-                        <div className="grid grid-cols-2 gap-4">
-                          
-                          {/* Seller Sign Box */}
-                          <div className="border border-dashed border-slate-300 rounded-md p-2 text-center h-20 flex flex-col justify-between bg-white relative overflow-hidden">
-                            <span className="text-[8px] font-black uppercase text-slate-400 block mb-1">APPROVED BY EXPORTER:</span>
-                            
-                            {isExporterSigned ? (
-                              <motion.div 
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="my-auto flex flex-col items-center justify-center text-emerald-600"
-                              >
-                                <span className="font-mono text-[9px] tracking-wide font-black border-2 border-emerald-500 px-1 py-0.5 uppercase transform -rotate-12 bg-white/90">
-                                  APPROVED - PT MULTI RAKSA MADANI
-                                </span>
-                                <span className="text-[7px] text-slate-400 mt-1">Eksportir Signed ✓</span>
-                              </motion.div>
-                            ) : (
-                              <div className="my-auto text-[8px] text-slate-350 font-bold">
-                                [Menunggu Tanda Tangan]
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Buyer Sign Box */}
-                          <div className="border border-dashed border-slate-300 rounded-md p-2 text-center h-20 flex flex-col justify-between bg-white relative overflow-hidden">
-                            <span className="text-[8px] font-black uppercase text-slate-400 block mb-1">COUNTERSIGNED BY BUYER:</span>
-                            
-                            {isBuyerSigned ? (
-                              <motion.div 
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="my-auto flex flex-col items-center justify-center text-indigo-600"
-                              >
-                                <span className="font-mono text-[9px] tracking-wide font-black border-2 border-indigo-500 px-1 py-0.5 uppercase transform rotate-6 bg-white/90">
-                                  ACCEPTED & COUNTERSIGNED
-                            </span>
-                                <span className="text-[7px] text-slate-400 mt-1">Buyer Signed ✓</span>
-                              </motion.div>
-                            ) : (
-                              <div className="my-auto text-[8px] text-slate-350 font-bold">
-                                [Menunggu Countersign]
-                              </div>
-                            )}
-                          </div>
-
-                        </div>
-                      </div>
-                    </>
-                  )}
-
+                  {renderDocumentContent(currentUser?.role === 'Buyer' ? 'buyer' : 'trader')}
                 </div>
               </div>
             </div>
 
           </div>
+
+          {/* Dual Signature Controls Panel */}
+          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-5 text-white border border-slate-850 shadow-md text-left">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-indigo-850">
+              <FileSignature className="w-4.5 h-4.5 text-indigo-300" />
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-100">Hub Tanda Tangan Bilateral</h3>
+                <p className="text-[10px] text-indigo-300">Harus ditandatangani 2 Pihak agar Proforma Invoice Sah!</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 py-4 text-xs font-medium">
+              
+              {/* Exporter Signature Button */}
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
+                <div>
+                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 1: Eksportir</span>
+                  <span className="font-bold text-slate-100 block">PT MULTI RAKSA MADANI</span>
+                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Trader / Owner</span>
+                </div>
+                <button
+                  disabled={isLocked || !canSignExporter}
+                  onClick={() => !isLocked && canSignExporter && setIsExporterSigned(!isExporterSigned)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
+                    isLocked 
+                      ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
+                      : !canSignExporter
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700 flex items-center gap-1'
+                        : isExporterSigned 
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 cursor-pointer' 
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 cursor-pointer'
+                  }`}
+                >
+                  {isLocked ? (
+                    <>
+                      <Lock className="w-3 h-3 text-emerald-300" />
+                      <span>Terverifikasi</span>
+                    </>
+                  ) : !canSignExporter ? (
+                    <>
+                      <Lock className="w-3 h-3 text-slate-400" />
+                      <span>Hanya Trader</span>
+                    </>
+                  ) : (
+                    isExporterSigned ? '✓ Sudah TTD' : 'Tanda Tangan'
+                  )}
+                </button>
+              </div>
+
+              {/* Buyer Signature Button */}
+              <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
+                <div>
+                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 2: Buyer</span>
+                  <span className="font-bold text-slate-100 block">{buyerCompany}</span>
+                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Buyer</span>
+                </div>
+                <button
+                  disabled={isLocked || !canSignBuyer}
+                  onClick={() => !isLocked && canSignBuyer && setIsBuyerSigned(!isBuyerSigned)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
+                    isLocked 
+                      ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
+                      : !canSignBuyer
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700 flex items-center gap-1'
+                        : isBuyerSigned 
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 cursor-pointer' 
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95 cursor-pointer'
+                  }`}
+                >
+                  {isLocked ? (
+                    <>
+                      <Lock className="w-3 h-3 text-emerald-300" />
+                      <span>Terverifikasi</span>
+                    </>
+                  ) : !canSignBuyer ? (
+                    <>
+                      <Lock className="w-3 h-3 text-slate-400" />
+                      <span>Hanya Buyer</span>
+                    </>
+                  ) : (
+                    isBuyerSigned ? '✓ Sudah TTD' : 'Tanda Tangan'
+                  )}
+                </button>
+              </div>
+
+              {/* Joint Signature Info Box */}
+              <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-900 text-[11px] text-indigo-200 leading-relaxed">
+                <div className="flex gap-2 font-black uppercase text-indigo-300 tracking-wider text-[10px] items-center mb-1">
+                  <BadgeInfo className="w-4 h-4 text-indigo-455 shrink-0" />
+                  Bagaimana Bilateral Berdampak?
+                </div>
+                Jika <strong>kedua pihak telah menandatangani</strong>, status Proforma Invoice berubah menjadi <span className="text-emerald-300 font-extrabold uppercase">BILATERALLY AGREED</span>. Lembaran ini sekarang sah diajukan ke Bank Devisa Luar Negeri untuk penerbitan dana pelindung L/C.
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
       </div>
+
+      {/* LOI READ-ONLY MODAL */}
+      <AnimatePresence>
+        {isLoiModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-2xl border border-slate-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative flex flex-col text-left"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setIsLoiModalOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-5">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">Review Letter of Intent (LOI)</h3>
+                  <p className="text-[10px] text-slate-400">Dokumen Permintaan Pembukaan Resmi dari Pembeli</p>
+                </div>
+              </div>
+
+              {/* Action Toolbar for LOI (Print & Download) */}
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-150 mb-4 text-xs">
+                <span className="font-bold text-slate-505 select-none">
+                  Mode Baca Saja (Read-Only)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrintLoi}
+                    className="p-1.5 px-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-extrabold uppercase text-[9.5px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    Cetak Dokumen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadLoiHTML}
+                    className="p-1.5 px-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-extrabold uppercase text-[9.5px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Unduh (.HTML)
+                  </button>
+                </div>
+              </div>
+
+              {/* LOI Paper Frame */}
+              <div className="p-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden mb-5">
+                <div id="loi-document-paper" className="bg-slate-50 p-5 rounded-lg border border-slate-150 font-mono text-[10px] text-slate-705 space-y-4 shadow-inner">
+                  <div className="border-b border-dashed border-slate-300 pb-3 text-left">
+                    <h5 className="font-bold text-slate-900 text-xs">YOSHIHIDE TRADING CO., LTD.</h5>
+                    <p className="text-[9px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
+                    <p className="text-[9px] text-slate-400 font-bold mt-0.5">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
+                  </div>
+                  <div className="text-right text-[9px] text-slate-500">
+                    <p className="font-bold">Doc Ref: YT-LOI/2026/04</p>
+                    <p>Date: June 15, 2026</p>
+                  </div>
+                  <div className="space-y-2 text-left">
+                    <p className="font-bold text-slate-900">TO: PT MULTI RAKSA MADANI</p>
+                    <p className="font-bold text-[11px] underline">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
+                    <p className="leading-relaxed">
+                      Dear Multi Raksa Madani Exports Team,
+                    </p>
+                    <p className="leading-relaxed">
+                      We herewith officially express our strong interest to purchase high-quality Indonesian commodities. Based on your repute, we would like to request a detailed specifications list and a price proposal for:
+                    </p>
+                    <div className="p-3 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[10px] space-y-1">
+                      <div>• Commodity: <span className="text-indigo-600">{selectedProduct.name}</span></div>
+                      <div>• Target Volume: <span className="text-indigo-600">{quantity} MT (Metrik Ton)</span></div>
+                      <div>• Target Incoterms: <span className="text-indigo-600">FOB Jakarta Port</span></div>
+                      <div>• Price Guideline Needed: <span className="text-indigo-600">USD / Metric Ton</span></div>
+                    </div>
+                    <p className="leading-relaxed">
+                      Kindly send us your Official Quotation Sheet along with laboratory test certifications (COA) and cargo load-time estimates. We look forward to a sustainable mutual trade relationship.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-[8.5px]">
+                    <span className="text-slate-400 italic">Signed digitally by Kenji Yoshihide (Director)</span>
+                    <span className="text-emerald-600 font-extrabold uppercase">OFFICIAL DOCUMENT</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* LOI Footer - Tawaran Button */}
+              <div className="flex gap-3 justify-end items-center border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsLoiModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Tutup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoiModalOpen(false);
+                    setIsTawaranModalOpen(true);
+                  }}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer animate-pulse"
+                >
+                  <Send className="w-4.5 h-4.5" />
+                  Tawaran (Balas Penawaran)
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TAWARAN POPUP MODAL (INTERACTIVE NEGOTIATOR & CALCULATOR) */}
+      <AnimatePresence>
+        {isTawaranModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="bg-slate-50 rounded-3xl border border-slate-200 max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl p-6 relative flex flex-col text-left"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setIsTawaranModalOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 mb-5 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-indigo-600 text-white rounded-lg">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">Interactive Negotiator: Penyusunan Tawaran</h3>
+                    <p className="text-[10px] text-slate-500">Sesuaikan rincian parameter komersial dan kalkulasi pembayaran untuk dikirim ke buyer</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreviewInModal(!showPreviewInModal)}
+                    className={`px-3 py-1.5 rounded-xl border font-bold text-[10px] tracking-wider uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                      showPreviewInModal 
+                        ? 'bg-indigo-100 text-indigo-700 border-indigo-200' 
+                        : 'bg-white text-slate-600 border-slate-250 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    {showPreviewInModal ? 'Sembunyikan Preview' : 'Tampilkan Preview'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Content Split Frame */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start overflow-y-auto pr-1">
+                
+                {/* Left Side: Negotiator Form & Calculator (Spans 12 or 7) */}
+                <div className={`space-y-6 ${showPreviewInModal ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
+                  
+                  {/* Form Configurator */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs text-left space-y-4">
+                    <div className="pb-3 border-b border-slate-100">
+                      <h4 className="text-xs font-black uppercase text-indigo-950 flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-indigo-600" />
+                        Sesuaikan Parameter Transaksi
+                      </h4>
+                      <p className="text-[10.5px] text-slate-400 mt-1">
+                        Ubah data transaksi di bawah ini untuk melihat hasil estimasi perbankan dan memperbarui berkas penawaran.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Product Select */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-500">Pilih Komoditas Ekspor</label>
+                        {shipment ? (
+                          <div className="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 select-none">
+                            {selectedProduct.name} (Terkunci dari Transaksi)
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedProduct.id}
+                            onChange={(e) => {
+                              const matching = mockProducts.find(p => p.id === e.target.value);
+                              if (matching) {
+                                setSelectedProduct(matching);
+                                const priceVal = parseFloat(matching.price.replace(/,/g, '')) || 1000;
+                                setPricePerUnit(priceVal);
+                              }
+                            }}
+                            className="w-full p-2 border border-slate-250 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-800 cursor-pointer"
+                          >
+                            {mockProducts.map(p => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+
+                      {/* Volume / Quantity */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-500">Volume Kuantitas ({selectedProduct.unit})</label>
+                        <div className="flex gap-2">
+                          <input
+                            disabled={isLocked}
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                          />
+                          <span className="p-2 bg-slate-100 border border-slate-250 text-[11px] text-slate-505 font-bold rounded-lg shrink-0">
+                            {selectedProduct.unit.split(' ')[0]}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Price Per Unit */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-500">Harga Per Unit Proposal (USD / Unit)</label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">USD</span>
+                          <input
+                            disabled={isLocked}
+                            type="number"
+                            value={pricePerUnit}
+                            onChange={(e) => setPricePerUnit(Math.max(10, parseInt(e.target.value) || 10))}
+                            className="w-full pl-11 p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Payment Terms */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pembayaran (Payment Terms)</label>
+                        <select
+                          disabled={isLocked}
+                          value={paymentTerms}
+                          onChange={(e) => setPaymentTerms(e.target.value)}
+                          className="w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-800 bg-slate-50 cursor-pointer"
+                        >
+                          <option value="50% DP T/T, 50% LC at Sight">50% Down Payment T/T, 50% L/C Confirmed</option>
+                          <option value="30% Advanced Deposit, 70% Copy Bills of Lading">30% DP T/T, 70% Cadangan B/L</option>
+                          <option value="100% Sight Letter of Credit (L/C Irrevocable)">100% L/C Irrevocable at Sight</option>
+                          <option value="100% Advanced Telegraphic Transfer (T/T)">100% Advanced T/T (Full Prabayar)</option>
+                        </select>
+                      </div>
+
+                      {/* Incoterms Selector */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pengiriman (Incoterms 2020)</label>
+                        <select
+                          disabled={isLocked}
+                          value={incoterms}
+                          onChange={(e) => setIncoterms(e.target.value)}
+                          className="w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-800 bg-slate-50 cursor-pointer"
+                        >
+                          <option value="FOB Jakarta Port (Incoterms 2020)">FOB (Free on Board) - Pelabuhan Tanjung Priok, Jakarta</option>
+                          <option value="CIF Tokyo Port, Japan (Incoterms 2020)">CIF (Cost, Insurance & Freight) - Tokyo Port</option>
+                          <option value="CFR Los Angeles Port, USA (Incoterms 2020)">CFR (Cost & Freight) - Los Angeles Port</option>
+                          <option value="EXW Origin Warehouse (Incoterms 2020)">EXW (Ex Works) - Gudang Supplier Produsen</option>
+                        </select>
+                      </div>
+
+                      {/* Port of Discharge */}
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-black uppercase text-slate-505">Pelabuhan Bongkar (Port of Discharge)</label>
+                        <input
+                          disabled={isLocked}
+                          type="text"
+                          value={portOfDischarge}
+                          onChange={(e) => setPortOfDischarge(e.target.value)}
+                          className="w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Calculator and Guide */}
+                  <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                        <Landmark className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wide">Kalkulator &amp; Panduan Pembayaran Buyer</h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          Estimasi rincian keuangan hasil pembagian termin perbankan devisa perdagangan internasional.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-150">
+                        <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Kargo</span>
+                        <span className="text-xs font-black text-slate-800 block mt-0.5">{quantity} MT</span>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-150">
+                        <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Harga / Unit</span>
+                        <span className="text-xs font-black text-slate-800 block mt-0.5">${pricePerUnit.toLocaleString('en-US')} USD</span>
+                      </div>
+                      <div className="bg-indigo-950 text-indigo-100 p-2.5 rounded-xl">
+                        <span className="text-[8.5px] uppercase font-bold text-indigo-300 block">FOB Dasar</span>
+                        <span className="text-xs font-black text-white block mt-0.5">${totalPrice.toLocaleString('en-US')} USD</span>
+                      </div>
+                    </div>
+
+                    {/* Termin Pembayaran */}
+                    {(() => {
+                      let dpPercent = 0;
+                      let dpLabel = "";
+                      let lcLabel = "";
+                      let desc = "";
+
+                      if (paymentTerms.includes("50% DP")) {
+                        dpPercent = 0.5;
+                        dpLabel = "DP 50% via T/T Cable Transfer";
+                        lcLabel = "L/C at Sight 50% di Bank Devisa";
+                        desc = "Sistem Campuran: Buyer menyetor 50% deposit untuk modal produksi, sisanya dijamin bank lewat instrumen Letter of Credit yang cair otomatis begitu Bill of Lading terbit.";
+                      } else if (paymentTerms.includes("30% Advanced")) {
+                        dpPercent = 0.3;
+                        dpLabel = "DP 30% Advanced T/T";
+                        lcLabel = "Pelunasan 70% setelah Copy B/L";
+                        desc = "Eksportir memuat barang ke kapal kargo, lalu mengirim pindaian Bill of Lading. Pembeli asing mentransfer 70% sisa dana barulah dokumen pelayaran asli dikirim.";
+                      } else if (paymentTerms.includes("100% Sight Letter")) {
+                        dpPercent = 0;
+                        dpLabel = "Bebas DP di Muka";
+                        lcLabel = "L/C 100% Irrevocable at Sight";
+                        desc = "Dana 100% dijamin aman dalam custody bank penjamin pembeli. Dana dicairkan ke bank eksportir seketika setelah seluruh dokumen kepabeanan lolos verifikasi.";
+                      } else {
+                        dpPercent = 1.0;
+                        dpLabel = "Full 100% Prabayar via T/T";
+                        lcLabel = "Tidak Ada Termin Sisa";
+                        desc = "Metode prabayar penuh sebelum produksi dimulai. Menguntungkan bagi eksportir, namun menuntut tingkat kepercayaan tinggi dari buyer asing.";
+                      }
+
+                      return (
+                        <div className="p-3.5 bg-indigo-950 text-indigo-50 border border-indigo-900 rounded-xl space-y-2.5 text-xs text-left">
+                          <span className="text-[9.5px] font-black uppercase text-indigo-300 tracking-wider block">Rincian Termin Devisa Aktif</span>
+                          <div className="grid grid-cols-2 gap-3 pt-1">
+                            <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                              <span className="text-[8.5px] text-indigo-300 block font-semibold">{dpLabel}</span>
+                              <span className="text-xs font-black text-white block mt-0.5">${(totalPrice * dpPercent).toLocaleString('en-US')}.00 USD</span>
+                            </div>
+                            <div className="bg-white/5 p-2 rounded-lg border border-white/10">
+                              <span className="text-[8.5px] text-indigo-300 block font-semibold">{lcLabel}</span>
+                              <span className="text-xs font-black text-white block mt-0.5">${(totalPrice * (1 - dpPercent)).toLocaleString('en-US')}.00 USD</span>
+                            </div>
+                          </div>
+                          <p className="text-[9.5px] text-indigo-200 leading-relaxed pt-1.5 border-t border-indigo-900">
+                            <strong>Aturan Main Termin:</strong> {desc}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Right Side: Document Preview Column (Spans 5) */}
+                {showPreviewInModal && (
+                  <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-4 shadow-inner space-y-3 max-h-[75vh] flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-black text-slate-550 uppercase tracking-wider block border-b border-slate-100 pb-2">
+                      Live Draft Preview: Penawaran Harga (Quotation)
+                    </span>
+                    <div className="flex-1 overflow-y-auto pr-1">
+                      {/* Document Layout Paper */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 font-mono text-[9px] text-slate-705 space-y-4 shadow-3xs text-left">
+                        <div className="border-b border-dashed border-slate-300 pb-2.5">
+                          <h5 className="font-bold text-slate-900 text-[11px]">PT MULTI RAKSA MADANI</h5>
+                          <p className="text-[8px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+                          <p className="text-[8px] text-slate-400 font-bold mt-0.5">Email: export@multiraksamaradani.co.id</p>
+                        </div>
+                        <div className="text-right text-[8px] text-slate-400">
+                          <p className="font-bold text-slate-550">Doc Ref: AQ-QTN/2026/102</p>
+                          <p>Date: June 17, 2026</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="font-bold text-slate-900">TO: YOSHIHIDE TRADING CO., LTD. (Tokyo, Japan)</p>
+                          <p className="font-bold text-[10px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
+                          <p className="leading-relaxed text-slate-500">
+                            Thank you for your LOI interest YT-LOI/2026/04. We are delighted to submit our best factory offering pricing & parameters below:
+                          </p>
+                          
+                          <div className="bg-white rounded border border-slate-205 overflow-hidden">
+                            <div className="p-1.5 bg-slate-100 border-b border-slate-200 flex justify-between font-bold text-slate-800 text-[8px]">
+                              <span>ITEM / SPECIFICATION</span>
+                              <span>OFFER PRICE</span>
+                            </div>
+                            <div className="p-1.5 space-y-1">
+                              <p className="font-bold text-slate-900 text-[8.5px]">{selectedProduct.name}</p>
+                              <p className="text-slate-500 leading-snug">Specification: {selectedProduct.specification}</p>
+                              <p className="text-slate-500 font-bold">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
+                              <div className="pt-1 flex justify-between border-t border-slate-100 font-bold text-indigo-950">
+                                <span>Quantity: {quantity} MT</span>
+                                <span>USD ${pricePerUnit.toLocaleString('en-US')} / MT</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-2 bg-indigo-50/40 border border-indigo-100 rounded-lg space-y-1 text-[8px] text-slate-650">
+                            <div><strong>• Syarat Kirim (Incoterms):</strong> {incoterms}</div>
+                            <div><strong>• Syarat Bayar (Payment):</strong> {paymentTerms}</div>
+                            <div><strong>• Pelabuhan Bongkar:</strong> {portOfDischarge}</div>
+                            <div className="pt-1 border-t border-indigo-100 font-black text-indigo-950 text-right mt-1">
+                              Estimated FOB Cargo Value: USD ${totalPrice.toLocaleString('en-US')}.00
+                            </div>
+                          </div>
+                        </div>
+                        <div className="pt-3 border-t border-slate-200 flex justify-between items-center text-[7.5px]">
+                          <span className="text-slate-400 italic">Issued by: PT Multi Raksa Madani</span>
+                          <span className="text-indigo-600 font-extrabold uppercase">DRAFT OFFER</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Tawaran Footer Controls */}
+              <div className="flex gap-3 justify-end items-center border-t border-slate-200 pt-4 mt-5">
+                <button
+                  type="button"
+                  onClick={() => setIsTawaranModalOpen(false)}
+                  className="px-4 py-2 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Update state to stage 2: Offer Sheet & Quotation
+                    updateStepIdAndBubble(2);
+                    setIsTawaranModalOpen(false);
+                  }}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  Kirim &amp; Balas Permintaan (Ke Tahap 2)
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

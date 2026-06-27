@@ -12,10 +12,8 @@ import {
 import LoginModal from './components/LoginModal';
 import DocumentEditor from './components/DocumentEditor';
 import DocumentViewer from './components/DocumentViewer';
-import ShipmentWorkflowTracker from './components/ShipmentWorkflowTracker';
 import InteractiveInfographic from './components/InteractiveInfographic';
 import ExportGuide from './components/ExportGuide';
-import NegotiationDashboard from './components/NegotiationDashboard';
 import LandingPage from './components/LandingPage';
 import AccountManagement from './components/AccountManagement';
 import { 
@@ -23,7 +21,7 @@ import {
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
   Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
-  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter
 } from 'lucide-react';
 
 export default function App() {
@@ -92,10 +90,13 @@ export default function App() {
 
   const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => initialAlerts);
   const [activeShipmentId, setActiveShipmentId] = useState<string>('');
+  const [shipmentSearchQuery, setShipmentSearchQuery] = useState('');
+  const [shipmentStatusFilter, setShipmentStatusFilter] = useState('All');
   const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'guide' | 'negotiation' | 'users'>('home');
   const [negoStepId, setNegoStepId] = useState<number>(1);
   const [negotiationProduct, setNegotiationProduct] = useState<ExportProduct | undefined>(undefined);
   const [showRestrictedAlert, setShowRestrictedAlert] = useState<string | null>(null);
+  const [autoOpenLoi, setAutoOpenLoi] = useState<boolean>(false);
 
   // Local storage based user list and login credential state
   const [users, setUsers] = useState<UserProfile[]>(() => {
@@ -135,6 +136,7 @@ export default function App() {
       address: 'Gedung Graha Dirgantara Lt. 5, Jl. Jend. Sudirman No. 45, Jakarta Selatan 12190',
       telephone: '+62 21 8089 7788',
       email: 'support@multiraksamaradani.co.id',
+      bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80',
     };
   });
 
@@ -184,6 +186,7 @@ export default function App() {
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profileCompany, setProfileCompany] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
   const [profileAddress, setProfileAddress] = useState('');
   const [profileCountry, setProfileCountry] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('');
@@ -201,6 +204,7 @@ export default function App() {
     setProfileName(currentUser.name);
     setProfileEmail(currentUser.email);
     setProfileCompany(currentUser.companyName);
+    setProfilePhone(currentUser.phone || '');
     setProfileAddress(currentUser.address || '');
     setProfileCountry(currentUser.country || '');
     setProfileAvatar(currentUser.avatar);
@@ -301,6 +305,7 @@ export default function App() {
           name: profileName.trim(),
           email: emailLower,
           companyName: profileCompany.trim(),
+          phone: profilePhone.trim() || undefined,
           address: profileAddress.trim(),
           country: profileCountry.trim(),
           avatar: profileAvatar
@@ -317,6 +322,7 @@ export default function App() {
       name: profileName.trim(),
       email: emailLower,
       companyName: profileCompany.trim(),
+      phone: profilePhone.trim() || undefined,
       address: profileAddress.trim(),
       country: profileCountry.trim(),
       avatar: profileAvatar
@@ -436,6 +442,7 @@ export default function App() {
   const [isDocEditorOpen, setIsDocEditorOpen] = useState(false);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<ExportDocument | null>(null);
+  const [shipmentToDeleteId, setShipmentToDeleteId] = useState<string | null>(null);
 
   // Form state for new contract builder
   const [newContractForm, setNewContractForm] = useState({
@@ -507,6 +514,29 @@ export default function App() {
     return true;
   });
 
+  // Apply Search Query & Status Filters
+  const filteredShipments = visibleShipments.filter(s => {
+    // Status Filter
+    if (shipmentStatusFilter === 'Draft') {
+      const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || d.type === 'Proforma Invoice') && d.status === 'Approved');
+      if (isSigned) return false;
+    } else if (shipmentStatusFilter === 'Completed') {
+      const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || d.type === 'Proforma Invoice') && d.status === 'Approved');
+      if (!isSigned) return false;
+    }
+    // Search Query Filter
+    if (shipmentSearchQuery.trim() !== '') {
+      const q = shipmentSearchQuery.toLowerCase();
+      const matchContract = s.contractNumber.toLowerCase().includes(q);
+      const matchProduct = s.productName.toLowerCase().includes(q);
+      const matchBuyer = s.buyerCompany.toLowerCase().includes(q);
+      const matchPol = s.portOfLoading.toLowerCase().includes(q);
+      const matchPod = s.portOfDischarge.toLowerCase().includes(q);
+      return matchContract || matchProduct || matchBuyer || matchPol || matchPod;
+    }
+    return true;
+  });
+
   // Active Shipment Ref Helper
   const activeShipment = visibleShipments.find(s => s.id === activeShipmentId) || (visibleShipments.length > 0 ? visibleShipments[0] : undefined);
 
@@ -567,7 +597,7 @@ export default function App() {
         const newAlert: RealTimeAlert = {
           id: newAlertId,
           shipmentId: activeShipmentId,
-          contractNumber: activeShipment.contractNumber,
+          contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
           title: 'Persetujuan Bea Cukai RI (NPE)',
           message: simulatedCount > 0 
             ? 'Dokumen Cukai ekspor PEB disetujui, Nota Pelayanan Ekspor diterbitkan. Cargo dilepaskan untuk proses Loading.' 
@@ -597,9 +627,9 @@ export default function App() {
         const newAlert: RealTimeAlert = {
           id: newAlertId,
           shipmentId: activeShipmentId,
-          contractNumber: activeShipment.contractNumber,
+          contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
           title: 'Sertifikasi Karantina Tervalidasi',
-          message: `Sertifikasi karantina phytosanitary hasil tani pada kontrak ${activeShipment.contractNumber} dinyatakan lulus uji laboratorium oleh Balai Karandina Indonesia.`,
+          message: `Sertifikasi karantina phytosanitary hasil tani pada kontrak ${activeShipment?.contractNumber || 'SC-GLOBAL'} dinyatakan lulus uji laboratorium oleh Balai Karandina Indonesia.`,
           type: 'success',
           timestamp,
           readBy: []
@@ -629,7 +659,7 @@ export default function App() {
         const newAlert: RealTimeAlert = {
           id: newAlertId,
           shipmentId: activeShipmentId,
-          contractNumber: activeShipment.contractNumber,
+          contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
           title: 'Barang Siap oleh Supplier',
           message: updatedCount > 0 
             ? 'Supplier memberikan notifikasi kargo siap angkut dari gudang tani lokal.' 
@@ -664,7 +694,7 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-doc-${Date.now()}`,
       shipmentId: newDoc.shipmentId,
-      contractNumber: activeShipment.contractNumber,
+      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Penerbitan Dokumen Baru',
       message: `${newDoc.type} ekspor berhasil dirilis oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'} (${currentUser?.name}) dengan nomor formal ${newDoc.code}.`,
       type: 'info',
@@ -697,7 +727,7 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-sub-${Date.now()}`,
       shipmentId: activeShipmentId,
-      contractNumber: activeShipment.contractNumber,
+      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Surat Pengajuan Terkirim',
       message: `Surat Pengajuan resmi untuk berkas ekspor telah dikirimkan oleh pelaku usaha (${currentUser?.name}) agar ditelaah & disahkan oleh Otoritas Dagang.`,
       type: 'warning',
@@ -730,7 +760,7 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-app-${Date.now()}`,
       shipmentId: activeShipmentId,
-      contractNumber: activeShipment.contractNumber,
+      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Pabean Memvalidasi Dokumen',
       message: `Pihak Bea Cukai (Owner/Direktur) telah meneliti fisik serta menerbitkan cap validasi pabean hijau pada berkas.`,
       type: 'success',
@@ -756,6 +786,12 @@ export default function App() {
     // Find active shipment's total calculated value
     const calculatedValue = updatedData.quantity * updatedData.pricePerUnit;
 
+    let finalContractNumber = activeShipment?.contractNumber || 'SC-GLOBAL';
+    if (finalContractNumber.endsWith('-NEGO')) {
+      const randNum = Math.floor(100 + Math.random() * 900);
+      finalContractNumber = finalContractNumber.replace('-NEGO', `-${randNum}`);
+    }
+
     setShipments(prev => prev.map(s => {
       if (s.id === shipmentId) {
         // Also update documents status
@@ -768,6 +804,7 @@ export default function App() {
 
         return {
           ...s,
+          contractNumber: finalContractNumber,
           quantity: updatedData.quantity,
           totalValue: calculatedValue,
           portOfDischarge: updatedData.portOfDischarge,
@@ -794,9 +831,9 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-dealConfirm-${Date.now()}`,
       shipmentId,
-      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
-      title: 'Kesepakatan Deal PI Tercapai!',
-      message: `Kontrak Penjualan dan Proforma Invoice disahkan secara bilateral untuk ${activeShipment?.productName}. Nominal total: $${calculatedValue.toLocaleString('id-ID')} USD.`,
+      contractNumber: finalContractNumber,
+      title: 'Kesepakatan Deal PI/Kontrak Tercapai!',
+      message: `Draf negosiasi resmi disahkan secara bilateral untuk ${activeShipment?.productName}. Nomor kontrak resmi diterbitkan: ${finalContractNumber}. Nominal total: $${calculatedValue.toLocaleString('id-ID')} USD.`,
       type: 'success',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -805,10 +842,31 @@ export default function App() {
   };
 
   const handleUpdateStep = (shipmentId: string, nextStep: ShipmentStep, comments: string) => {
+    let finalContractNumber = '';
+
     setShipments(prev => prev.map(s => {
       if (s.id === shipmentId) {
+        let contractNumber = s.contractNumber;
+        if (nextStep === 'Draft') {
+          if (!contractNumber.endsWith('-NEGO')) {
+            const hasTrailingDigits = /-\d{3}$/.test(contractNumber);
+            if (hasTrailingDigits) {
+              contractNumber = contractNumber.slice(0, -4) + '-NEGO';
+            } else {
+              contractNumber = contractNumber + '-NEGO';
+            }
+          }
+        } else {
+          if (contractNumber.endsWith('-NEGO')) {
+            const randNum = Math.floor(100 + Math.random() * 900);
+            contractNumber = contractNumber.replace('-NEGO', `-${randNum}`);
+          }
+        }
+        finalContractNumber = contractNumber;
+
         return {
           ...s,
+          contractNumber,
           currentStep: nextStep,
           stepHistory: [
             ...s.stepHistory,
@@ -829,7 +887,7 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-step-${Date.now()}`,
       shipmentId,
-      contractNumber: activeShipment.contractNumber,
+      contractNumber: finalContractNumber || activeShipment?.contractNumber || 'SC-GLOBAL',
       title: `Perubahan Alur Pengapalan`,
       message: `Transaksi ekspor kini beralih ke tahap "${nextStepName}". Tindakan diperbarui oleh: ${currentUser?.name || currentUser?.role}`,
       type: 'info',
@@ -865,7 +923,7 @@ export default function App() {
     const newAlert: RealTimeAlert = {
       id: `alt-cert-${Date.now()}`,
       shipmentId,
-      contractNumber: activeShipment.contractNumber,
+      contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Sertifikasi Tambahan Diterbitkan',
       message: `Sertifikasi tambahan "${name}" dilampirkan oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'}.`,
       type: 'info',
@@ -948,8 +1006,16 @@ export default function App() {
     };
 
     // Populate initial items
-    newShip.documents = createMockDocuments(newShip.id, newShip.totalValue, newShip.quantity, newShip.unit, newShip.productName, newShip.hsCode);
-    newShip.certifications = mockCertificationsList(newShip.id);
+    newShip.documents = createMockDocuments(newShip.id, newShip.totalValue, newShip.quantity, newShip.unit, newShip.productName, newShip.hsCode).map(d => ({
+      ...d,
+      status: 'Draft',
+      updatedAt: new Date().toISOString()
+    }));
+    newShip.certifications = mockCertificationsList(newShip.id).map(c => ({
+      ...c,
+      status: 'Pending',
+      updatedAt: new Date().toISOString()
+    }));
 
     setShipments(prev => [newShip, ...prev]);
     setActiveShipmentId(newShipmentId);
@@ -1066,11 +1132,16 @@ export default function App() {
     setAlerts([]);
   };
 
-  const handleStartNegotiation = (product: ExportProduct) => {
+  const handleStartNegotiation = (product: ExportProduct, customQuantity?: number) => {
     // Generate new active shipment in draft mode
     const newShipmentId = `ship-${1000 + shipments.length + 1}`;
     const defaultBuyerCompany = (currentUser && currentUser.role === 'Buyer') ? currentUser.companyName : 'YOSHIHIDE TRADING CO., LTD.';
     const defaultBuyerName = (currentUser && currentUser.role === 'Buyer') ? currentUser.name : 'Kenji Yoshihide';
+    
+    const finalQty = customQuantity || 15;
+    const pricePerTon = parseFloat(product.price.replace(/,/g, '')) || 1000;
+    const finalTotalValue = pricePerTon * finalQty;
+
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${product.id.toUpperCase()}-2026-NEGO`,
@@ -1086,9 +1157,9 @@ export default function App() {
       traderId: 'usr-trader',
       traderName: currentUser?.name || 'Hendry Kurniawan',
       productName: product.name,
-      quantity: 15,
+      quantity: finalQty,
       unit: product.unit,
-      totalValue: parseFloat(product.price.replace(/,/g, '')) * 15,
+      totalValue: finalTotalValue,
       currency: 'USD',
       hsCode: product.hsCode,
       portOfLoading: 'Tanjung Priok, Jakarta',
@@ -1112,13 +1183,22 @@ export default function App() {
     };
 
     // Populate initial documents & certifications
-    newShip.documents = createMockDocuments(newShip.id, newShip.totalValue, newShip.quantity, newShip.unit, newShip.productName, newShip.hsCode);
-    newShip.certifications = mockCertificationsList(newShip.id);
+    newShip.documents = createMockDocuments(newShip.id, finalTotalValue, finalQty, newShip.unit, newShip.productName, newShip.hsCode).map(d => ({
+      ...d,
+      status: 'Draft',
+      updatedAt: new Date().toISOString()
+    }));
+    newShip.certifications = mockCertificationsList(newShip.id).map(c => ({
+      ...c,
+      status: 'Pending',
+      updatedAt: new Date().toISOString()
+    }));
 
     setShipments(prev => [newShip, ...prev]);
     setActiveShipmentId(newShipmentId);
     setNegotiationProduct(product);
     setActiveTab('workflow'); // Go straight to the combined workflow dashboard!
+    setAutoOpenLoi(true);
   };
 
   const handleSelectUser = (profile: UserProfile | null) => {
@@ -1260,49 +1340,13 @@ export default function App() {
       etd: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString().split('T')[0],
       eta: new Date(Date.now() + 25 * 24 * 3600 * 1000).toISOString().split('T')[0],
       trackingNumber: trackingNumber,
-      currentStep: 'Shipping',
+      currentStep: 'Draft',
       stepHistory: [
         { 
           step: 'Draft', 
           timestamp: new Date().toISOString(), 
           updatedBy: 'usr-buyer', 
           comments: 'Inisiasi Bilateral: LOI dan Quotation disetujui bersama melalui meja penandatanganan PI.' 
-        },
-        { 
-          step: 'Sourcing', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-supplier', 
-          comments: 'Supplier menyelesaikan penyiapan barang dari gudang tani lokal.' 
-        },
-        { 
-          step: 'Verification', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-trader', 
-          comments: 'Hasil uji lab karantina diperoleh, phytosanitary lengkap bebas hama.' 
-        },
-        { 
-          step: 'Documents', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-trader', 
-          comments: 'Seluruh draf dokumen ekspor (COO, Packing List, Invoice) terverifikasi.' 
-        },
-        { 
-          step: 'Customs', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-admin', 
-          comments: 'Beacukai menerbitkan NPE hijau resmi tanpa kendala penahanan.' 
-        },
-        { 
-          step: 'Loading', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-forwarder', 
-          comments: 'Kargo utuh dimasukkan ke dek kapal laut besi raksasa.' 
-        },
-        { 
-          step: 'Shipping', 
-          timestamp: new Date().toISOString(), 
-          updatedBy: 'usr-forwarder', 
-          comments: 'Kapal pembawa kargo resmi lepas jangkar, menyalakan sistem transmitter IoT satelit GPS aktif.' 
         }
       ],
       documents: [],
@@ -1346,69 +1390,71 @@ export default function App() {
   // 4. Counts and Analytics Calculation
   const unreadAlertsCount = alerts.filter(a => !currentUser || !a.readBy.includes(currentUser.id)).length;
   
+  const isShipmentDealCompleted = (s: ExportShipment) => {
+    return s.documents.some(d => d.type === 'Sales Contract' && d.status === 'Approved');
+  };
+
   const completedShipmentsValue = visibleShipments
-    .filter(s => s.currentStep === 'Completed')
+    .filter(isShipmentDealCompleted)
     .reduce((sum, s) => sum + s.totalValue, 0);
 
-  const activeShipmentsCount = visibleShipments.filter(s => s.currentStep !== 'Completed').length;
+  const activeShipmentsCount = visibleShipments.filter(s => !isShipmentDealCompleted(s)).length;
   
   const totalVolumeExported = visibleShipments.reduce((sum, s) => sum + s.quantity, 0);
 
-  const getStepDetails = (step: ShipmentStep) => {
-    switch (step) {
+  const getStepDetails = (s: ExportShipment) => {
+    const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || (d.type as string) === 'Proforma Invoice') && d.status === 'Approved');
+    
+    switch (s.currentStep) {
       case 'Draft':
-        return { 
-          label: 'Negosiasi & PI', 
-          color: 'text-amber-750 bg-amber-50/70 border-amber-200', 
-          percent: 12.5
+        if (!isSigned) {
+          return {
+            label: 'Negosiasi Kontrak',
+            color: 'text-amber-700 bg-amber-50/70 border-amber-200',
+            percent: 15
+          };
+        } else {
+          return {
+            label: 'Kontrak Disetujui',
+            color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+            percent: 30
+          };
+        }
+      case 'Shipping': {
+        let completedSubs: number[] = [];
+        const stored = localStorage.getItem(`exportflow_completed_substeps_${s.id}`);
+        if (stored) {
+          try {
+            completedSubs = JSON.parse(stored);
+          } catch (e) {}
+        }
+        const completedCount = completedSubs.length;
+        const percent = 30 + Math.min(completedCount, 4) * 15;
+        
+        let subLabel = 'Proses Logistik';
+        if (completedCount === 0) subLabel = 'Sourcing Komoditas';
+        else if (completedCount === 1) subLabel = 'Karantina & Bea Cukai';
+        else if (completedCount === 2) subLabel = 'Pelayaran Kargo';
+        else if (completedCount === 3) subLabel = 'Pencairan L/C';
+        else if (completedCount === 4) subLabel = 'L/C Cair (Menunggu Verifikasi Akhir)';
+
+        return {
+          label: `${subLabel} (${completedCount}/4 Selesai)`,
+          color: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+          percent: percent
         };
-      case 'Sourcing':
-        return { 
-          label: 'Penyediaan Barang', 
-          color: 'text-slate-750 bg-slate-50 border-slate-200', 
-          percent: 25
-        };
-      case 'Verification':
-        return { 
-          label: 'Uji Mutu & Lab', 
-          color: 'text-cyan-750 bg-cyan-50/70 border-cyan-200', 
-          percent: 37.5
-        };
-      case 'Documents':
-        return { 
-          label: 'Penyusunan COO/PEB', 
-          color: 'text-blue-750 bg-blue-50/70 border-blue-200', 
-          percent: 50
-        };
-      case 'Customs':
-        return { 
-          label: 'Kliring Bea Cukai', 
-          color: 'text-purple-750 bg-purple-50/70 border-purple-200', 
-          percent: 62.5
-        };
-      case 'Loading':
-        return { 
-          label: 'Stuffing Kontainer', 
-          color: 'text-pink-750 bg-pink-50/70 border-pink-200', 
-          percent: 75
-        };
-      case 'Shipping':
-        return { 
-          label: 'Kapal Berlayar (GPS)', 
-          color: 'text-emerald-750 bg-emerald-50/70 border-emerald-200', 
-          percent: 87.5
-        };
+      }
       case 'Completed':
-        return { 
-          label: 'Tiba & Cair L/C', 
-          color: 'text-green-750 bg-green-50/70 border-green-200', 
+        return {
+          label: 'Transaksi Selesai',
+          color: 'text-emerald-700 bg-emerald-100 border-emerald-200',
           percent: 100
         };
       default:
-        return { 
-          label: step, 
-          color: 'text-gray-750 bg-gray-50 border-gray-250', 
-          percent: 0
+        return {
+          label: 'Draf',
+          color: 'text-slate-700 bg-slate-50 border-slate-200',
+          percent: 10
         };
     }
   };
@@ -1536,10 +1582,10 @@ export default function App() {
                         </button>
                         <button 
                           onClick={openEditProfile}
-                          className="text-slate-600 hover:text-slate-800 p-0.5 bg-slate-100 hover:bg-slate-200 rounded flex items-center justify-center transition-all"
+                          className="text-slate-600 hover:text-slate-800 p-1 bg-slate-100 hover:bg-slate-200 rounded-md flex items-center justify-center transition-all"
                           title="Edit Profil & Sandi"
                         >
-                          <Settings className="w-3 h-3 text-slate-500 hover:rotate-90 transition-transform duration-300" />
+                          <Settings className="w-4 h-4 text-slate-600 hover:rotate-90 transition-transform duration-300" />
                         </button>
                       </p>
                       <p className="text-[10px] text-gray-400 font-extrabold capitalize leading-none pt-0.5">{currentUser.role === 'Owner/Direktur' ? 'Owner/Direktur' : currentUser.role}</p>
@@ -1694,49 +1740,17 @@ export default function App() {
             {(activeShipmentId === '' || !activeShipment) ? (
               /* ================= OPTION B: ALL TRANSACTIONS DASHBOARD OVERVIEW ================= */
               <div className="space-y-6">
-                {/* Header Banner */}
-                <div className="bg-slate-900 text-white rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-sm border border-slate-850 text-left">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none hidden md:block animate-spin-slow">
-                    <Globe className="w-32 h-32 text-indigo-400" />
-                  </div>
-                  <div className="relative z-10 max-w-3xl space-y-2">
-                    <span className="px-2.5 py-1 bg-indigo-500/25 text-indigo-300 rounded-lg text-[10px] uppercase font-mono font-bold tracking-wider border border-indigo-500/20 inline-block">
-                      Sistem Ekspor Terintegrasi • Opsi B
-                    </span>
-                    <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
-                      Hub Negosiasi &amp; Pelacakan Transaksi
-                    </h1>
-                    <p className="text-xs text-slate-300/90 leading-relaxed">
-                      Sistem monitoring real-time berbasis kontrak. Pilih salah satu transaksi aktif di bawah untuk menyetujui Proforma Invoice bilateral, melacak pergerakan kontainer pelabuhan, atau meninjau draf sertifikat karantina ekspor pertanian Anda.
-                    </p>
-                  </div>
-                </div>
-
                 {/* Dashboard Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-50 text-indigo-650 rounded-lg">
-                        <TrendingUp className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Total Nilai Kontrak</p>
-                        <h3 className="text-base font-black text-slate-900 mt-0.5">
-                          ${visibleShipments.reduce((sum, s) => sum + s.totalValue, 0).toLocaleString('id-ID')} <span className="text-[10px] text-gray-500 font-bold">USD</span>
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                  
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
                         <Clock className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Transaksi Ekspor Berjalan</p>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Negosiasi Kontrak Aktif</p>
                         <h3 className="text-base font-black text-slate-900 mt-0.5">
-                          {visibleShipments.filter(s => s.currentStep !== 'Completed').length} <span className="text-[10px] text-gray-500 font-bold">Kontrak</span>
+                          {visibleShipments.filter(s => !isShipmentDealCompleted(s)).length} <span className="text-[10px] text-gray-500 font-bold">Negosiasi</span>
                         </h3>
                       </div>
                     </div>
@@ -1748,42 +1762,66 @@ export default function App() {
                         <CheckCircle className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Selesai Dikirim &amp; Cair</p>
+                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Kontrak Disetujui (Selesai)</p>
                         <h3 className="text-base font-black text-slate-900 mt-0.5">
-                          {visibleShipments.filter(s => s.currentStep === 'Completed').length} <span className="text-[10px] text-gray-500 font-bold">Transaksi</span>
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                        <Layers className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Total Volume Dikirim</p>
-                        <h3 className="text-base font-black text-slate-900 mt-0.5">
-                          {totalVolumeExported} <span className="text-[10px] text-gray-500 font-bold">Metric Ton (MT)</span>
+                          {visibleShipments.filter(s => isShipmentDealCompleted(s)).length} <span className="text-[10px] text-gray-500 font-bold">Disetujui</span>
                         </h3>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Subtitle with Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 border-b border-gray-150 pb-3 text-left">
-                  <div>
-                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">Negosiasi &amp; Kontrak Dagang Anda ({visibleShipments.length})</h2>
+                {/* Subtitle with Actions & Compact Search */}
+                <div className="pt-2 border-b border-gray-150 pb-3 flex flex-col lg:flex-row lg:items-end justify-between gap-3 text-left">
+                  <div className="space-y-1">
+                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                      Negosiasi &amp; Kontrak Dagang Anda 
+                      {shipmentSearchQuery || shipmentStatusFilter !== 'All' ? (
+                        <span className="text-indigo-600 font-extrabold ml-1">
+                          ({filteredShipments.length} dari {visibleShipments.length})
+                        </span>
+                      ) : (
+                        ` (${visibleShipments.length})`
+                      )}
+                    </h2>
                     <p className="text-xs text-slate-400">Silakan pilih salah satu kargo kontainer atau draf LOI di bawah ini untuk memulai pelacakan alur kerja terpadu.</p>
                   </div>
-                  <button
-                    onClick={() => setIsNewContractModalOpen(true)}
-                    className="self-start sm:self-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm hover:-translate-y-0.5 z-10"
-                  >
-                    <Plus className="w-4 h-4 shrink-0" />
-                    Mulai Kontrak Penjualan Baru
-                  </button>
+
+                  {/* Compact Search & Filter Controls */}
+                  <div className="flex items-center gap-2 max-w-full sm:max-w-md shrink-0">
+                    {/* Search Input */}
+                    <div className="relative flex-1 sm:w-56">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
+                        <Search className="w-3.5 h-3.5" />
+                      </span>
+                      <input
+                        type="text"
+                        value={shipmentSearchQuery}
+                        onChange={(e) => setShipmentSearchQuery(e.target.value)}
+                        placeholder="Cari kontrak, produk, buyer..."
+                        className="w-full bg-white text-xs border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 text-slate-700 font-medium placeholder-slate-400"
+                      />
+                      {shipmentSearchQuery && (
+                        <button
+                          onClick={() => setShipmentSearchQuery('')}
+                          className="absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Step Filter Dropdown */}
+                    <select
+                      value={shipmentStatusFilter}
+                      onChange={(e) => setShipmentStatusFilter(e.target.value as any)}
+                      className="bg-white text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-slate-600 font-bold cursor-pointer"
+                    >
+                      <option value="All">Semua Kontrak</option>
+                      <option value="Draft">Negosiasi Aktif</option>
+                      <option value="Completed">Kontrak Disetujui</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Grid list of shipments */}
@@ -1813,99 +1851,163 @@ export default function App() {
                       </button>
                     </div>
                   </div>
+                ) : filteredShipments.length === 0 ? (
+                  <div className="bg-white rounded-xl border border-gray-150 p-10 text-center max-w-md mx-auto space-y-3 shadow-3xs">
+                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
+                      <Search className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Pencarian Tidak Ditemukan</h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Tidak ada transaksi yang sesuai dengan kata kunci atau filter tahap yang Anda pilih.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShipmentSearchQuery('');
+                        setShipmentStatusFilter('All');
+                      }}
+                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase py-1.5 px-3.5 rounded-lg transition-all cursor-pointer inline-block"
+                    >
+                      Reset Filter &amp; Cari Kembali
+                    </button>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {visibleShipments.map(s => {
-                      const stepInfo = getStepDetails(s.currentStep);
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredShipments.map(s => {
+                      const stepInfo = getStepDetails(s);
                       return (
                         <div 
                           key={s.id} 
-                          className="bg-white rounded-2xl border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-3xs text-left"
+                          className="bg-white rounded-xl border border-gray-150 hover:border-indigo-200 hover:shadow-xs transition-all p-4 flex flex-col justify-between gap-3 text-left"
                         >
-                          {/* Upper Details Panel */}
-                          <div className="p-5 md:p-6 space-y-4">
-                            <div className="flex items-center justify-between gap-2.5">
-                              <span className="font-mono bg-slate-100 py-1 px-2.5 rounded-lg text-[10px] text-slate-600 font-extrabold tracking-tight">
+                          <div className="space-y-3">
+                            {/* Header: Contract & Step */}
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono bg-slate-100 py-0.5 px-2 rounded-md text-[9px] text-slate-600 font-extrabold tracking-tight">
                                 {s.contractNumber}
                               </span>
-                              <span className={`px-2.5 py-1 text-[10px] font-bold uppercase rounded-lg border flex items-center gap-1 ${stepInfo.color}`}>
-                                {s.currentStep === 'Draft' && <FileSignature className="w-3 h-3" />}
-                                {s.currentStep === 'Sourcing' && <Package className="w-3 h-3" />}
-                                {s.currentStep === 'Verification' && <Activity className="w-3 h-3" />}
-                                {s.currentStep === 'Documents' && <FileText className="w-3 h-3" />}
-                                {s.currentStep === 'Customs' && <ShieldCheck className="w-3.5 h-3.5" />}
-                                {s.currentStep === 'Loading' && <Layers className="w-3 h-3" />}
-                                {s.currentStep === 'Shipping' && <Ship className="w-3 h-3" />}
-                                {s.currentStep === 'Completed' && <CheckCircle className="w-3 h-3" />}
-                                <span>{stepInfo.label}</span>
-                              </span>
+                              {(() => {
+                                if (s.currentStep === 'Completed') {
+                                  return (
+                                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-emerald-750 bg-emerald-50 border-emerald-200">
+                                      <CheckCircle className="w-2.5 h-2.5" />
+                                      <span>Selesai &amp; Lunas</span>
+                                    </span>
+                                  );
+                                } else if (s.currentStep === 'Shipping') {
+                                  let completedSubs: number[] = [];
+                                  const stored = localStorage.getItem(`exportflow_completed_substeps_${s.id}`);
+                                  if (stored) {
+                                    try {
+                                      completedSubs = JSON.parse(stored);
+                                    } catch (e) {}
+                                  }
+                                  const completedCount = completedSubs.length;
+                                  return (
+                                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-indigo-700 bg-indigo-50 border-indigo-200">
+                                      <Ship className="w-2.5 h-2.5" />
+                                      <span>Logistik ({completedCount}/4)</span>
+                                    </span>
+                                  );
+                                } else {
+                                  const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || (d.type as string) === 'Proforma Invoice') && d.status === 'Approved');
+                                  if (isSigned) {
+                                    return (
+                                      <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-teal-700 bg-teal-50 border-teal-200">
+                                        <CheckCircle className="w-2.5 h-2.5" />
+                                        <span>Kontrak Disetujui</span>
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-amber-700 bg-amber-50/70 border-amber-200">
+                                        <FileSignature className="w-2.5 h-2.5" />
+                                        <span>Negosiasi Aktif</span>
+                                      </span>
+                                    );
+                                  }
+                                }
+                              })()}
                             </div>
-
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-black text-slate-900 leading-snug group-hover:text-indigo-650 transition-colors">
+                            
+                            {/* Product Name & Value */}
+                            <div>
+                              <h4 className="text-xs font-black text-slate-900 leading-snug line-clamp-1">
                                 {s.productName}
                               </h4>
-                              <p className="text-xs text-gray-400 font-semibold">
-                                Volume Ekspor: <span className="text-slate-700 font-bold">{s.quantity} {s.unit}</span>
+                              <p className="text-[11px] text-indigo-600 font-extrabold mt-0.5">
+                                ${s.totalValue.toLocaleString('id-ID')} USD
                               </p>
                             </div>
 
-                            {/* Detail Grid */}
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 pt-3 border-t border-dashed border-gray-150 text-[11px]">
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-dashed border-gray-100 text-[10px]">
                               <div>
-                                <span className="text-gray-400 font-semibold block">Buyer (Importir):</span>
+                                <span className="text-gray-400 font-semibold block">Buyer:</span>
                                 <span className="font-bold text-slate-700 block truncate" title={s.buyerCompany}>{s.buyerCompany}</span>
                               </div>
                               <div>
-                                <span className="text-gray-400 font-semibold block">Total Nilai Barang:</span>
-                                <span className="font-extrabold text-indigo-600 block">${s.totalValue.toLocaleString('id-ID')} USD</span>
+                                <span className="text-gray-400 font-semibold block">Volume:</span>
+                                <span className="font-bold text-slate-700 block">{s.quantity} {s.unit}</span>
                               </div>
-                              <div>
-                                <span className="text-gray-400 font-semibold block">Pelabuhan Muat (POL):</span>
-                                <span className="font-bold text-slate-700 block truncate" title={s.portOfLoading}>{s.portOfLoading.split(',')[0]}</span>
+                              <div className="col-span-2">
+                                <span className="text-gray-400 font-semibold block">Rute (POL → POD):</span>
+                                <span className="font-bold text-slate-600 block truncate" title={`${s.portOfLoading} → ${s.portOfDischarge}`}>
+                                  {s.portOfLoading.split(',')[0]} → {s.portOfDischarge.split(',')[0]}
+                                </span>
                               </div>
-                              <div>
-                                <span className="text-gray-400 font-semibold block">Pelabuhan Bongkar (POD):</span>
-                                <span className="font-bold text-slate-700 block truncate" title={s.portOfDischarge}>{s.portOfDischarge.split(',')[0]}</span>
+                              <div className="col-span-2">
+                                <span className="text-gray-400 font-semibold block">Jadwal (ETD → ETA):</span>
+                                <span className="font-bold text-slate-600 block truncate">
+                                  {s.etd} → {s.eta}
+                                </span>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Modernized Progress Meter */}
-                            <div className="space-y-1.5 pt-1">
-                              <div className="flex items-center justify-between text-[11px] font-bold select-none text-slate-500">
-                                <span>Perkembangan Regulasi Pabean &amp; Fisik</span>
-                                <span className="text-indigo-650 font-black">{stepInfo.percent}% Selesai</span>
+                          {/* Progress & Actions Footer */}
+                          <div className="space-y-3 pt-2 border-t border-gray-100">
+                            {/* Minimalist Progress Bar */}
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[9px] font-bold text-slate-500">
+                                <span>Progres</span>
+                                <span className="text-indigo-600 font-black">{stepInfo.percent}%</span>
                               </div>
-                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                                 <div 
                                   className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" 
                                   style={{ width: `${stepInfo.percent}%` }}
                                 />
                               </div>
                             </div>
-                          </div>
 
-                          {/* Lower Action bar inside Card */}
-                          <div className="bg-slate-50/50 border-t border-slate-150 px-5 py-3 flex items-center justify-between gap-3 select-none">
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
-                              <span>ETD: {s.etd}</span>
-                              <span>•</span>
-                              <span>ETA: {s.eta}</span>
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-end gap-1.5">
+                              {currentUser?.role === 'Owner/Direktur' && (
+                                <button
+                                  onClick={() => setShipmentToDeleteId(s.id)}
+                                  className="p-1.5 text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all cursor-pointer shadow-3xs"
+                                  title="Hapus Transaksi"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              
+                              <button
+                                onClick={() => {
+                                  setActiveShipmentId(s.id);
+                                }}
+                                className={`flex-1 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer shadow-3xs ${
+                                  s.currentStep === 'Draft'
+                                    ? 'bg-amber-600 text-white hover:bg-amber-700 hover:-translate-y-0.5 active:scale-95'
+                                    : 'bg-slate-900 text-white hover:bg-indigo-600 hover:-translate-y-0.5 active:scale-95'
+                                }`}
+                              >
+                                <span>Lacak &amp; Kelola</span>
+                                <ArrowRight className="w-3 h-3 shrink-0" />
+                              </button>
                             </div>
-                            
-                            <button
-                              onClick={() => {
-                                setActiveShipmentId(s.id);
-                              }}
-                              className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-3xs ${
-                                s.currentStep === 'Draft'
-                                  ? 'bg-amber-600 text-white hover:bg-amber-700 hover:-translate-y-0.5 active:scale-95'
-                                  : 'bg-slate-900 text-white hover:bg-indigo-600 hover:-translate-y-0.5 active:scale-95'
-                              }`}
-                            >
-                              <span>Lacak &amp; Kelola</span>
-                              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                            </button>
                           </div>
                         </div>
                       );
@@ -1936,6 +2038,8 @@ export default function App() {
                     negoStepId={negoStepId}
                     onNegoStepIdChange={(stepId) => setNegoStepId(stepId)}
                     onUpdateShipmentFromDeal={handleUpdateShipmentFromDeal}
+                    autoOpenLoi={autoOpenLoi}
+                    onResetAutoOpenLoi={() => setAutoOpenLoi(false)}
                   />
                 )}
               </div>
@@ -2205,6 +2309,20 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                {/* Phone Field */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Nomor Telepon</label>
+                  <input
+                    type="tel"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="Contoh: +62 812 3456 7890"
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+              </div>
+
               {/* Address Field */}
               <div className="space-y-1">
                 <label className="block text-[11px] font-black uppercase text-slate-500">Alamat Perusahaan</label>
@@ -2321,6 +2439,68 @@ export default function App() {
         onSelectUser={handleSelectUser}
         initialMode={loginModalMode}
       />
+
+      {/* Deletion Confirmation Modal for Owner/Direktur */}
+      {shipmentToDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-red-100 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center animate-pulse">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">Hapus Transaksi</h3>
+                <p className="text-[10px] text-red-500 font-extrabold uppercase">Otorisasi Owner/Direktur</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Apakah Anda yakin ingin menghapus transaksi kontainer dengan nomor kontrak{" "}
+              <strong className="font-mono text-indigo-600">
+                {shipments.find(s => s.id === shipmentToDeleteId)?.contractNumber}
+              </strong>{" "}
+              secara permanen? Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setShipmentToDeleteId(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all cursor-pointer"
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={() => {
+                  if (shipmentToDeleteId) {
+                    const shipmentToDelete = shipments.find(s => s.id === shipmentToDeleteId);
+                    if (shipmentToDelete) {
+                      setShipments(prev => prev.filter(s => s.id !== shipmentToDeleteId));
+                      if (activeShipmentId === shipmentToDeleteId) {
+                        setActiveShipmentId('');
+                      }
+                      const newAlert: RealTimeAlert = {
+                        id: `alt-delete-${Date.now()}`,
+                        shipmentId: shipmentToDeleteId,
+                        contractNumber: shipmentToDelete.contractNumber,
+                        title: 'Transaksi Dihapus Secara Permanen',
+                        message: `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dihapus secara permanen dari pabean oleh Direktur Utama.`,
+                        type: 'warning',
+                        timestamp: new Date().toISOString(),
+                        readBy: []
+                      };
+                      setAlerts(prev => [newAlert, ...prev]);
+                    }
+                    setShipmentToDeleteId(null);
+                  }
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-3xs cursor-pointer animate-none"
+              >
+                Hapus Permanen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Sales Contract Builder Modal (Mulai transaksi dari awal) */}
       {isNewContractModalOpen && (

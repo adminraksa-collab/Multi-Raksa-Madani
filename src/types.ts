@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   avatar: string;
   companyName: string;
+  phone?: string;
   address?: string;
   country?: string;
   isApproved?: boolean;
@@ -71,14 +72,9 @@ export interface Certification {
 }
 
 export type ShipmentStep = 
-  | 'Draft'                  // Kontrak penjualan dibuat
-  | 'Sourcing'               // Barang disediakan oleh Supplier
-  | 'Verification'           // Karantina, sertifikasi halal, phytosanitary
-  | 'Documents'              // Pembuatan COO, Invoice, PL, Bea Cukai
-  | 'Customs'                // Pemeriksaan pabean & PEB (Pemberitahuan Ekspor Barang)
-  | 'Loading'                // Forwarder memuat barang ke kontainer/kapal
-  | 'Shipping'               // Kapal dalam pelayaran
-  | 'Completed';             // Barang sampai, dokumen diclearance di negara tujuan
+  | 'Draft'                  // Kontrak penjualan & Proforma Invoice disepakati
+  | 'Shipping'               // Proses Logistik Terpadu (Sourcing, Customs, Pelayaran, L/C)
+  | 'Completed';             // Selesai Serah Terima oleh Buyer
 
 export interface ShipmentStepInfo {
   step: ShipmentStep;

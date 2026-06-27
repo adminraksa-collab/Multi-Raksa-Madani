@@ -3,7 +3,7 @@ import { UserProfile, UserRole } from '../types';
 import { 
   Users, UserCheck, Shield, Trash2, CheckCircle, 
   Search, ShieldAlert, AlertCircle, Sparkles, Building, Mail, Filter,
-  Truck, Key, Eye, EyeOff, Plus, X, Edit, Save, Check, Info
+  Truck, Key, Eye, EyeOff, Plus, X, Edit, Save, Check, Info, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -88,6 +88,7 @@ export default function AccountManagement({
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('Trader');
   const [newUserCompany, setNewUserCompany] = useState('');
+  const [newUserPhone, setNewUserPhone] = useState('');
   const [newUserApproved, setNewUserApproved] = useState(true);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -99,6 +100,7 @@ export default function AccountManagement({
   const [editPassword, setEditPassword] = useState('');
   const [editRole, setEditRole] = useState<UserRole>('Trader');
   const [editCompany, setEditCompany] = useState('');
+  const [editPhone, setEditPhone] = useState('');
   const [editApproved, setEditApproved] = useState(true);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
@@ -137,6 +139,7 @@ export default function AccountManagement({
       email: emailLower,
       avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 999999)}?w=150`,
       companyName: newUserCompany.trim(),
+      phone: newUserPhone.trim() || undefined,
       isApproved: newUserApproved
     };
 
@@ -162,6 +165,7 @@ export default function AccountManagement({
     setNewUserEmail('');
     setNewUserPassword('');
     setNewUserCompany('');
+    setNewUserPhone('');
     setNewUserApproved(true);
 
     setTimeout(() => {
@@ -179,6 +183,7 @@ export default function AccountManagement({
     setEditPassword(credObj ? credObj.password : '');
     setEditRole(user.role);
     setEditCompany(user.companyName);
+    setEditPhone(user.phone || '');
     setEditApproved(user.isApproved !== false);
     setEditError('');
     setEditSuccess('');
@@ -214,6 +219,7 @@ export default function AccountManagement({
           email: emailLower,
           role: editRole,
           companyName: editCompany.trim(),
+          phone: editPhone.trim() || undefined,
           isApproved: editApproved
         };
       }
@@ -511,6 +517,19 @@ export default function AccountManagement({
                   />
                 </div>
 
+                {/* Field 5b: Nomor Telepon / WA */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nomor Telepon / WhatsApp</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Contoh: +6281234567890"
+                    value={newUserPhone}
+                    onChange={(e) => setNewUserPhone(e.target.value)}
+                    className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                  />
+                </div>
+
                 {/* Field 6: Approval */}
                 <div className="flex items-center gap-3 self-end py-2">
                   <input
@@ -671,6 +690,12 @@ export default function AccountManagement({
                                 )}
                               </p>
                               <p className="text-[9px] text-slate-400 font-semibold truncate">Kab/Kota: {user.country || 'Indonesia'}</p>
+                              {user.phone && (
+                                <p className="text-[9px] text-emerald-600 font-bold truncate flex items-center gap-1 mt-0.5" title="WhatsApp / Telepon">
+                                  <Phone className="w-3 h-3 shrink-0 text-emerald-500" />
+                                  <span>{user.phone}</span>
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -809,7 +834,7 @@ export default function AccountManagement({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 max-w-lg w-full border border-slate-200 shadow-2xl relative text-left"
+              className="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto border border-slate-200 shadow-2xl relative text-left"
             >
               {/* Close Button */}
               <button 
@@ -904,6 +929,19 @@ export default function AccountManagement({
                     value={editCompany}
                     onChange={(e) => setEditCompany(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                  />
+                </div>
+
+                {/* Nomor Telepon / WA */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nomor Telepon / WhatsApp</label>
+                  <input
+                    type="tel"
+                    required
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                    placeholder="Contoh: +6281234567890"
                   />
                 </div>
 

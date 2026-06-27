@@ -4,7 +4,7 @@ import { mockUsers } from '../mockData';
 import { 
   Shield, Briefcase, ShoppingBag, Truck, Leaf, X, 
   Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle, 
-  ArrowRight, Key, Sparkles, UserCheck, UserPlus, Building
+  ArrowRight, Key, Sparkles, UserCheck, UserPlus, Building, Phone
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -77,6 +77,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [regCompany, setRegCompany] = useState('');
   const [regRole, setRegRole] = useState<UserRole>('Buyer');
+  const [regPhone, setRegPhone] = useState('');
 
   // Local state for credentials and user list in storage
   const [localCredentials, setLocalCredentials] = useState<any[]>([]);
@@ -242,6 +243,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
       email: emailLower,
       avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
       companyName: regCompany.trim(),
+      phone: regPhone.trim() || undefined,
       isApproved: !needsApproval // false if Trader, Forwarder, Supplier
     };
 
@@ -308,10 +310,10 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col md:flex-row my-4 sm:my-8 text-left"
+          className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-150 flex flex-col md:flex-row my-4 sm:my-8 text-left max-h-[90vh] md:max-h-[85vh] overflow-y-auto md:overflow-hidden"
         >
           {/* LEFT SIDE: FORM LOGIN */}
-          <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6">
+          <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6 md:overflow-y-auto md:max-h-[85vh]">
             <div className="space-y-4">
               {/* Brand and titles */}
               <div className="flex items-center gap-2">
@@ -612,6 +614,28 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       </div>
                     </div>
 
+                    {/* Nomor Telepon / WA */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span>Nomor Telepon / WhatsApp</span>
+                        </label>
+                        <span className="text-[8px] text-slate-400 font-bold uppercase">Wajib Diisi</span>
+                      </div>
+                      <input
+                        type="tel"
+                        value={regPhone}
+                        onChange={(e) => {
+                          setRegPhone(e.target.value);
+                          setErrorMsg('');
+                        }}
+                        placeholder="Contoh: +6281234567890"
+                        className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                        required
+                      />
+                    </div>
+
                     {/* Feedbacks */}
                     {errorMsg && (
                       <div className="p-2.5 bg-red-50 border border-red-200 text-red-900 text-xs rounded-xl flex items-start gap-2 animate-shake">
@@ -668,7 +692,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
           </div>
 
           {/* RIGHT SIDE: EASY TESTING CREDENTIALS BAR */}
-          <div className="md:w-1/2 bg-slate-50 border-t md:border-t-0 md:border-l border-gray-150 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6">
+          <div className="md:w-1/2 bg-slate-50 border-t md:border-t-0 md:border-l border-gray-150 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6 md:overflow-y-auto md:max-h-[85vh]">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1.5 p-1.5 px-3 bg-indigo-100 border border-indigo-200 rounded-lg text-[10px] text-indigo-800 font-extrabold uppercase shrink-0">

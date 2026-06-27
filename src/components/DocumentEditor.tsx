@@ -60,7 +60,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
   useEffect(() => {
     if (shipments.length > 0 && !selectedShipmentId) {
       // Find one in Draft / Verification / Documents
-      const draftShipment = shipments.find(s => ['Draft', 'Verification', 'Documents', 'Sourcing'].includes(s.currentStep)) || shipments[0];
+      const draftShipment = shipments.find(s => ['Draft', 'Shipping'].includes(s.currentStep)) || shipments[0];
       setSelectedShipmentId(draftShipment.id);
     }
   }, [shipments, selectedShipmentId]);

@@ -6,11 +6,12 @@ import {
   CheckCircle, ArrowRight, Info, AlertCircle, 
   Award, FileText, Anchor, Compass, UserCheck, Play, 
   Layers, ChevronRight, Check, Sparkles, Send, FileDown,
-  X, BookOpen, AlertTriangle, Lightbulb, ChevronDown, ChevronUp, RefreshCw
+  X, BookOpen, AlertTriangle, Lightbulb, ChevronDown, ChevronUp, RefreshCw,
+  Lock, Trash2, Paperclip, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import VesselGPSMap from './VesselGPSMap';
-import NegotiationDashboard from './NegotiationDashboard';
+// No VesselGPSMap import
+import CommercialNegotiationGateway from './CommercialNegotiationGateway';
 
 interface UnifiedStepInfo {
   stepId: string;
@@ -25,113 +26,33 @@ interface UnifiedStepInfo {
 
 const UNIFIED_STEPS: UnifiedStepInfo[] = [
   {
-    stepId: 'nego-loi',
+    stepId: 'negotiation',
     step: 'Draft',
-    label: 'LOI (Surat Minat)',
-    description: 'Buyer menyatakan minat pembelian komoditas ekspor via Letter of Intent (LOI) resmi.',
-    actor: 'Buyer',
-    expectedDuration: '1-2 Hari',
-    stepIcon: 'FileText',
-    stage: 'negotiation'
-  },
-  {
-    stepId: 'nego-quotation',
-    step: 'Draft',
-    label: 'Quotation (Penawaran)',
-    description: 'Trader mengirim lembar penawaran harga, spesifikasi kargo, dan kalkulasi bea.',
+    label: 'Negosiasi & Kontrak',
+    description: 'Penyusunan draf kontrak bilateral (LOI, MoU) & penandatanganan Proforma Invoice (PI) bersama.',
     actor: 'Trader',
     expectedDuration: '1-3 Hari',
-    stepIcon: 'Award',
+    stepIcon: 'Draft',
     stage: 'negotiation'
-  },
-  {
-    stepId: 'nego-pi',
-    step: 'Draft',
-    label: 'Draf PI & Negosiasi',
-    description: 'Para pihak merancang Proforma Invoice (PI) dan menegosiasikan klausul jual-beli ekspor.',
-    actor: 'Trader',
-    expectedDuration: '2-4 Hari',
-    stepIcon: 'Layers',
-    stage: 'negotiation'
-  },
-  {
-    stepId: 'nego-signing',
-    step: 'Draft',
-    label: 'Tanda Tangan Kontrak',
-    description: 'Penandatanganan bilateral Sales Contract oleh Trader dan Buyer Jerman secara hukum.',
-    actor: 'Trader',
-    expectedDuration: '1-2 Hari',
-    stepIcon: 'UserCheck',
-    stage: 'negotiation'
-  },
-  {
-    stepId: 'sourcing',
-    step: 'Sourcing',
-    label: 'Penyediaan Barang',
-    description: 'Supplier memproduksi kargo ramah lingkungan dan mengapalkan ke Gudang Transit Utama.',
-    actor: 'Supplier',
-    expectedDuration: '7-14 Hari',
-    stepIcon: 'Layers',
-    stage: 'logistics'
-  },
-  {
-    stepId: 'verification',
-    step: 'Verification',
-    label: 'Sertifikasi Karantina',
-    description: 'Pengujian lab acak oleh Balai Karantina Pertanian RI guna sertifikat Phytosanitary.',
-    actor: 'Trader',
-    expectedDuration: '2-5 Hari',
-    stepIcon: 'Award',
-    stage: 'logistics'
-  },
-  {
-    stepId: 'documents',
-    step: 'Documents',
-    label: 'Sertifikat Asal (COO)',
-    description: 'Eksportir mengurus Certificate of Origin (COO) resmi dari Kementerian Perdagangan.',
-    actor: 'Trader',
-    expectedDuration: '2-3 Hari',
-    stepIcon: 'FileText',
-    stage: 'logistics'
-  },
-  {
-    stepId: 'customs',
-    step: 'Customs',
-    label: 'Kepabeanan Bea Cukai',
-    description: 'Pengajuan berkas PEB secara daring mandiri dan penerbitan izin muat NPE oleh pabean.',
-    actor: 'Owner/Direktur',
-    expectedDuration: '1-2 Hari',
-    stepIcon: 'Shield',
-    stage: 'logistics'
-  },
-  {
-    stepId: 'loading',
-    step: 'Loading',
-    label: 'Loading & Stuffing',
-    description: 'Forwarder memuat kargo FCL ke kontainer baja laut dan dinaikkan ke kapal cargo.',
-    actor: 'Forwarder',
-    expectedDuration: '1-2 Hari',
-    stepIcon: 'Anchor',
-    stage: 'logistics'
   },
   {
     stepId: 'shipping',
     step: 'Shipping',
-    label: 'Pelayaran Logistik',
-    description: 'Kapal kontainer berlayar mengarungi samudra samudera menuju Hamburg lintas negara.',
-    actor: 'Forwarder',
-    expectedDuration: '15-25 Hari',
-    stepIcon: 'Compass',
+    label: 'Proses Logistik & L/C',
+    description: 'Sourcing petani lokal, Bea Cukai (PEB/COO/Phyto), pengapalan samudra (B/L), dan pemenuhan dokumen L/C.',
+    actor: 'Trader',
+    expectedDuration: '20-30 Hari',
+    stepIcon: 'Shipping',
     stage: 'logistics'
   },
   {
     stepId: 'completed',
     step: 'Completed',
-    label: 'Pelunasan L/C',
-    description: 'Kargo diterima di Eropa, eksportir melepas draf BL bersih guna klaim dana L/C bank.',
+    label: 'Selesai & Serah Terima',
+    description: 'Bongkar muat kargo berhasil di pelabuhan Hamburg Jerman, serah terima kargo, dan penutupan transaksi.',
     actor: 'Buyer',
-    expectedDuration: '3-5 Hari',
-    stepIcon: 'CheckCircle',
+    expectedDuration: '1-2 Hari',
+    stepIcon: 'Completed',
     stage: 'logistics'
   }
 ];
@@ -152,9 +73,11 @@ interface InteractiveInfographicProps {
     incoterms: string;
     portOfDischarge: string;
     buyerCompany: string;
-    nextStep: 'Sourcing';
+    nextStep: ShipmentStep;
     comments: string;
   }) => void;
+  autoOpenLoi?: boolean;
+  onResetAutoOpenLoi?: () => void;
 }
 
 export default function InteractiveInfographic({
@@ -166,30 +89,18 @@ export default function InteractiveInfographic({
   onSimulateEvent,
   negoStepId,
   onNegoStepIdChange,
-  onUpdateShipmentFromDeal
+  onUpdateShipmentFromDeal,
+  autoOpenLoi,
+  onResetAutoOpenLoi
 }: InteractiveInfographicProps) {
   
   // Index of the actual/real shipment progress step
   const getActualUnifiedIndex = () => {
-    if (shipment.currentStep !== 'Draft') {
-      switch (shipment.currentStep) {
-        case 'Sourcing': return 4;
-        case 'Verification': return 5;
-        case 'Documents': return 6;
-        case 'Customs': return 7;
-        case 'Loading': return 8;
-        case 'Shipping': return 9;
-        case 'Completed': return 10;
-        default: return 4;
-      }
-    } else {
-      // It's Draft (Negotiation Phase)
-      const currentNegoStep = negoStepId || 1;
-      if (currentNegoStep === 1) return 0;
-      if (currentNegoStep === 2) return 1;
-      if (currentNegoStep === 3 || currentNegoStep === 4) return 2;
-      if (currentNegoStep === 5) return 3;
-      return 0;
+    switch (shipment.currentStep) {
+      case 'Draft': return 0;
+      case 'Shipping': return 1;
+      case 'Completed': return 2;
+      default: return 0;
     }
   };
 
@@ -207,11 +118,139 @@ export default function InteractiveInfographic({
   const [docSavedMessage, setDocSavedMessage] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
+  // For Phase II: Logistics simulation tracking (0 = Sourcing, 1 = Customs, 2 = Shipping, 3 = L/C)
+  const [activeLogisticsSubStep, setActiveLogisticsSubStep] = useState<number>(0);
+  const [completedLogisticsSubSteps, setCompletedLogisticsSubSteps] = useState<number[]>(() => {
+    try {
+      const stored = localStorage.getItem(`exportflow_completed_substeps_${shipment.id}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`exportflow_completed_substeps_${shipment.id}`, JSON.stringify(completedLogisticsSubSteps));
+  }, [completedLogisticsSubSteps, shipment.id]);
+
+  interface SubStepFile {
+    id: string;
+    name: string;
+    size: string;
+    date: string;
+    isDefault?: boolean;
+    dataUrl?: string;
+  }
+
+  const INITIAL_SUBSTEP_FILES: {[key: number]: SubStepFile[]} = {
+    0: [
+      { id: 'def-0', name: 'Draf_Surat_Penyerahan_Bahan_Baku_Gayo.pdf', size: '284 KB', date: '26 Jun 2026', isDefault: true }
+    ],
+    1: [
+      { id: 'def-1', name: 'Deklarasi_PEB_Bea_Cukai_Draft.pdf', size: '315 KB', date: '26 Jun 2026', isDefault: true }
+    ],
+    2: [
+      { id: 'def-2', name: 'Draf_Bill_of_Lading_BL_Ocean_TJP.pdf', size: '412 KB', date: '26 Jun 2026', isDefault: true }
+    ],
+    3: [
+      { id: 'def-3', name: 'Letter_of_Credit_Advising_Mandiri_Signed.pdf', size: '1.2 MB', date: '26 Jun 2026', isDefault: true }
+    ]
+  };
+
+  const [uploadedSubStepFiles, setUploadedSubStepFiles] = useState<{[key: number]: SubStepFile[]}>(() => {
+    try {
+      const stored = localStorage.getItem(`exportflow_substep_files_${shipment.id}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_SUBSTEP_FILES;
+  });
+
+  const [dragActive, setDragActive] = useState<{[key: number]: boolean}>({});
+  const [subStepUploadError, setSubStepUploadError] = useState<{[key: number]: string | null}>({});
+
+  useEffect(() => {
+    localStorage.setItem(`exportflow_substep_files_${shipment.id}`, JSON.stringify(uploadedSubStepFiles));
+  }, [uploadedSubStepFiles, shipment.id]);
+
+  const handleUploadFile = (subStepIdx: number, file: File) => {
+    setSubStepUploadError(prev => ({ ...prev, [subStepIdx]: null }));
+
+    if (file.size > 2 * 1024 * 1024) {
+      setSubStepUploadError(prev => ({ 
+        ...prev, 
+        [subStepIdx]: 'Gagal: Ukuran berkas melebihi batas maksimum 2MB.' 
+      }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const sizeStr = file.size > 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+        : `${(file.size / 1024).toFixed(0)} KB`;
+      
+      const newFile: SubStepFile = {
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        name: file.name,
+        size: sizeStr,
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        dataUrl: reader.result as string
+      };
+
+      // Limit to exactly 1 file: replace any existing file
+      setUploadedSubStepFiles(prev => ({
+        ...prev,
+        [subStepIdx]: [newFile]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteFile = (subStepIdx: number, fileId: string) => {
+    setSubStepUploadError(prev => ({ ...prev, [subStepIdx]: null }));
+    setUploadedSubStepFiles(prev => ({
+      ...prev,
+      [subStepIdx]: (prev[subStepIdx] || []).filter(f => f.id !== fileId)
+    }));
+  };
+
+  const downloadFile = (file: SubStepFile) => {
+    if (file.dataUrl) {
+      const link = document.createElement('a');
+      link.href = file.dataUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Create simulated download for default mock documents
+      const content = `[DOKUMEN RESMI SIMULASI]\nNama Dokumen: ${file.name}\nUkuran: ${file.size}\nTanggal Validasi: ${file.date}\nStatus: Terverifikasi oleh Sistem Tata Kelola Ekspor`;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name.endsWith('.pdf') ? file.name : `${file.name}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // On-page UI tab controls & configurations
-  const [onPageTab, setOnPageTab] = useState<'details' | 'actions' | 'dictionary'>('details');
+  const [onPageTab, setOnPageTab] = useState<'details' | 'actions' | 'dictionary'>('actions');
   const [showEducation, setShowEducation] = useState<boolean>(true);
   const [dictionaryRole, setDictionaryRole] = useState<UserRole>('Trader');
   const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(true);
+  const [isStepPopupOpen, setIsStepPopupOpen] = useState<boolean>(false);
+  const [showCommercialArchive, setShowCommercialArchive] = useState<boolean>(false);
 
   // Trigger auto-focus whenever the actual active step advances
   useEffect(() => {
@@ -219,52 +258,55 @@ export default function InteractiveInfographic({
   }, [actualStepIndex]);
 
   useEffect(() => {
+    // Synchronize selected sub-step with actual progress if needed, or default to 0
+    if (actualStepIndex !== 1) {
+      setActiveLogisticsSubStep(0);
+    }
+  }, [actualStepIndex]);
+
+  // Automatically open the step details popup modal when autoOpenLoi is requested
+  useEffect(() => {
+    if (autoOpenLoi) {
+      setInspectedStepIndex(0); // Draft is the first step (index 0)
+      setIsStepPopupOpen(true);
+    }
+  }, [autoOpenLoi]);
+
+  useEffect(() => {
     // Generate default fields based on inspectedStepIndex & shipment
     const defaultFields: {[key: string]: string} = {};
-    if (inspectedStepIndex === 4) {
-      defaultFields.deliveryNo = 'DO/TRANSIT-GAYO/2026/889';
-      defaultFields.supplier = shipment.supplierCompany || 'Koperasi Kopi Gayo Organik';
-      defaultFields.receiver = 'Gudang Transit Utama PT Multi Raksa Madani';
-      defaultFields.truckNo = 'B 9201 TXX';
-      defaultFields.netMass = `${shipment.quantity * 1000} Kilogram (kg)`;
-      defaultFields.condition = 'Kadar air tervalidasi 12% max, bebas jamur & hama parasit';
-    } else if (inspectedStepIndex === 5) {
-      defaultFields.appNo = 'REQ-PHYT/KT-GAYO/2026/410';
-      defaultFields.exporter = 'PT Multi Raksa Madani (Hendry Kurniawan)';
-      defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
-      defaultFields.botanicalName = shipment.productName.toLowerCase().includes('kopi') ? 'Coffea arabica' : 'Cocos nucifera';
-      defaultFields.origin = 'Sumatran Highlands, Indonesia';
-      defaultFields.treatment = 'Sertifikasi lab bebas pestisida, fumigasi Metil Bromida';
-    } else if (inspectedStepIndex === 6) {
-      defaultFields.cooNo = 'COO/A-EUR/2026/10291';
-      defaultFields.cooNo_part2 = 'KEMENTERIAN PERDAGANGAN RI';
-      defaultFields.shipper = 'PT Multi Raksa Madani';
-      defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
-      defaultFields.transport = `${shipment.vesselName} ${shipment.voyageNumber || 'HP.991'} via ${shipment.portOfLoading}`;
-      defaultFields.preference = 'Indonesian Origin Certified (GSP Scheme)';
-      defaultFields.hsCode = shipment.hsCode || '0901.11.10';
-    } else if (inspectedStepIndex === 7) {
-      defaultFields.pebNo = 'PEB-REG/BEACUKAI-TJP/2026/778';
-      defaultFields.declarant = 'Hendry Kurniawan (PT Multi Raksa Madani)';
-      defaultFields.hsCode = shipment.hsCode || '0901.11.10';
-      defaultFields.fobValue = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
-      defaultFields.currency = 'USD';
-      defaultFields.loadingPort = shipment.portOfLoading;
-    } else if (inspectedStepIndex === 8) {
-      defaultFields.stuffingNo = 'SO/SK-LOG/2026/1102';
-      defaultFields.forwarder = 'PT Samudera Logistik Internasional';
-      defaultFields.containerNo = 'TGBU 882019-2 (40ft High Cube)';
-      defaultFields.sealNo = 'ID-BC-SEGEL-88201';
-      defaultFields.driverPhone = 'Budiono (+62 812-9908-1123)';
-      defaultFields.stuffingDate = shipment.etd || '2026-07-01';
-    } else if (inspectedStepIndex === 9) {
-      defaultFields.siNo = 'SI/SAMUDERA/2026/099';
-      defaultFields.shipper = 'PT Multi Raksa Madani';
-      defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
-      defaultFields.vesselName = shipment.vesselName;
-      defaultFields.destination = shipment.portOfDischarge;
-      defaultFields.freightCharges = 'Freight Prepaid (Sistem CIF)';
-    } else if (inspectedStepIndex === 10) {
+    if (inspectedStepIndex === 0) {
+      defaultFields.trxId = shipment.id;
+    } else if (inspectedStepIndex === 1) {
+      if (activeLogisticsSubStep === 0) {
+        defaultFields.deliveryNo = 'DO/TRANSIT-GAYO/2026/889';
+        defaultFields.supplier = shipment.supplierCompany || 'Koperasi Kopi Gayo Organik';
+        defaultFields.receiver = 'Gudang Transit Utama PT Multi Raksa Madani';
+        defaultFields.truckNo = 'B 9201 TXX';
+        defaultFields.netMass = `${shipment.quantity * 1000} Kilogram (kg)`;
+        defaultFields.condition = 'Kadar air tervalidasi 12% max, bebas jamur & hama parasit';
+      } else if (activeLogisticsSubStep === 1) {
+        defaultFields.pebNo = 'PEB-REG/BEACUKAI-TJP/2026/778';
+        defaultFields.declarant = 'Hendry Kurniawan (PT Multi Raksa Madani)';
+        defaultFields.hsCode = shipment.hsCode || '0901.11.10';
+        defaultFields.fobValue = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
+        defaultFields.currency = 'USD';
+        defaultFields.loadingPort = shipment.portOfLoading;
+      } else if (activeLogisticsSubStep === 2) {
+        defaultFields.siNo = 'SI/SAMUDERA/2026/099';
+        defaultFields.shipper = 'PT Multi Raksa Madani';
+        defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
+        defaultFields.vesselName = shipment.vesselName;
+        defaultFields.destination = shipment.portOfDischarge;
+        defaultFields.freightCharges = 'Freight Prepaid (Sistem CIF)';
+      } else if (activeLogisticsSubStep === 3) {
+        defaultFields.lcNo = 'LC-DEUTSCH/2026/9011';
+        defaultFields.beneficiary = 'PT Multi Raksa Madani';
+        defaultFields.advisingBank = 'Bank Mandiri (Persero) Tbk - Jakarta Cabang Thamrin';
+        defaultFields.amount = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
+        defaultFields.docRequiredList = 'Commercial Invoice, Packing List, Certificate of Origin, Bill of Lading, Phytosanitary Certificate';
+      }
+    } else if (inspectedStepIndex === 2) {
       defaultFields.lcNo = 'LC-DEUTSCH/2026/9011';
       defaultFields.beneficiary = 'PT Multi Raksa Madani';
       defaultFields.advisingBank = 'Bank Mandiri (Persero) Tbk - Jakarta Cabang Thamrin';
@@ -276,7 +318,7 @@ export default function InteractiveInfographic({
     
     setDocFields(defaultFields);
     setDocSavedMessage(null);
-  }, [inspectedStepIndex, shipment]);
+  }, [inspectedStepIndex, activeLogisticsSubStep, shipment]);
 
   const handleFieldChange = (key: string, val: string) => {
     setDocFields(prev => ({
@@ -285,98 +327,117 @@ export default function InteractiveInfographic({
     }));
   };
 
+  const getLetterheadData = (stepIdx: number, subStepIdx: number) => {
+    switch (stepIdx) {
+      case 0:
+        return {
+          name: 'PT MULTI RAKSA MADANI',
+          address: 'Menara Karya Lt.12, Jalan HR. Rasuna Said Blok X-5 Kuningan, Jakarta Selatan • Telp: (021) 529-5000',
+          subtitle: 'PORTAL TERPADU HUB PERDAGANGAN EKSPOR REPUBLIK INDONESIA'
+        };
+      case 1:
+        if (subStepIdx === 0) {
+          return {
+            name: (shipment.supplierCompany || 'KOPERASI KOPI GAYO ORGANIK').toUpperCase(),
+            address: 'Jalan Raya Takengon-Angkup, Pegasing, Aceh Tengah, Aceh • Telp: (0643) 21104',
+            subtitle: 'SUPPLIER MITRA TANI & KOORDINATOR ALIANSI PERKEBUNAN RAKYAT'
+          };
+        } else if (subStepIdx === 1) {
+          return {
+            name: 'DIREKTORAT JENDERAL BEA DAN CUKAI - REPUBLIK INDONESIA',
+            address: 'KPPBC Tipe Madya Pabean B Tanjung Priok, Jalan Nusantara No. 2, Jakarta Utara • Telp: (021) 439-0021',
+            subtitle: 'SISTEM REKONSILIASI PABEAN ELEKTRONIK (CEISA - EKSPOR)'
+          };
+        } else if (subStepIdx === 2) {
+          return {
+            name: 'PT SAMUDERA LOGISTIK INDONESIA',
+            address: 'Gedung Samudera Raya Lantai 3, Pelabuhan Belawan, Medan, Sumatera Utara • Telp: (061) 441-9000',
+            subtitle: 'FORWARDING MULTINASIONAL & AGEN PELAYARAN LINTAS SAMUDRA'
+          };
+        } else {
+          return {
+            name: 'BANK MANDIRI (PERSERO) TBK',
+            address: 'Plaza Mandiri, Jl. Jend. Gatot Subroto Kav. 36-38, Senayan, Jakarta Selatan • Telp: 14000',
+            subtitle: 'ADVISING BANK - DIVISI PEMBIAYAAN PERDAGANGAN INTERNASIONAL (TRADE FINANCE)'
+          };
+        }
+      case 2:
+      default:
+        return {
+          name: (shipment.buyerCompany || 'EUROFOODS IMPORT GMBH').toUpperCase(),
+          address: 'Speicherstadt Sandtorkai 37, 20457 Hamburg, Germany • Telp: +49 40 3344-0',
+          subtitle: 'IMPORTIR & DISTRIBUTOR RESMI KOMODITAS PANGAN EROPA'
+        };
+    }
+  };
+
   const getDocMeta = (idx: number) => {
     switch (idx) {
-      case 4:
+      case 0:
         return {
-          title: 'Draf Surat Jalan Penyerahan Barang (Delivery Order)',
-          inputs: [
-            { label: 'Nomor Surat Jalan', key: 'deliveryNo' },
-            { label: 'Supplier Pengirim', key: 'supplier' },
-            { label: 'Gudang Penerima', key: 'receiver' },
-            { label: 'Nomor Plat Truk', key: 'truckNo' },
-            { label: 'Berat Bersih', key: 'netMass' },
-            { label: 'Spesifikasi/Kualitas', key: 'condition' },
-          ]
+          title: 'Kontrak Dagang & Surat Minat Pembelian',
+          inputs: []
         };
-      case 5:
-        return {
-          title: 'Permohonan Pengujian Lab & Karantina (Phytosanitary Application)',
-          inputs: [
-            { label: 'Nomor Permohonan', key: 'appNo' },
-            { label: 'Eksportir Pemohon', key: 'exporter' },
-            { label: 'Pihak Penerima', key: 'consignee' },
-            { label: 'Nama Botani Tumbuhan', key: 'botanicalName' },
-            { label: 'Negara/Daerah Asal', key: 'origin' },
-            { label: 'Rincian Treatment', key: 'treatment' },
-          ]
-        };
-      case 6:
-        return {
-          title: 'Keterangan Asal / Certificate of Origin (Form D / A)',
-          inputs: [
-            { label: 'Nomor COO', key: 'cooNo' },
-            { label: 'Instansi Penerbit', key: 'cooNo_part2' },
-            { label: 'Shipper (Pengirim)', key: 'shipper' },
-            { label: 'Penerima Barang', key: 'consignee' },
-            { label: 'Moda Transportasi', key: 'transport' },
-            { label: 'Kriteria Preferensi', key: 'preference' },
-            { label: 'Kode HS Code', key: 'hsCode' },
-          ]
-        };
-      case 7:
-        return {
-          title: 'Draft Laporan Pemberitahuan Ekspor Barang (Draft PEB)',
-          inputs: [
-            { label: 'Nomor Pengajuan PEB', key: 'pebNo' },
-            { label: 'Eksportir Terdaftar', key: 'declarant' },
-            { label: 'HS Code Komoditas', key: 'hsCode' },
-            { label: 'Nilai Ekspor (FOB)', key: 'fobValue' },
-            { label: 'Valuta Bayar', key: 'currency' },
-            { label: 'Pelabuhan Asal Muat', key: 'loadingPort' },
-          ]
-        };
-      case 8:
-        return {
-          title: 'Perintah Muat Kontainer (Container Stuffing Order)',
-          inputs: [
-            { label: 'Nomor Stuffing Order', key: 'stuffingNo' },
-            { label: 'Perusahaan Logistik', key: 'forwarder' },
-            { label: 'Nomor Kontainer', key: 'containerNo' },
-            { label: 'Nomor Segel Bea Cukai', key: 'sealNo' },
-            { label: 'Kontak Sopir Truk', key: 'driverPhone' },
-            { label: 'Tanggal Stuffing', key: 'stuffingDate' },
-          ]
-        };
-      case 9:
-        return {
-          title: 'Instruksi Pengapalan Pelayaran (Shipping Instruction)',
-          inputs: [
-            { label: 'Nomor SI Pelayaran', key: 'siNo' },
-            { label: 'Pengirim Kargo', key: 'shipper' },
-            { label: 'Penerima Kargo', key: 'consignee' },
-            { label: 'Nama Kapal Pengangkut', key: 'vesselName' },
-            { label: 'Pelabuhan Tujuan Bongkar', key: 'destination' },
-            { label: 'Keterangan Ongkos', key: 'freightCharges' },
-          ]
-        };
-      case 10:
-        return {
-          title: 'Permohonan Pencairan Letter of Credit (L/C Settlement Request)',
-          inputs: [
-            { label: 'Nomor Letter of Credit (L/C)', key: 'lcNo' },
-            { label: 'Beneficiary (Penerima)', key: 'beneficiary' },
-            { label: 'Advising Bank', key: 'advisingBank' },
-            { label: 'Nilai Klaim Penagihan', key: 'amount' },
-            { label: 'Daftar Dokumen Terlampir', key: 'docRequiredList' },
-          ]
-        };
+      case 1:
+        if (activeLogisticsSubStep === 0) {
+          return {
+            title: 'Surat Penyerahan Bahan Baku (Sourcing DO)',
+            inputs: [
+              { label: 'Nomor Delivery Order', key: 'deliveryNo' },
+              { label: 'Supplier / Koperasi', key: 'supplier' },
+              { label: 'Penerima Kargo', key: 'receiver' },
+              { label: 'Nomor Armada Truk', key: 'truckNo' },
+              { label: 'Massa Bersih Komoditas', key: 'netMass' },
+              { label: 'Kondisi & Kualitas', key: 'condition' },
+            ]
+          };
+        } else if (activeLogisticsSubStep === 1) {
+          return {
+            title: 'Pemberitahuan Ekspor Barang (PEB / Customs)',
+            inputs: [
+              { label: 'Nomor Registrasi PEB', key: 'pebNo' },
+              { label: 'Eksportir Terdaftar', key: 'declarant' },
+              { label: 'HS Code Komoditas', key: 'hsCode' },
+              { label: 'Nilai Ekspor FOB (USD)', key: 'fobValue' },
+              { label: 'Mata Uang Pembayaran', key: 'currency' },
+              { label: 'Pelabuhan Muat Ekspor', key: 'loadingPort' },
+            ]
+          };
+        } else if (activeLogisticsSubStep === 2) {
+          return {
+            title: 'Instruksi Pengapalan Pelayaran (Shipping Instruction)',
+            inputs: [
+              { label: 'Nomor SI Pelayaran', key: 'siNo' },
+              { label: 'Pengirim Kargo', key: 'shipper' },
+              { label: 'Penerima Kargo', key: 'consignee' },
+              { label: 'Nama Kapal Pengangkut', key: 'vesselName' },
+              { label: 'Pelabuhan Tujuan Bongkar', key: 'destination' },
+              { label: 'Keterangan Ongkos', key: 'freightCharges' },
+            ]
+          };
+        } else {
+          return {
+            title: 'Penyelesaian Letter of Credit (L/C Settlement)',
+            inputs: [
+              { label: 'Nomor L/C Kontrak', key: 'lcNo' },
+              { label: 'Penerima Pembayaran (Beneficiary)', key: 'beneficiary' },
+              { label: 'Bank Koresponden', key: 'advisingBank' },
+              { label: 'Jumlah Nominal Pencairan', key: 'amount' },
+              { label: 'Syarat Dokumen Bersih', key: 'docRequiredList' },
+            ]
+          };
+        }
+      case 2:
       default:
-        return { 
-          title: 'Draf Dokumen Ekspor Dagang', 
+        return {
+          title: 'Dokumen Serah Terima & Konfirmasi (Proof of Delivery)',
           inputs: [
-            { label: 'ID Transaksi', key: 'trxId' }
-          ] 
+            { label: 'Nomor L/C Kontrak', key: 'lcNo' },
+            { label: 'Penerima Pembayaran (Beneficiary)', key: 'beneficiary' },
+            { label: 'Bank Koresponden', key: 'advisingBank' },
+            { label: 'Jumlah Nominal Pencairan', key: 'amount' },
+            { label: 'Syarat Dokumen Bersih', key: 'docRequiredList' },
+          ]
         };
     }
   };
@@ -472,14 +533,14 @@ export default function InteractiveInfographic({
           hak: [
             'Menerbitkan invoice komersial, packing list, serta pengisian lembar Certificate of Origin (COO) mandiri.',
             'Menunjuk logistik Forwarder & PPJK terpercaya pabean untuk mengatur stuffing kontainer pelabuhan.',
-            'Menuntut verifikasi pencairan dana Letter of Credit (L/C) dari bank setelah menyerahkan berkas kargo bersih.'
+            'Menuntut verifikasi pencairan dana dari bank setelah menyerahkan berkas kargo bersih.'
           ],
           kewajiban: [
             'Menyusun Sales Contract komoditi yang tervalidasi harga FOB/CIF bersama Buyer Jerman.',
             'Melunasi biaya pabean kontainer & biaya administrasi pendaftaran Karantina Pertanian.',
             'Memastikan muatan yang disuplai oleh petani lokal memenuhi grade kadar kelembapan ekspor.'
           ],
-          steps: ['Draft', 'Verification', 'Documents']
+          steps: ['Draft']
         };
       case 'Supplier':
         return {
@@ -495,7 +556,7 @@ export default function InteractiveInfographic({
             'Melakukan sortir grade mutu kargo (Premium Grade A) bebas jamur.',
             'Mengirim komoditi hasil bumi menuju Gudang Transit Utama sesuai kesepakatan.'
           ],
-          steps: ['Sourcing']
+          steps: ['Draft']
         };
       case 'Owner/Direktur':
         return {
@@ -511,7 +572,7 @@ export default function InteractiveInfographic({
             'Menerbitkan sertifikasi NPE Hijau jika kargo klir pabean dalam 1x24 jam kerja.',
             'Memastikan produk ekspor yang dikapalkan bebas selundupan kargo mineral mentah ilegal.'
           ],
-          steps: ['Customs']
+          steps: ['Draft']
         };
       case 'Forwarder':
         return {
@@ -527,7 +588,7 @@ export default function InteractiveInfographic({
             'Melakukan pengemasan kargo laut (stuffing kargo kontainer) secara aman.',
             'Mengurus dokumen pabean pelayaran manifest & Bill of Lading (B/L) resmi kapal kargo.'
           ],
-          steps: ['Loading', 'Shipping']
+          steps: ['Shipping']
         };
       case 'Buyer':
         return {
@@ -539,7 +600,7 @@ export default function InteractiveInfographic({
             'Mengajukan tuntutan klaim asuransi laut jika terjadi kebocoran kontainer di atas dek samudera.'
           ],
           kewajiban: [
-            'Membuka instrumen pembayaran Letter of Credit (L/C) dengan bank koresponden pelunasan resmi Eropa.',
+            'Melakukan pembayaran penuh secara aman.',
             'Membayar penuh sisa pelunasan barang setelah menerima draf konfirmasi manifest laut.',
             'Mengurus bea cukai impor clearance lokal di Pelabuhan Hamburg Jerman tepat waktu.'
           ],
@@ -549,197 +610,87 @@ export default function InteractiveInfographic({
   };
 
   const executeStepProgression = (index: number) => {
-    if (index < 4) return; // Handled by NegotiationDashboard
     const targetStep = UNIFIED_STEPS[index];
+    let nextStep: ShipmentStep = 'Draft';
     let defaultComments = '';
     
     switch (targetStep.step) {
-      case 'Sourcing':
-        onSimulateEvent('supplier-ready');
-        break;
-      case 'Verification':
-        onSimulateEvent('phytosanitary-issued');
-        defaultComments = 'Sertifikat kesehatan komoditas/karantina tumbuhan disetujui lab karantina negara.';
-        onUpdateStep(shipment.id, 'Documents', defaultComments);
-        break;
-      case 'Documents':
-        defaultComments = 'Semua pemberkasan komersial (Invoice, PL, dan Surat Keterangan Asal / COO) diterbitkan resmi oleh Trader.';
-        onUpdateStep(shipment.id, 'Customs', defaultComments);
-        break;
-      case 'Customs':
-        onSimulateEvent('customs-approved');
-        break;
-      case 'Loading':
-        defaultComments = 'Kargo dimasukkan dalam kontainer FCL (stuffing) dan dimuat ke dek kapal logistik kelas samudra.';
-        onUpdateStep(shipment.id, 'Shipping', defaultComments);
+      case 'Draft':
+        nextStep = 'Shipping';
+        defaultComments = 'Sales contract disahkan secara bilateral. Berlanjut ke proses logistik terpadu dan koordinasi pencairan L/C.';
         break;
       case 'Shipping':
-        onSimulateEvent('ship-movement');
-        defaultComments = 'Kapal kontainer berlayar melewati Samudra Hindia menuju Terusan Suez / Pelabuhan Hamburg.';
-        onUpdateStep(shipment.id, 'Completed', defaultComments);
+        nextStep = 'Completed';
+        defaultComments = 'Seluruh rangkaian logistik terpadu selesai, L/C dicairkan oleh Bank, dan kapal berlabuh di Hamburg Jerman.';
         break;
       case 'Completed':
-        defaultComments = 'Buyer secara resmi mengonfirmasi penerimaan kargo kontainer di pelabuhan tujuan, menyerahkan Bill of Lading (B/L) asli ke bank penjamin, dan mencairkan pembayaran Letter of Credit (L/C) penuh ke rekening Eksportir. Siklus data diarsipkan.';
-        onUpdateStep(shipment.id, 'Completed', defaultComments);
+        nextStep = 'Completed';
+        defaultComments = 'Penerimaan kargo dikonfirmasi resmi oleh Buyer di pelabuhan Hamburg Jerman. Pembayaran ekspor tuntas sempurna!';
         break;
     }
     
-    // Set focus inspection to next step or keep it on the completed screen
-    const nextInspectIndex = index === UNIFIED_STEPS.length - 1 ? 10 : index + 1;
+    onUpdateStep(shipment.id, nextStep, defaultComments);
+    
+    // Auto-inspect the next step in UI
+    const nextInspectIndex = index === UNIFIED_STEPS.length - 1 ? UNIFIED_STEPS.length - 1 : index + 1;
     setInspectedStepIndex(nextInspectIndex);
-    setOnPageTab('details');
+    setOnPageTab('actions');
   };
 
-  const isFullyCompleted = shipment.currentStep === 'Completed' && shipment.stepHistory.some(h => h.step === 'Completed');
+  const isFullyCompleted = shipment.currentStep === 'Completed';
+  const isCurrentActiveStep = inspectedStepIndex === actualStepIndex;
+  const isStepCompleted = inspectedStepIndex < actualStepIndex || isFullyCompleted;
+  const isStepFuture = inspectedStepIndex > actualStepIndex && !isFullyCompleted;
   const activeInspectedStep = UNIFIED_STEPS[inspectedStepIndex];
   const isEmergencyTakeover = activeInspectedStep.actor === 'Trader' && currentUser?.role === 'Owner/Direktur';
-  const isAuthorizedToClickCurrentInspected = currentUser?.role === activeInspectedStep.actor || isEmergencyTakeover;
+  const isLogisticsSimulationFullyCompleted = completedLogisticsSubSteps.length === 4;
+  const isAuthorizedToClickCurrentInspected = 
+    inspectedStepIndex === 1
+      ? (isLogisticsSimulationFullyCompleted && (currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur'))
+      : (currentUser?.role === activeInspectedStep.actor || isEmergencyTakeover);
 
   const getStepGuide = (index: number) => {
     switch (index) {
       case 0:
         return {
-          title: 'Letter of Intent (Inquiry LOI)',
-          subtitle: 'Minat Awal Kemitraan Dagang',
-          laymanAnalogy: 'Bagaikan surat minat formal dari calon pembeli luar negeri yang menyatakan secara tertulis ketertarikan mereka mengimpor komoditas Anda dengan perkiraan volume awal.',
-          purpose: 'Menyatakan secara sah kehendak calon importir untuk melakukan kemitraan pembelian komoditas ekspor Indonesia.',
-          actors: ['Buyer (Hans Mueller / Jerman)', 'Trader (Eksportir)'],
-          badge: 'INQUIRY',
+          title: 'Fase I: Komersial & Negosiasi',
+          subtitle: 'Kemitraan Dagang Bilateral Internasional',
+          laymanAnalogy: 'Bagaikan tahap lamaran atau tawar-menawar harga mas kawin sebelum melangsungkan pesta pernikahan. Pembeli luar negeri mengirim LOI sebagai tanda minat serius, lalu kedua pihak menyepakati harga, volume kargo, sistem pengapalan (Incoterms), dan menandatangani Proforma Invoice (PI) bersama.',
+          purpose: 'Menyepakati seluruh parameter komersial dan legalitas transaksi ekspor sebelum rantai pasok lokal dan logistik ekspor dijalankan.',
+          actors: ['Buyer (Jerman)', 'Trader (Indonesia)'],
+          badge: 'NEGOSIASI',
           docs: [
-            { name: 'Letter of Intent (LOI)', desc: 'Surat resmi bermaterai niaga internasional dari perusahaan importir luar negeri.' }
+            { name: 'Letter of Intent (LOI)', desc: 'Surat ketertarikan resmi dari importir luar negeri untuk membeli komoditas.' },
+            { name: 'Proforma Invoice (PI)', desc: 'Faktur sementara bilateral yang draf-nya disepakati dan ditandatangani basah oleh pembeli dan penjual.' }
           ]
         };
       case 1:
         return {
-          title: 'Offer Sheets / Quotation (Penawaran Resmi)',
-          subtitle: 'Kalkulasi Tarif & Lembar Penawaran',
-          laymanAnalogy: 'Bagaikan surat rincian penawaran harga dari eksportir PT Multi Raksa Madani sebagai respon LOI, memuat batas toleransi mutu, harga FOB/CIF, serta garansi pengapalan.',
-          purpose: 'Trader/Eksportir memaparkan syarat harga penawaran niaga komoditi berdasarkan LOI yang diterima.',
-          actors: ['Trader (Hendry Kurniawan)', 'Buyer'],
-          badge: 'QUOTATION',
+          title: 'Fase II: Logistik Terpadu & Pencairan L/C',
+          subtitle: 'Sourcing, Kepabeanan, Pelayaran Samudra, dan Penyelesaian Finansial',
+          laymanAnalogy: 'Bagaikan serangkaian estafet kargo dari hulu ke hilir: Supplier tani lokal memanen komoditas terbaik, Bea Cukai menyetujui izin ekspor barang, Forwarder mengangkut kontainer pabean melintasi samudera, dan dokumen lengkap perkapalan diperiksa bank penerbit L/C untuk mencairkan jaminan pembayaran eksportir.',
+          purpose: 'Menjamin kelancaran penyediaan komoditas, clearance kepabeanan ekspor, mobilisasi kargo lintas laut, dan pencairan pembayaran L/C internasional secara berurutan dan aman.',
+          actors: ['Supplier', 'Trader', 'Forwarder', 'Bank Koresponden'],
+          badge: 'LOGISTIK & L/C',
           docs: [
-            { name: 'Commercial Quotation Sheet', desc: 'Rincian lembar penawaran harga komoditas per satuan unit beserta durasi validasi.' }
+            { name: 'Sourcing DO', desc: 'Surat penyerahan bahan baku dari koperasi pertanian ke gudang eksportir.' },
+            { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Deklarasi pabean Bea Cukai yang menerbitkan Nota Pelayanan Ekspor (NPE).' },
+            { name: 'Bill of Lading (B/L)', desc: 'Tanda terima pengapalan samudra dan bukti kepemilikan kargo di atas kapal.' },
+            { name: 'L/C Settlement Doc', desc: 'Sertifikat kelayakan dokumen bersih yang ditukar dengan pembayaran L/C dari bank pembuka.' }
           ]
         };
       case 2:
-        return {
-          title: 'Proforma Invoice (PI) & Syarat Bayar',
-          subtitle: 'Negosiasi Klausul & Cara Pembayaran Internasional',
-          laymanAnalogy: 'Bagaikan draf struk detail belanjaan sementara sebelum pelunasan kasir. Draf ini dipakai oleh pembeli untuk memohon pembukaan Letter of Credit di bank koresponden Jerman.',
-          purpose: 'Menetapkan spesifikasi kargo final, nilai transaksi total, dan jaminan pembayaran instrumen perbankan.',
-          actors: ['Trader', 'Buyer', 'Bank Koresponden'],
-          badge: 'NEGOSIASI',
-          docs: [
-            { name: 'Proforma Invoice (PI)', desc: 'Faktur komersial awal pembuka transaksi dagang bilateral secara internasional.' }
-          ]
-        };
-      case 3:
-        return {
-          title: 'Sales Contract & Bilateral Signatures',
-          subtitle: 'Penandatanganan Kontrak Jual-Beli Konkrit',
-          laymanAnalogy: 'Bagaikan akad deal mengikat dalam bisnis ekspor. Begitu tanda tangan disematkan secara bilateral, kontrak mengikat demi hukum dan kargo resmi berstatus pesanan aktif!',
-          purpose: 'Mengikat kedua belah pihak secara hukum formal dalam payung transaksi ekspor-impor bebas sengketa.',
-          actors: ['Trader', 'Buyer'],
-          badge: 'KONTRAK',
-          docs: [
-            { name: 'Sales Contract (SC)', desc: 'Surat kontrak hukum internasional final bermeterai serta bertanda tangan direksi.' }
-          ]
-        };
-      case 4:
-        return {
-          title: 'Surat Penyerahan Bahan Baku (Sourcing DO)',
-          subtitle: 'Pengiriman Komoditas dari Petani & Koperasi',
-          laymanAnalogy: 'Bagaikan nota kirim barang dari suplier bahan baku lokal ke gudang utama Anda. Ini membuktikan bahwa bahan premium segar sudah dipanen dan berpindah dari kebun gayo ke pengemasan pabrik.',
-          purpose: 'Menjamin ketersediaan barang mentah berkualitas premium sesuai kuota yang disepakati.',
-          actors: ['Supplier Koperasi Kopi', 'Trader (QC Lapangan)'],
-          badge: 'PASOKAN',
-          docs: [
-            { name: 'Delivery Order (DO)', desc: 'Bukti jalan truk logistik mengangkut komoditas agro menuju gudang transit.' }
-          ]
-        };
-      case 5:
-        return {
-          title: 'Uji Lab & Karantina (Phytosanitary)',
-          subtitle: 'Pemeriksaan Kesehatan Bebas Hama Tumbuhan',
-          laymanAnalogy: 'Bagaikan tes bebas penyakit menular tumbuhan. Tanpa surat sertifikat ini, otoritas Jerman akan menolak pembongkaran muatan demi melindungi kelestarian biosfer alam mereka.',
-          purpose: 'Mendapat sertifikasi jaminan kesehatan tumbuhan bebas parasit, serangga, dan kontaminasi jamur paku.',
-          actors: ['Balai Karantina Pertanian RI', 'Trader'],
-          badge: 'KARANTINA',
-          docs: [
-            { name: 'Phytosanitary Certificate (PC)', desc: 'Sertifikat kesehatan nabati wajib dari Kementerian Pertanian RI.' }
-          ]
-        };
-      case 6:
-        return {
-          title: 'Penerbitan Dokumen Pabean (COO & Dokumen Dagang)',
-          subtitle: 'Pembuatan Sertifikat Asal Barang Nusantara',
-          laymanAnalogy: 'Bagaikan akte kepemilikan geografi atau sertifikasi keaslian asli "Made in Indonesia". Ini dipakai guna meraup tarif preferensial bea masuk kargo di negara Uni Eropa (Jerman).',
-          purpose: 'Menerbitkan Certificate of Origin (COO), Invoice Resmi, dan Packing List untuk kebutuhan pemeriksaan bea masuk impor Jerman.',
-          actors: ['Dinas Perindustrian & Perdagangan RI', 'Trader'],
-          badge: 'SERTIFIKASI',
-          docs: [
-            { name: 'Certificate of Origin (COO)', desc: 'Bukti sahih barang diproduksi di Indonesia (Form A/D).' },
-            { name: 'Commercial Invoice & Packing List', desc: 'Isian nilai barang, berat bersih, berat kotor, dan rincian kemasan karung kargo.' }
-          ]
-        };
-      case 7:
-        return {
-          title: 'Deklarasi Bea Cukai (Draft PEB & NPE)',
-          subtitle: 'Pemberitahuan Ekspor Barang & Persetujuan Muat',
-          laymanAnalogy: 'Bagaikan meminta paspor keluar bandara untuk kargo Anda. Kita melapor secara sistem ELEKTRONIK (PEB) kementerian keuangan mengenai muatan agar diperiksa kelaikannya dan diizinkan naik ke kapal.',
-          purpose: 'Melaporkan manifes pabean ekspor negara guna mendapatkan Nota Pelayanan Ekspor (NPE) hijau yang sah dari kepabeanan.',
-          actors: ['Owner/Direktur', 'Trader'],
-          badge: 'PABEAN',
-          docs: [
-            { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Dokumen deklarasi deklararif pabean resmi dari eksportir.' },
-            { name: 'Nota Pelayanan Ekspor (NPE)', desc: 'Surat clearance resmi pabean yang mengizinkan kontainer masuk pintu dermaga terminal.' }
-          ]
-        };
-      case 8:
-        return {
-          title: 'Pemuatan & Pengemasan (Stuffing & Seal)',
-          subtitle: 'Memasukkan Kargo ke Kontainer & Penyegelan Logistik',
-          laymanAnalogy: 'Bagaikan mempacking koper tebal bersegor baja laut berpaku. Kontainer baja diisi penuh kargo (stuffing), kemudian segel magnetik resmi dipasang guna menandakan muatan belum dibuka sepihak.',
-          purpose: 'Melakukan penataan kargo seimbang di dalam kontainer samudra 20ft/40ft, melindunginya dari guncangan badai laut, serta menyegel penutup.',
-          actors: ['Forwarder Logistik', 'Petugas Bea Cukai'],
-          badge: 'STUFFING',
-          docs: [
-            { name: 'Stuffing Packing Order / Seal Report', desc: 'Laporan segel baja resmi berkode QR pabean dan sertifikasi muat roda logistik.' }
-          ]
-        };
-      case 9:
-        return {
-          title: 'Instruksi Pengapalan (Shipping Bill of Lading)',
-          subtitle: 'Pemuatan ke Dek Kapal & Pelayaran Samudra',
-          laymanAnalogy: 'Bagaikan tiket kapal sekuritas samudera bergaransi. Kapten kapal meneken tanda terima sah B/L ini sebagai garansi bahwa muatan siap melaut berlayar.',
-          purpose: 'Menerbitkan Bill of Lading (B/L) resmi pelayaran laut yang berfungsi sebagai dokumen kepemilikan kargo utama selama di laut lepas.',
-          actors: ['Pelayaran Samudra / Forwarder', 'Trader'],
-          badge: 'PELAYARAN',
-          docs: [
-            { name: 'Bill of Lading (B/L)', desc: 'Surat perjanjian pengangkutan muatan laut resmi sekaligus tanda kepemilikan barang dagang.' }
-          ]
-        };
-      case 10:
-        return {
-          title: 'Pencairan Pembayaran L/C (Letter of Credit)',
-          subtitle: 'Penyerahan Seberkas Dokumen Bersih ke Bank Koresponden',
-          laymanAnalogy: 'Bagaikan melepaskan kunci brankas bersama di bank setelah seluruh pengapalan tuntas. Kita menukar dokumen asli pabean laut dengan kucuran dana L/C impor jaminan aman anti-gagal bayar.',
-          purpose: 'Menuntaskan siklus transaksi dagang internasional dengan pembayaran aman, bebas risiko gagal bayar pembeli luar negeri.',
-          actors: ['Buyer', 'Trader'],
-          badge: 'TRANSAKSI',
-          docs: [
-            { name: 'Letter of Credit Settlement', desc: 'Nota pencairan penagihan ekspor sah berjaminan bank penyelesaian aman.' }
-          ]
-        };
       default:
         return {
-          title: 'Langkah Edukasi',
-          subtitle: 'Prosedur Dagang RI',
-          laymanAnalogy: 'Panduan belajar praktis tata kelola logistik ekspor ekosistem maritim.',
-          purpose: 'Menyelidiki alur kepatuhan dagang.',
-          actors: ['Pelaku Dagang Nusantara'],
-          badge: 'EDUKASI',
-          docs: []
+          title: 'Fase III: Selesai & Serah Terima',
+          subtitle: 'Bongkar Muat Kargo & Konfirmasi Penerimaan Komoditas',
+          laymanAnalogy: 'Bagaikan menerima paket kiriman barang di depan rumah Anda lalu menandatangani resi penerimaan kurir. Setelah berlayar ribuan mil, kapal berlabuh di Pelabuhan Hamburg, Jerman. Kargo diturunkan, dibongkar pabean setempat, dan diserahkan secara resmi kepada Buyer Jerman dalam kondisi prima.',
+          purpose: 'Menyelesaikan siklus transaksi dagang internasional secara paripurna dengan penyerahan kargo fisik dan pencatatan riwayat sukses di sistem ekspor.',
+          actors: ['Buyer Jerman', 'Pelabuhan Hamburg'],
+          badge: 'SELESAI',
+          docs: [
+            { name: 'Proof of Delivery (POD)', desc: 'Berita acara serah terima kargo resmi di pelabuhan tujuan yang ditandatangani Buyer.' }
+          ]
         };
     }
   };
@@ -752,6 +703,7 @@ export default function InteractiveInfographic({
       try {
         const meta = getDocMeta(inspectedStepIndex);
         const title = meta.title;
+        const lh = getLetterheadData(inspectedStepIndex, activeLogisticsSubStep);
         
         let customRowsHtml = '';
         meta.inputs.forEach(inp => {
@@ -999,9 +951,9 @@ export default function InteractiveInfographic({
     <div class="watermark">OFFICIAL SPECIMEN</div>
     
     <div class="letterhead">
-      <h1>PT MULTI RAKSA MADANI</h1>
-      <p>Menara Karya Lt.12, Jalan HR. Rasuna Said Blok X-5 Kuningan, Jakarta Selatan • Telp: (021) 529-5000</p>
-      <div class="sub-logo">PORTAL TERPADU HUB PERDAGANGAN EKSPOR REPUBLIK INDONESIA</div>
+      <h1>${lh.name}</h1>
+      <p>${lh.address}</p>
+      <div class="sub-logo">${lh.subtitle}</div>
     </div>
     
     <div class="doc-title">
@@ -1158,29 +1110,26 @@ export default function InteractiveInfographic({
           <div className="min-w-[1080px] relative px-4 pb-2">
             
             {/* Low-profile, borderless phase header row */}
-            <div className="grid grid-cols-11 mb-3 text-[9px] font-black uppercase tracking-wider text-slate-400">
-              <div className="col-span-4 border-b border-indigo-150 pb-1.5 flex items-center gap-1.5 text-indigo-600 pr-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                <span>Fase I: Komersial &amp; Kontrak (Langkah 1 - 4)</span>
+            <div className="border-b border-slate-150 pb-2 mb-4 flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-700">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>Alur Proses Dagang &amp; Logistik Ekspor Terpadu (3 Langkah)</span>
               </div>
-              <div className="col-span-7 border-b border-emerald-150 pb-1.5 flex items-center gap-1.5 text-emerald-600 pl-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Fase II: Logistik &amp; Kepabeanan Ekspor (Langkah 5 - 11)</span>
-              </div>
+              <span className="text-[10px] text-slate-400 font-mono">ALUR TRANS-NASIONAL UTUH</span>
             </div>
 
-            {/* Single background track line spanning across all 11 steps */}
-            <div className="absolute left-[4.5%] right-[4.5%] top-[54px] h-1 bg-slate-150 rounded-full overflow-hidden -z-10">
+            {/* Single background track line spanning across all 3 steps */}
+            <div className="absolute left-[10%] right-[10%] top-[56px] h-1 bg-slate-150 rounded-full overflow-hidden -z-10">
               <div 
                 className="h-full bg-emerald-500 transition-all duration-700"
                 style={{ 
-                  width: `${(actualStepIndex / 10) * 100}%` 
+                  width: `${(actualStepIndex / (UNIFIED_STEPS.length - 1)) * 100}%` 
                 }}
               />
             </div>
 
             {/* Steps container */}
-            <div className="grid grid-cols-11 relative z-10">
+            <div className="grid grid-cols-3 relative z-10">
               {UNIFIED_STEPS.map((st, idx) => {
                 const isPassed = isFullyCompleted ? true : idx < actualStepIndex;
                 const isActiveNow = isFullyCompleted ? false : idx === actualStepIndex;
@@ -1196,7 +1145,8 @@ export default function InteractiveInfographic({
                     onClick={() => {
                       setInspectedStepIndex(idx);
                       setSelectedRole(UNIFIED_STEPS[idx].actor);
-                      setOnPageTab('details');
+                      setOnPageTab('actions');
+                      setIsStepPopupOpen(true);
                     }}
                     className={`flex flex-col items-center text-center relative focus:outline-none select-none cursor-pointer group transition-all duration-200 transform ${
                       isBeingInspected ? 'scale-[1.05]' : 'hover:scale-[1.02]'
@@ -1209,10 +1159,11 @@ export default function InteractiveInfographic({
                       {isActiveNow && (
                         <span className="absolute inset-0 rounded-full bg-blue-500/15 animate-ping" />
                       )}
-                      {isPassed ? (
-                        <CheckCircle className="w-4.5 h-4.5 text-emerald-500" />
-                      ) : (
-                        getStepIcon(st.stepIcon, 'w-4.5 h-4.5')
+                      {getStepIcon(st.stepIcon, 'w-4.5 h-4.5')}
+                      {isPassed && (
+                        <span className="absolute -top-1 -right-1 rounded-full bg-emerald-500 text-white p-0.5 border border-white flex items-center justify-center shadow-3xs z-20 animate-none">
+                          <Check className="w-2 h-2 stroke-[3]" />
+                        </span>
                       )}
 
                       {/* Initials indicator badge */}
@@ -1234,9 +1185,7 @@ export default function InteractiveInfographic({
                     </div>
 
                     {/* Step Index Label */}
-                    <span className={`text-[8.5px] font-black uppercase tracking-wider font-mono mt-2.5 ${
-                      idx < 4 ? 'text-indigo-600' : 'text-emerald-600'
-                    }`}>
+                    <span className="text-[8.5px] font-black uppercase tracking-wider font-mono mt-2.5 text-slate-500">
                       Langkah {idx + 1}
                     </span>
 
@@ -1270,62 +1219,734 @@ export default function InteractiveInfographic({
         </div>
       </div>
 
-      {/* Put Vessel GPS MAP here! */}
-      {(shipment.currentStep === 'Shipping' || UNIFIED_STEPS[inspectedStepIndex].stepId === 'shipping') && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <VesselGPSMap shipment={shipment} />
-        </motion.div>
-      )}
+      {/* Workspace below conveyor belt when popup is closed removed for cleaner, consolidated popup-only experience */}
 
-      {/* Workspace split layout */}
-      {inspectedStepIndex < 4 ? (
-        <div className="animate-fadeIn">
-          <div className="bg-gradient-to-r from-indigo-50/60 to-blue-50/60 border border-indigo-100 p-4 rounded-xl text-xs font-semibold flex items-center justify-between shadow-3xs text-slate-800 text-left mb-6">
-            <div className="flex items-center gap-3">
-              <span className="bg-indigo-600 text-white rounded-lg px-2.5 py-1 text-[9px] uppercase font-mono font-black animate-pulse shrink-0">
-                Tahap {inspectedStepIndex + 1}: {UNIFIED_STEPS[inspectedStepIndex].label}
-              </span>
-              <span>
-                Anda sedang melihat langkah negosiasi komersial <strong>{UNIFIED_STEPS[inspectedStepIndex].label}</strong>. 
-                Sistem mengintegrasikan jalannya perundingan harga dengan alur pengiriman logistik dalam satu peta terpadu.
-              </span>
+      {/* Workspace split layout inside Modal Popup */}
+      <AnimatePresence>
+        {isStepPopupOpen && (
+          <div 
+            onClick={() => setIsStepPopupOpen(false)}
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 md:p-6 overflow-y-auto"
+          >
+            <motion.div 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-7xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]"
+            >
+              {/* Modal Header */}
+              <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between border-b border-slate-800 shrink-0 select-none">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-1.5 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider rounded bg-indigo-600 text-white shrink-0">
+                    LANGKAH {inspectedStepIndex + 1} / 3
+                  </span>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h3 className="font-bold text-xs sm:text-sm tracking-tight text-white leading-tight">
+                      {UNIFIED_STEPS[inspectedStepIndex].label}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 font-sans">
+                      • Penanggung Jawab: <strong className="text-slate-200 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].actor}</strong>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-sans hidden sm:inline">
+                      • Durasi: <strong className="text-slate-200 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].expectedDuration}</strong>
+                    </span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsStepPopupOpen(false)}
+                  className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all focus:outline-none cursor-pointer shrink-0 ml-2"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 overflow-y-auto flex-1 bg-slate-950">
+                {inspectedStepIndex === 0 ? (
+                  <div className="w-full animate-fadeIn max-w-5xl mx-auto py-2">
+                    <CommercialNegotiationGateway
+                      shipment={shipment}
+                      currentUser={currentUser}
+                      onUpdateShipmentFromDeal={onUpdateShipmentFromDeal}
+                      onSelectUser={onSelectUser}
+                      isArchiveMode={shipment.currentStep !== 'Draft'}
+                    />
+                  </div>
+                ) : (
+                  <>
+
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      
+                      {inspectedStepIndex === 1 && (
+                        <div className="lg:col-span-12 bg-slate-900 border border-slate-800 p-5 rounded-2xl relative shadow-md space-y-5 text-white">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="p-1 bg-indigo-600 rounded text-white text-[10px] font-black uppercase font-mono tracking-wider">
+                                SIMULASI PERAN
+                              </span>
+                              <h4 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
+                                <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+                                Estafet Ekspor &amp; Logistik Terintegrasi (Goal: L/C)
+                              </h4>
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              Selesai: <strong className="text-emerald-400 font-bold">{completedLogisticsSubSteps.length}/4</strong> Sub-Tahap
+                            </div>
+                          </div>
+
+                          {/* Sub-steps selection buttons bar */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { label: '1. Sourcing Tani', role: 'Supplier', company: shipment.supplierCompany || 'Koperasi Tani', color: 'teal', icon: ShoppingBag },
+                              { label: '2. Bea Cukai PEB', role: 'Trader', company: 'PT Multi Raksa Madani', color: 'indigo', icon: Shield },
+                              { label: '3. Pelayaran B/L', role: 'Forwarder', company: 'PT Samudera Logistik', color: 'amber', icon: Truck },
+                              { label: '4. Pencairan L/C', role: 'Bank', company: 'Bank Koresponden', color: 'emerald', icon: Award }
+                            ].map((sub, sIdx) => {
+                              const isDone = completedLogisticsSubSteps.includes(sIdx);
+                              const isAct = activeLogisticsSubStep === sIdx;
+                              const IconComp = sub.icon;
+                              
+                              return (
+                                <button
+                                  key={sIdx}
+                                  onClick={() => {
+                                    setActiveLogisticsSubStep(sIdx);
+                                    setSelectedRole(sub.role as UserRole);
+                                  }}
+                                  className={`relative p-3 rounded-xl border text-left flex flex-col justify-between transition-all duration-200 cursor-pointer ${
+                                    isAct 
+                                      ? 'bg-slate-950 border-indigo-500 text-white ring-2 ring-indigo-500/20' 
+                                      : isDone
+                                        ? 'bg-slate-900/40 border-emerald-500/30 text-emerald-400/90 hover:bg-slate-900/60'
+                                        : 'bg-slate-900/20 border-slate-800 text-slate-400 hover:bg-slate-900/40'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between w-full">
+                                    <span className={`text-[9.5px] font-black font-mono uppercase tracking-wider ${
+                                      isAct ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-500'
+                                    }`}>
+                                      {sub.label}
+                                    </span>
+                                    {isDone ? (
+                                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                                    ) : (
+                                      <IconComp className={`w-3.5 h-3.5 shrink-0 ${isAct ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+                                    )}
+                                  </div>
+                                  <div className="mt-2 text-xs font-bold truncate leading-tight">
+                                    {sub.role}
+                                  </div>
+                                  <div className="text-[9px] text-slate-500 font-medium truncate mt-0.5">
+                                    {sub.company}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Detail role task simulation box */}
+                          {(() => {
+                            const subDetails = [
+                              {
+                                title: 'Fase Sourcing: Panen & Pengangkutan Darat Komoditas Agro',
+                                role: 'Supplier (Koperasi Tani Lokal)',
+                                desc: 'Sebagai Supplier, tanggung jawab Anda adalah melakukan QC terhadap biji kopi gayo premium dari petani lokal, mengemasnya ke dalam karung goni ekspor, dan menyerahkannya ke gudang utama penampungan Trader. Isi formulir Delivery Order (DO) di bawah ini sebagai draf serah terima fisik barang.',
+                                btnText: 'Tandatangani DO & Selesaikan Sourcing Tani',
+                                event: 'supplier-ready' as const,
+                                successMsg: 'Sourcing Sukses! Komoditas tani telah tervalidasi masuk ke gudang utama eksportir.'
+                              },
+                              {
+                                title: 'Fase Kepabeanan: Deklarasi Dokumen Pemberitahuan Ekspor Barang (PEB)',
+                                role: 'Trader (Eksportir & Pengurus Dokumen)',
+                                desc: 'Sebagai Trader, Anda bertugas melaporkan nilai muatan pabean ekspor, HS Code komoditas, dan Pelabuhan Muat secara presisi ke Sistem Bea Cukai Republik Indonesia. Lengkapi isian formulir deklarasi PEB di bawah ini, lalu terbitkan dokumen Nota Pelayanan Ekspor (NPE) resmi.',
+                                btnText: 'Deklarasikan PEB & Terbitkan NPE Bea Cukai',
+                                event: 'customs-approved' as const,
+                                successMsg: 'Nota Pelayanan Ekspor (NPE) Terbit! Bea Cukai menyetujui izin clearance pengapalan barang.'
+                              },
+                              {
+                                title: 'Fase Pelayaran: Stuffing Kontainer & Penerbitan Bill of Lading (B/L)',
+                                role: 'Forwarder (Logistik & Agen Pelayaran Laut)',
+                                desc: 'Sebagai Forwarder, Anda bertanggung jawab mengemas kargo laut (stuffing) ke dalam kontainer baja berstandar internasional, menempelkan segel pabean resmi, dan mengoordinasikan jadwal pelayaran rute lintas benua menuju Port of Hamburg Jerman. Isi manifes draf Bill of Lading (B/L) pelayaran di bawah ini.',
+                                btnText: 'Terbitkan Bill of Lading & Berangkatkan Kapal',
+                                event: 'ship-movement' as const,
+                                successMsg: 'Kapal Kargo Berangkat! Bill of Lading (B/L) resmi pelayaran samudera berhasil diterbitkan.'
+                              },
+                              {
+                                title: 'Fase Finansial: Presentasi Berkas Dokumen Bersih & Pencairan L/C',
+                                role: 'Bank Koresponden & Buyer Jerman',
+                                desc: 'Sebagai Bank/Buyer, Anda memvalidasi keaslian dokumen perkapalan (Bill of Lading asli, PEB, Phytosanitary, COO) yang diajukan eksportir. Jika seluruh syarat jaminan Letter of Credit (L/C) terpenuhi dengan bersih tanpa cacat dokumen (Clean Presentation), Bank langsung mencairkan dana pembayaran ekspor ekspor ke rekening eksportir.',
+                                btnText: 'Verifikasi Dokumen Bersih & Cairkan Dana L/C',
+                                event: null,
+                                successMsg: 'Letter of Credit Sukses Dicairkan! Dana pembayaran ekspor telah aman ditransfer penuh ke Bank eksportir.'
+                              }
+                            ][activeLogisticsSubStep];
+
+                            const isCurrentSubDone = completedLogisticsSubSteps.includes(activeLogisticsSubStep);
+                            const isPreviousStepsDone = Array.from({ length: activeLogisticsSubStep }, (_, i) => i).every(i => completedLogisticsSubSteps.includes(i));
+                            
+                            return (
+                              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                                  <div>
+                                    <h5 className="font-extrabold text-xs text-slate-100 tracking-tight">
+                                      {subDetails.title}
+                                    </h5>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                      Bertindak Sebagai: <strong className="text-indigo-400">{subDetails.role}</strong>
+                                    </p>
+                                  </div>
+                                  <span className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                    isCurrentSubDone 
+                                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                      : isPreviousStepsDone 
+                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse'
+                                        : 'bg-slate-800 text-slate-500 border border-slate-750'
+                                  }`}>
+                                    {isCurrentSubDone ? 'SELESAI' : isPreviousStepsDone ? 'AKTIF' : 'MENUNGGU'}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                                  {subDetails.desc}
+                                </p>
+
+                                {/* Section: Lampiran Dokumen Sub-Tahap */}
+                                <div className="border-t border-slate-800/80 pt-3 mt-3 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
+                                      <Paperclip className="w-3.5 h-3.5 text-indigo-400" />
+                                      <span>Dokumen Lampiran ({uploadedSubStepFiles[activeLogisticsSubStep]?.length || 0})</span>
+                                    </div>
+                                    <span className="text-[9px] text-slate-400 font-mono">Maks: 1 Berkas / 2MB</span>
+                                  </div>
+
+                                  {/* Error message if file is too large */}
+                                  {subStepUploadError[activeLogisticsSubStep] && (
+                                    <div className="p-2 bg-rose-950/40 border border-rose-500/20 text-rose-400 text-[10px] rounded-lg font-semibold mt-2 text-left">
+                                      {subStepUploadError[activeLogisticsSubStep]}
+                                    </div>
+                                  )}
+
+                                  {/* File List */}
+                                  {uploadedSubStepFiles[activeLogisticsSubStep]?.length > 0 ? (
+                                    <div className="grid grid-cols-1 gap-2">
+                                      {uploadedSubStepFiles[activeLogisticsSubStep].map(file => (
+                                        <div 
+                                          key={file.id} 
+                                          className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs"
+                                        >
+                                          <button 
+                                            onClick={() => downloadFile(file)}
+                                            className="flex items-center gap-2.5 min-w-0 text-left hover:text-indigo-400 transition-colors group cursor-pointer flex-1"
+                                            title="Unduh Berkas"
+                                          >
+                                            <FileText className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 shrink-0" />
+                                            <div className="truncate">
+                                              <p className="font-bold text-slate-200 group-hover:underline truncate">{file.name}</p>
+                                              <p className="text-[9px] text-slate-500">{file.size} • Diunggah {file.date}</p>
+                                            </div>
+                                          </button>
+                                          <div className="flex items-center gap-1">
+                                            <button
+                                              onClick={() => downloadFile(file)}
+                                              className="p-1.5 hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 rounded transition-all cursor-pointer"
+                                              title="Unduh Dokumen"
+                                            >
+                                              <FileDown className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteFile(activeLogisticsSubStep, file.id)}
+                                              className="p-1.5 hover:bg-slate-800 text-rose-400 hover:text-rose-300 rounded transition-all cursor-pointer"
+                                              title="Hapus Dokumen"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-[10px] text-slate-500 italic text-center py-1">
+                                      Belum ada dokumen yang diunggah.
+                                    </div>
+                                  )}
+
+                                  {/* Drag & Drop Upload Zone */}
+                                  {isPreviousStepsDone && (
+                                    <div
+                                      onDragOver={(e) => {
+                                        e.preventDefault();
+                                        setDragActive(prev => ({ ...prev, [activeLogisticsSubStep]: true }));
+                                      }}
+                                      onDragLeave={(e) => {
+                                        e.preventDefault();
+                                        setDragActive(prev => ({ ...prev, [activeLogisticsSubStep]: false }));
+                                      }}
+                                      onDrop={(e) => {
+                                        e.preventDefault();
+                                        setDragActive(prev => ({ ...prev, [activeLogisticsSubStep]: false }));
+                                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                          handleUploadFile(activeLogisticsSubStep, e.dataTransfer.files[0]);
+                                        }
+                                      }}
+                                      className={`border-2 border-dashed rounded-xl p-3 text-center transition-all cursor-pointer ${
+                                        dragActive[activeLogisticsSubStep]
+                                          ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                                          : 'border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60'
+                                      }`}
+                                      onClick={() => {
+                                        const input = document.getElementById(`substep-file-input-${activeLogisticsSubStep}`);
+                                        if (input) input.click();
+                                      }}
+                                    >
+                                      <input 
+                                        type="file"
+                                        id={`substep-file-input-${activeLogisticsSubStep}`}
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          if (e.target.files && e.target.files[0]) {
+                                            handleUploadFile(activeLogisticsSubStep, e.target.files[0]);
+                                          }
+                                        }}
+                                      />
+                                      <div className="flex flex-col items-center gap-1">
+                                        <Upload className="w-5 h-5 text-indigo-400 animate-pulse" />
+                                        <p className="text-[10px] font-bold text-slate-300">
+                                          Tarik & letakkan berkas di sini, atau <span className="text-indigo-400 hover:underline">cari berkas</span>
+                                        </p>
+                                        <p className="text-[9px] text-slate-500">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="pt-1">
+                                  {isCurrentSubDone ? (
+                                    <div className="space-y-3">
+                                      <div className="bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                                        <span>{subDetails.successMsg}</span>
+                                      </div>
+                                      {isLogisticsSimulationFullyCompleted && (
+                                        <div className="mt-3 pt-2.5 border-t border-emerald-500/10 flex justify-end">
+                                          <button
+                                            onClick={() => executeStepProgression(inspectedStepIndex)}
+                                            disabled={!isAuthorizedToClickCurrentInspected}
+                                            className={`px-4 py-2 rounded-lg text-xs font-black tracking-wide shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                                              isAuthorizedToClickCurrentInspected
+                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-[1.02]'
+                                                : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
+                                            }`}
+                                          >
+                                            <UserCheck className="w-3.5 h-3.5" />
+                                            Selesaikan &amp; Tanda Tangani Tahap Ini Resmi
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : !isPreviousStepsDone ? (
+                                    <div className="bg-slate-900 border border-slate-850 text-slate-500 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                                      <Lock className="w-4 h-4 text-slate-600 shrink-0" />
+                                      <span>Selesaikan sub-tahap sebelumnya terlebih dahulu untuk membuka kunci simulasi peran ini.</span>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setCompletedLogisticsSubSteps(prev => [...prev, activeLogisticsSubStep]);
+                                        if (subDetails.event) {
+                                          onSimulateEvent(subDetails.event);
+                                        }
+                                        if (activeLogisticsSubStep < 3) {
+                                          setTimeout(() => {
+                                            setActiveLogisticsSubStep(prev => prev + 1);
+                                          }, 1500);
+                                        }
+                                      }}
+                                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 hover:shadow-md text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Play className="w-3.5 h-3.5" />
+                                      {subDetails.btnText}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+             
+        {/* LEFT COMPONENT: Live Document Customizer & Paper Specimen Preview */}
+        <div className="lg:col-span-12 border border-slate-200 bg-white p-6 rounded-2xl relative shadow-3xs max-w-full space-y-6">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-indigo-600" />
+                Live Editor Berkas &amp; Formulir Ekspor Resmi
+              </h3>
+              <p className="text-xs text-gray-400 font-sans">
+                Lakukan pengisian draf formulir di bawah ini, lalu saksikan lembar fisik asli yang akan dicetak terbaharui seketika!
+              </p>
             </div>
-            <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-mono font-bold uppercase tracking-wider shrink-0 hidden md:inline-block">
-              FASE PRA-PENGAPALAN
-            </span>
+            
+            <button
+              onClick={handleDownloadRealFile}
+              disabled={isDownloading}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-850 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
+            >
+              <FileDown className="w-4 h-4" />
+              {isDownloading ? 'Menghimpun Berkas...' : 'Unduh'}
+            </button>
           </div>
-          <NegotiationDashboard
-            shipment={shipment}
-            currentUser={currentUser}
-            onUpdateShipmentFromDeal={onUpdateShipmentFromDeal}
-            forcedStepId={
-              inspectedStepIndex === 0 ? 1 :
-              inspectedStepIndex === 1 ? 2 :
-              inspectedStepIndex === 2 ? 3 :
-              inspectedStepIndex === 3 ? 5 : 1
-            }
-            onStepIdChange={(stepId) => {
-              if (onNegoStepIdChange) {
-                onNegoStepIdChange(stepId);
-              }
-              const newIndex = 
-                stepId === 1 ? 0 :
-                stepId === 2 ? 1 :
-                stepId === 3 || stepId === 4 ? 2 :
-                stepId === 5 ? 3 : 0;
-              setInspectedStepIndex(newIndex);
-            }}
-          />
+
+          {/* Dynamic properties form */}
+          {(() => {
+            const meta = getDocMeta(inspectedStepIndex);
+            return (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3">
+                <span className="text-[10px] font-black text-slate-550 uppercase tracking-widest block border-b border-slate-200 pb-1.5">
+                  Isian Pengenal Berkas: {meta.title} {isStepCompleted && <span className="ml-2 text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-normal">Diarsipkan</span>}
+                </span>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {meta.inputs.map(inp => (
+                    <div key={inp.key} className="space-y-1">
+                      <label className="text-[10.5px] font-bold text-slate-705 text-slate-700 block tracking-tight">
+                        {inp.label}
+                      </label>
+                      <input
+                        type="text"
+                        value={docFields[inp.key] || ''}
+                        disabled={isStepCompleted}
+                        onChange={(e) => handleFieldChange(inp.key, e.target.value)}
+                        placeholder={isStepCompleted ? "Arsip berkas terkunci..." : "Ketik rincian isian..."}
+                        className={`w-full text-xs border rounded px-2.5 py-1.5 shadow-3xs focus:outline-none transition-all font-sans ${
+                          isStepCompleted ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-slate-900 border-slate-300 focus:border-indigo-500'
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 flex items-center justify-between text-[11px] text-gray-400">
+                  <span>{isStepCompleted ? "*Berkas resmi ini telah diterbitkan dan tidak dapat diubah." : "*Data tersimpan secara lokal ke memori browser Anda."}</span>
+                  {!isStepCompleted ? (
+                    <button
+                      onClick={() => {
+                        setDocSavedMessage('Konfigurasi draf berhasil dicadangkan!');
+                        setTimeout(() => setDocSavedMessage(null), 3000);
+                      }}
+                      className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
+                    >
+                      Simpan Draf Berkas
+                    </button>
+                  ) : (
+                    <span className="text-gray-400 font-bold italic">Arsip Terkunci (Read-Only)</span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Toast feedback alerts */}
+          <AnimatePresence>
+            {docSavedMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="bg-emerald-50 text-emerald-850 p-4 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-xs font-sans leading-relaxed text-slate-900"
+              >
+                <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <p className="flex-1 font-medium">{docSavedMessage}</p>
+                <button onClick={() => setDocSavedMessage(null)} className="text-slate-400 hover:text-slate-655 font-bold text-xs cursor-pointer">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* HIGH-FIDELITY PRINT PAPER SHEETS EMBEDDED PREVIEW CONTAINER */}
+          <div className="border border-slate-205 rounded-xl overflow-hidden shadow-2xs relative">
+            
+            <div className="bg-amber-50 text-amber-900 text-[10px] font-bold px-4 py-2 border-b border-amber-100 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+              <span>LOG HARIAN SIMULATOR EKSPOR: LEMBAR DRAF TIDAK DAPAT DISALAHGUNAKAN • DRAF ELEKTRONIK</span>
+            </div>
+
+            <div className="bg-slate-100 p-4 sm:p-8 flex justify-center overflow-x-auto">
+              <div 
+                className="bg-white border border-slate-300 relative text-slate-900 shadow-md font-sans p-6 sm:p-12 text-[11px] leading-relaxed select-text"
+                style={{ 
+                  width: '100%', 
+                  maxWidth: '700px', 
+                  minHeight: '820px', 
+                  boxSizing: 'border-box' 
+                }}
+              >
+                
+                <div className="absolute top-[12px] bottom-[12px] left-[12px] right-[12px] border border-slate-200 pointer-events-none" />
+                <div className="absolute top-[16px] bottom-[16px] left-[16px] right-[16px] border border-slate-150 pointer-events-none" />
+
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+                  <div className="text-[52px] font-bold text-slate-950/2 rotate-[324deg] font-mono select-none tracking-widest uppercase">
+                    OFFICIAL SPECIMEN
+                  </div>
+                </div>
+
+                <div className="relative z-10 space-y-6">
+                  
+                  <div className="border-b-4 border-double border-slate-900 pb-4 text-center space-y-1.5">
+                    <h4 className="text-[15px] font-serif font-black tracking-widest uppercase text-slate-900 leading-snug">
+                      {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).name}
+                    </h4>
+                    <p className="text-[8.5px] font-mono tracking-wider text-slate-400 font-bold">
+                      {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).address}
+                    </p>
+                    <p className="text-[8.5px] font-mono tracking-widest text-indigo-700 font-black uppercase">
+                      {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).subtitle}
+                    </p>
+                  </div>
+
+                  <div className="text-center space-y-1 pt-1">
+                    <span className="font-serif font-black text-xs underline uppercase block text-slate-900 tracking-wide">
+                      {getDocMeta(inspectedStepIndex).title}
+                    </span>
+                    <span className="text-[8.5px] font-mono text-slate-400 block uppercase font-bold tracking-widest">
+                      KODE TUNTAS VALIDASI EKSPOR: {shipment.trackingNumber || 'GEXP-COF-110295'}/ONLINE-E-DOC/{Date.now().toString().slice(-4)}
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] leading-relaxed text-slate-700 font-serif">
+                    Berdasarkan Ketentuan &amp; Regulasi Ekspor-Impor Kementerian Perdagangan RI beserta Otoritas Kepabeanan Internasional, dengan ini diterbitkan dokumen resmi ekspor yang sah untuk siklus perdagangan luar negeri sebagai berikut:
+                  </p>
+
+                  <div className="border border-slate-300 rounded overflow-hidden animate-fade-in" key={inspectedStepIndex}>
+                    <table className="w-full text-left text-[10.5px] border-collapse font-sans bg-slate-50/20">
+                      <thead>
+                        <tr className="border-b border-slate-300 bg-slate-50">
+                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[45%]">
+                            Parameter Legalitas Dokumen
+                          </th>
+                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[55%]">
+                            Isian Terdaftar
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getDocMeta(inspectedStepIndex).inputs.map(inp => {
+                          const val = docFields[inp.key] || '-';
+                          return (
+                            <tr key={inp.key} className="border-b border-slate-200">
+                              <td className="py-2 px-3 text-[9.5px] font-mono text-slate-400 font-bold uppercase shrink-0">
+                                {inp.label}
+                              </td>
+                              <td className="py-2 px-3 font-mono text-slate-800 font-black">
+                                {val}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[9px] leading-relaxed font-serif text-slate-600">
+                    <strong>PERNYATAAN AKREDITASI MULTI-PIHAK:</strong><br />
+                    Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Multi Raksa Madani</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai ekspor Republik Indonesia berganda.
+                  </div>
+
+                  <div className="border-t border-dashed border-slate-250 pt-5 grid grid-cols-2 gap-6 items-end mt-8">
+                    
+                    <div className="space-y-1.5 font-sans">
+                      <div className="border border-slate-300 p-1.5 inline-block text-[7.5px] font-mono text-slate-400 leading-tight">
+                        METODE DETEKSI VERIFIKASI: ENKRIPSI AES-256 SECURED<br />
+                        [VALIDASI DIGITAL SERTIFIKAT TUNTAS]
+                      </div>
+                      <p className="text-[7.5px] text-slate-400 leading-normal font-sans">
+                        Seluruh isian di atas draf legalitas sah yang diterbitkan secara elektronik demi kepentingan kepatuhan ekspor dari wilayah hukum Republik Indonesia.
+                      </p>
+                    </div>
+
+                    <div className="text-center space-y-3 flex flex-col items-center shrink-0">
+                      <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider font-mono">
+                        Lembar Tanda Tangan &amp; Cap Resmi:
+                      </span>
+                      
+                      <div className="relative flex items-center justify-center">
+                        <div className="border border-double border-blue-500/75 rounded-full px-4 py-1.5 font-mono text-[7px] font-black text-blue-500/75 tracking-widest uppercase rotate-2 bg-white/70 relative z-10">
+                          VERIFIED SUBMITTED
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-10 select-none scale-125 z-0">
+                          ⭐ 📄 ⭐
+                        </div>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <p className="text-[9.5px] font-serif font-black text-slate-900 underline">
+                          {currentUser?.name || 'Hendry Kurniawan'}
+                        </p>
+                        <p className="text-[7px] font-mono text-slate-400 uppercase font-black">
+                          Authorized Signer for {currentUser?.role || 'Trader'}
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* Quick instructions alert */}
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-2.5 items-start text-xs font-sans text-slate-700">
+            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-slate-900 mb-0.5">💡 Tips Cetak &amp; Simpan Dokumen Negara</p>
+              <p className="text-slate-500 leading-relaxed text-[11px]">
+                Gunakan tombol &quot;Unduh &amp; Cetak Resmi&quot; untuk menggenerate dokumen fisik asli. Berkas akan terunduh sebagai file HTML berformat media cetak standar. Setelah Anda membuka file tersebut, peramban Anda akan secara otomatis memicu dialog cetak halaman (Print to PDF) bersusun rapi letterhead pabean Indonesia!
+              </p>
+            </div>
+          </div>
+
+          {/* Section: Validasi & Tanda Tangan Resmi Tahap Ini */}
+          <div className="mt-6 border-t border-slate-200 pt-6 space-y-4">
+            <h4 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
+              <UserCheck className="w-4 h-4 text-indigo-600" />
+              Verifikasi &amp; Tanda Tangan Resmi Tahap ini
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2 text-slate-800 text-xs">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
+                      Aktor Penanggung Jawab
+                    </span>
+                    <span className="font-extrabold text-slate-800 text-xs">
+                      {activeInspectedStep.actor === 'Owner/Direktur' ? 'Bea Cukai' : activeInspectedStep.actor}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded">
+                    {activeInspectedStep.actor === 'Owner/Direktur' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
+                      Sesi Pengguna Aktif Anda
+                    </span>
+                    <span className="font-extrabold text-slate-800 text-xs">
+                      {currentUser?.name || 'Belum Login'}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] font-black px-2 py-0.5 rounded border capitalize ${
+                    isAuthorizedToClickCurrentInspected
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      : 'bg-rose-50 text-rose-600 border-rose-200'
+                  }`}>
+                    {isAuthorizedToClickCurrentInspected ? '✓ Terotorisasi' : '⚠ Tidak Sesuai'}
+                  </span>
+                </div>
+
+                {isEmergencyTakeover && (
+                  <p className="text-[10px] text-amber-600 font-semibold italic mt-2">
+                    ✓ Mode Darurat: Peran Owner/Direktur diizinkan mengambil alih &amp; menandatangani tugas Trader.
+                  </p>
+                )}
+
+                {!isAuthorizedToClickCurrentInspected && (
+                  <p className="text-[10px] text-rose-600 italic mt-2 leading-relaxed">
+                    {inspectedStepIndex === 1 && !isLogisticsSimulationFullyCompleted
+                      ? '⚠️ Lengkapi ke-4 sub-tahap simulasi logistik terpadu di panel kiri (sampai status L/C cair) terlebih dahulu sebelum menandatangani penyelesaian fase ini secara resmi.'
+                      : `Sesi Anda saat ini (${currentUser?.role || 'Akses Umum/Tamu'}) tidak memiliki hak menandatangani tahap ini (${activeInspectedStep.actor}). Silakan beralih ke peran yang sesuai dengan menekan tombol Login di sudut atas.`}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                {isFullyCompleted && inspectedStepIndex === 2 ? (
+                  <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center space-y-2.5">
+                    <div className="flex justify-center">
+                      <span className="p-1.5 bg-emerald-500 text-white rounded-full block">
+                        <Check className="w-4 h-4" />
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-xs text-slate-900 font-black uppercase tracking-wider">
+                        🎉 Transaksi Sukses!
+                      </p>
+                      <p className="text-[10px] text-emerald-700 leading-normal">
+                        Seluruh kargo tuntas diserahkan &amp; dana dicairkan sempurna.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCompletedLogisticsSubSteps([]);
+                        onUpdateStep(shipment.id, 'Draft', 'Simulasi diulang kembali dari awal draf (Sales Contract) oleh pengguna.');
+                      }}
+                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Mulai Ulang Simulasi (Reset)
+                    </button>
+                  </div>
+                ) : isStepCompleted ? (
+                  <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center space-y-2">
+                    <button
+                      disabled
+                      className="w-full py-2.5 px-4 rounded-lg text-xs font-black tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      Tahap Sudah Selesai Dilaksanakan
+                    </button>
+                    <p className="text-[10px] text-slate-500 leading-normal">
+                      Langkah ini telah ditandatangani secara digital oleh aktor penanggung jawab. Data terkunci.
+                    </p>
+                  </div>
+                ) : isStepFuture ? (
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center space-y-2">
+                    <button
+                      disabled
+                      className="w-full py-2.5 px-4 rounded-lg text-xs font-black tracking-wide bg-slate-100 text-slate-400 border border-slate-250 cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Lock className="w-4 h-4 text-slate-400" />
+                      Tahap Belum Aktif
+                    </button>
+                    <p className="text-[10px] text-slate-500 leading-normal">
+                      Selesaikan langkah-langkah sebelumnya terlebih dahulu agar tahap ini dapat diaktifkan.
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => executeStepProgression(inspectedStepIndex)}
+                    disabled={!isAuthorizedToClickCurrentInspected}
+                    className={`w-full py-3 px-4 rounded-lg text-xs font-black tracking-wide shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      isAuthorizedToClickCurrentInspected
+                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                    }`}
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    {inspectedStepIndex === 2 ? 'Konfirmasi Penerimaan Barang & Selesaikan Transaksi' : 'Tandatangani Secara Sah & Validasi Tahap ini'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
         </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* LEFT COMPONENT: Educational Advisor & Work Authorization */}
-        {showEducation && (
+
+        {/* RIGHT COMPONENT: Educational Advisor & Work Authorization */}
+        {false && showEducation && (
           <div className="lg:col-span-5 space-y-6">
             
             <div className="bg-slate-900 text-slate-100 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
@@ -1337,25 +1958,14 @@ export default function InteractiveInfographic({
                     {getStepGuide(inspectedStepIndex)?.badge || 'ASISTEN'}
                   </span>
                   <span className="text-[11px] font-semibold text-indigo-200">
-                    Panduan &amp; Edukasi Ekspor Awam
+                    Aksi dan Panduan
                   </span>
                 </div>
                 <BookOpen className="w-4 h-4 text-indigo-400" />
               </div>
 
               {/* Subtabs */}
-              <div className="grid grid-cols-3 border-b border-slate-800">
-                <button
-                  onClick={() => setOnPageTab('details')}
-                  className={`py-3 text-[11px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
-                    onPageTab === 'details'
-                      ? 'border-indigo-400 bg-slate-800/50 text-white font-extrabold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200 bg-transparent'
-                  }`}
-                >
-                  <Lightbulb className="w-3.5 h-3.5" />
-                  💡 Analogi
-                </button>
+              <div className="grid grid-cols-2 border-b border-slate-800">
                 <button
                   onClick={() => setOnPageTab('actions')}
                   className={`py-3 text-[11px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
@@ -1368,15 +1978,15 @@ export default function InteractiveInfographic({
                   🛡️ Aksi Sah
                 </button>
                 <button
-                  onClick={() => setOnPageTab('dictionary')}
+                  onClick={() => setOnPageTab('details')}
                   className={`py-3 text-[11px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
-                    onPageTab === 'dictionary'
+                    onPageTab === 'details'
                       ? 'border-indigo-400 bg-slate-800/50 text-white font-extrabold'
                       : 'border-transparent text-slate-400 hover:text-slate-200 bg-transparent'
                   }`}
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  📖 Kewajiban
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  💡 Analogi
                 </button>
               </div>
 
@@ -1525,7 +2135,9 @@ export default function InteractiveInfographic({
                            {!isAuthorizedToClickCurrentInspected && (
                             <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
                               <p className="text-[10px] text-rose-300 italic">
-                                Sesi Anda saat ini ({currentUser?.role || 'Akses Umum/Tamu'}) tidak memiliki hak menandatangani tahap ini ({activeInspectedStep.actor}). Silakan beralih ke peran yang sesuai dengan menekan tombol **Login** di sudut atas.
+                                {inspectedStepIndex === 1 && !isLogisticsSimulationFullyCompleted
+                                  ? '⚠️ Lengkapi ke-4 sub-tahap simulasi logistik terpadu di panel kiri (sampai status L/C cair) terlebih dahulu sebelum menandatangani penyelesaian fase ini secara resmi.'
+                                  : `Sesi Anda saat ini (${currentUser?.role || 'Akses Umum/Tamu'}) tidak memiliki hak menandatangani tahap ini (${activeInspectedStep.actor}). Silakan beralih ke peran yang sesuai dengan menekan tombol Login di sudut atas.`}
                               </p>
                             </div>
                           )}
@@ -1534,7 +2146,7 @@ export default function InteractiveInfographic({
                     </div>
 
                     <div className="pt-2 space-y-2.5">
-                      {isFullyCompleted ? (
+                      {isFullyCompleted && inspectedStepIndex === 2 ? (
                         <div className="bg-emerald-950/90 border border-emerald-500/40 p-4 rounded-xl text-center space-y-3.5 shadow-lg">
                           <div className="flex justify-center">
                             <span className="p-2 bg-emerald-500 text-white rounded-full block animate-bounce">
@@ -1551,6 +2163,7 @@ export default function InteractiveInfographic({
                           </div>
                           <button
                             onClick={() => {
+                              setCompletedLogisticsSubSteps([]);
                               onUpdateStep(shipment.id, 'Draft', 'Simulasi diulang kembali dari awal draf (Sales Contract) oleh pengguna.');
                             }}
                             className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md hover:-translate-y-0.5 active:translate-y-0"
@@ -1558,6 +2171,45 @@ export default function InteractiveInfographic({
                             <RefreshCw className="w-3.5 h-3.5" />
                             Mulai Ulang Simulasi (Reset ke Tahap 1)
                           </button>
+                        </div>
+                      ) : shipment.currentStep === 'Draft' ? (
+                        <div className="space-y-2 text-left bg-slate-950 p-4 rounded-xl border border-slate-800">
+                          <button
+                            disabled
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-amber-950/20 text-amber-500 border border-amber-900/40 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs animate-pulse"
+                          >
+                            <Lock className="w-4 h-4 text-amber-500" />
+                            Alur Logistik Ekspor Terkunci
+                          </button>
+                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                            Selesaikan <strong>Fase I: Negosiasi Komersial &amp; Kontrak Bilateral</strong> terlebih dahulu pada dasbor halaman utama untuk membuka dan memulai alur eksekusi logistik ini.
+                          </p>
+                        </div>
+                      ) : isStepCompleted ? (
+                        <div className="space-y-2 text-left bg-emerald-950/15 p-3 rounded-xl border border-emerald-500/10">
+                          <button
+                            disabled
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-emerald-900/10 text-emerald-600 border border-emerald-200/30 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
+                          >
+                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                            Tahap ini Sudah Selesai Dilaksanakan
+                          </button>
+                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                            Langkah ini telah berhasil divalidasi dan ditandatangani secara digital oleh aktor penanggung jawab. Data riwayat terkunci.
+                          </p>
+                        </div>
+                      ) : isStepFuture ? (
+                        <div className="space-y-2 text-left bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+                          <button
+                            disabled
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-slate-800/40 text-slate-500 border border-slate-700/50 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
+                          >
+                            <AlertCircle className="w-4 h-4 text-slate-500" />
+                            Tahap Belum Aktif
+                          </button>
+                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                            Selesaikan langkah-langkah sebelumnya terlebih dahulu agar tahap ini dapat diaktifkan dan diproses.
+                          </p>
                         </div>
                       ) : (
                         <button
@@ -1570,7 +2222,7 @@ export default function InteractiveInfographic({
                           }`}
                         >
                           <UserCheck className="w-4 h-4" />
-                          {inspectedStepIndex === 10 ? 'Cairkan L/C & Selesaikan Transaksi' : 'Tandatangani Secara Sah & Validasi Tahap ini'}
+                          {inspectedStepIndex === 2 ? 'Konfirmasi Penerimaan Barang & Selesaikan Transaksi' : 'Tandatangani Secara Sah & Validasi Tahap ini'}
                         </button>
                       )}
                     </div>
@@ -1578,84 +2230,7 @@ export default function InteractiveInfographic({
                   </div>
                 )}
 
-                {/* 3. ROLES CONSTITUTION HAK & KEWAJIBAN TAB */}
-                {onPageTab === 'dictionary' && (
-                  <div className="space-y-4">
-                    
-                    <div className="flex flex-wrap gap-1 border-b border-slate-800 pb-3">
-                      {(['Trader', 'Supplier', 'Owner/Direktur', 'Forwarder', 'Buyer'] as UserRole[]).map(rl => (
-                        <button
-                          key={rl}
-                          onClick={() => setDictionaryRole(rl)}
-                          className={`text-[9.5px] font-extrabold px-2 py-1 rounded transition-all cursor-pointer ${
-                            dictionaryRole === rl
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                          }`}
-                        >
-                          {rl === 'Owner/Direktur' ? 'Owner/Direktur' : rl}
-                        </button>
-                      ))}
-                    </div>
 
-                    {(() => {
-                      const selMeta = getActorMeta(dictionaryRole);
-                      const theme = getRoleTheme(dictionaryRole);
-                      return (
-                        <div className="space-y-3 font-sans break-words pt-1">
-                          
-                          <div className="flex items-center gap-2">
-                            <span className={`p-1.5 rounded-lg ${theme?.bg} ${theme?.primary}`}>
-                              {getRoleIcon(dictionaryRole, 'w-4 h-4')}
-                            </span>
-                            <div>
-                              <h5 className="text-white font-extrabold text-xs">
-                                {selMeta?.title}
-                              </h5>
-                              <p className="text-[10px] text-slate-400 font-mono">
-                                Contoh: {selMeta?.company}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3.5 pt-3">
-                            
-                            <div className="space-y-1.5">
-                              <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block font-mono">
-                                Hak Konstitusi Dagang (Rights)
-                              </span>
-                              <ul className="space-y-2">
-                                {selMeta?.hak.map((hk, i) => (
-                                  <li key={i} className="flex gap-2.5 text-xs text-slate-300 leading-relaxed">
-                                    <span className="text-indigo-500 font-bold font-mono text-[10.5px]">0{i+1}.</span>
-                                    <span>{hk}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            <div className="space-y-1.5 pt-2 border-t border-slate-800/50">
-                              <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest block font-mono">
-                                Kewajiban Operasional (Duties)
-                              </span>
-                              <ul className="space-y-2">
-                                {selMeta?.kewajiban.map((kw, i) => (
-                                  <li key={i} className="flex gap-2.5 text-xs text-slate-300 leading-relaxed">
-                                    <span className="text-amber-500 font-bold font-mono text-[10.5px]">0{i+1}.</span>
-                                    <span>{kw}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                          </div>
-
-                        </div>
-                      );
-                    })()}
-
-                  </div>
-                )}
 
               </div>
 
@@ -1672,242 +2247,15 @@ export default function InteractiveInfographic({
           </div>
         )}
 
-        {/* RIGHT COMPONENT: Live Document Customizer & Paper Specimen Preview */}
-        <div className={`${showEducation ? 'lg:col-span-7' : 'lg:col-span-12'} border border-slate-200 bg-white p-6 rounded-2xl relative shadow-3xs max-w-full space-y-6`}>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
-            <div>
-              <h3 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-indigo-600" />
-                Live Editor Berkas &amp; Formulir Ekspor Resmi
-              </h3>
-              <p className="text-xs text-gray-400 font-sans">
-                Lakukan pengisian draf formulir di bawah ini, lalu saksikan lembar fisik asli yang akan dicetak terbaharui seketika!
-              </p>
-            </div>
-            
-            <button
-              onClick={handleDownloadRealFile}
-              disabled={isDownloading}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-850 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
-            >
-              <FileDown className="w-4 h-4" />
-              {isDownloading ? 'Menghimpun Berkas...' : 'Unduh &amp; Cetak Resmi'}
-            </button>
-          </div>
-
-          {/* Dynamic properties form */}
-          {(() => {
-            const meta = getDocMeta(inspectedStepIndex);
-            return (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3">
-                <span className="text-[10px] font-black text-slate-550 uppercase tracking-widest block border-b border-slate-200 pb-1.5">
-                  Isian Pengenal Berkas: {meta.title}
-                </span>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {meta.inputs.map(inp => (
-                    <div key={inp.key} className="space-y-1">
-                      <label className="text-[10.5px] font-bold text-slate-705 text-slate-700 block tracking-tight">
-                        {inp.label}
-                      </label>
-                      <input
-                        type="text"
-                        value={docFields[inp.key] || ''}
-                        onChange={(e) => handleFieldChange(inp.key, e.target.value)}
-                        placeholder="Ketik rincian isian..."
-                        className="w-full text-xs bg-white border border-slate-300 rounded px-2.5 py-1.5 shadow-3xs focus:outline-none focus:border-indigo-500 transition-all font-sans"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-2 flex items-center justify-between text-[11px] text-gray-400">
-                  <span>*Data tersimpan secara lokal ke memori browser Anda.</span>
-                  <button
-                    onClick={() => {
-                      setDocSavedMessage('Konfigurasi draf berhasil dicadangkan!');
-                      setTimeout(() => setDocSavedMessage(null), 3000);
-                    }}
-                    className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer"
-                  >
-                    Simpan Draf Berkas
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Toast feedback alerts */}
-          <AnimatePresence>
-            {docSavedMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="bg-emerald-50 text-emerald-850 p-4 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-xs font-sans leading-relaxed text-slate-900"
-              >
-                <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <p className="flex-1 font-medium">{docSavedMessage}</p>
-                <button onClick={() => setDocSavedMessage(null)} className="text-slate-400 hover:text-slate-655 font-bold text-xs cursor-pointer">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* HIGH-FIDELITY PRINT PAPER SHEETS EMBEDDED PREVIEW CONTAINER */}
-          <div className="border border-slate-205 rounded-xl overflow-hidden shadow-2xs relative">
-            
-            <div className="bg-amber-50 text-amber-900 text-[10px] font-bold px-4 py-2 border-b border-amber-100 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
-              <span>LOG HARIAN SIMULATOR EKSPOR: LEMBAR DRAF TIDAK DAPAT DISALAHGUNAKAN • DRAF ELEKTRONIK</span>
-            </div>
-
-            <div className="bg-slate-100 p-4 sm:p-8 flex justify-center overflow-x-auto">
-              <div 
-                className="bg-white border border-slate-300 relative text-slate-900 shadow-md font-sans p-6 sm:p-12 text-[11px] leading-relaxed select-text"
-                style={{ 
-                  width: '100%', 
-                  maxWidth: '700px', 
-                  minHeight: '820px', 
-                  boxSizing: 'border-box' 
-                }}
-              >
-                
-                <div className="absolute top-[12px] bottom-[12px] left-[12px] right-[12px] border border-slate-200 pointer-events-none" />
-                <div className="absolute top-[16px] bottom-[16px] left-[16px] right-[16px] border border-slate-150 pointer-events-none" />
-
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
-                  <div className="text-[52px] font-bold text-slate-950/2 rotate-[324deg] font-mono select-none tracking-widest uppercase">
-                    OFFICIAL SPECIMEN
-                  </div>
-                </div>
-
-                <div className="relative z-10 space-y-6">
-                  
-                  <div className="border-b-4 border-double border-slate-900 pb-4 text-center space-y-1.5">
-                    <h4 className="text-[15px] font-serif font-black tracking-widest uppercase text-slate-900">
-                      PT MULTI RAKSA MADANI
-                    </h4>
-                    <p className="text-[8.5px] font-mono tracking-wider text-slate-400 font-bold">
-                      Menara Karya Lt.12, Jalan HR. Rasuna Said Blok X-5 Kuningan, Jakarta Selatan • Telp: (021) 529-5000
-                    </p>
-                    <p className="text-[8.5px] font-mono tracking-widest text-indigo-700 font-black uppercase">
-                      PORTAL TERPADU HUB PERDAGANGAN EKSPOR REPUBLIK INDONESIA
-                    </p>
-                  </div>
-
-                  <div className="text-center space-y-1 pt-1">
-                    <span className="font-serif font-black text-xs underline uppercase block text-slate-900 tracking-wide">
-                      {getDocMeta(inspectedStepIndex).title}
-                    </span>
-                    <span className="text-[8.5px] font-mono text-slate-400 block uppercase font-bold tracking-widest">
-                      KODE TUNTAS VALIDASI EKSPOR: {shipment.trackingNumber || 'GEXP-COF-110295'}/ONLINE-E-DOC/{Date.now().toString().slice(-4)}
-                    </span>
-                  </div>
-
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-serif">
-                    Berdasarkan Ketentuan &amp; Regulasi Ekspor-Impor Kementerian Perdagangan RI beserta Otoritas Kepabeanan Internasional, dengan ini diterbitkan dokumen resmi ekspor yang sah untuk siklus perdagangan luar negeri sebagai berikut:
-                  </p>
-
-                  <div className="border border-slate-300 rounded overflow-hidden animate-fade-in" key={inspectedStepIndex}>
-                    <table className="w-full text-left text-[10.5px] border-collapse font-sans bg-slate-50/20">
-                      <thead>
-                        <tr className="border-b border-slate-300 bg-slate-50">
-                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[45%]">
-                            Parameter Legalitas Dokumen
-                          </th>
-                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[55%]">
-                            Isian Terdaftar
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getDocMeta(inspectedStepIndex).inputs.map(inp => {
-                          const val = docFields[inp.key] || '-';
-                          return (
-                            <tr key={inp.key} className="border-b border-slate-200">
-                              <td className="py-2 px-3 text-[9.5px] font-mono text-slate-400 font-bold uppercase shrink-0">
-                                {inp.label}
-                              </td>
-                              <td className="py-2 px-3 font-mono text-slate-800 font-black">
-                                {val}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[9px] leading-relaxed font-serif text-slate-600">
-                    <strong>PERNYATAAN AKREDITASI MULTI-PIHAK:</strong><br />
-                    Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Multi Raksa Madani</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai ekspor Republik Indonesia berganda.
-                  </div>
-
-                  <div className="border-t border-dashed border-slate-250 pt-5 grid grid-cols-2 gap-6 items-end mt-8">
-                    
-                    <div className="space-y-1.5 font-sans">
-                      <div className="border border-slate-300 p-1.5 inline-block text-[7.5px] font-mono text-slate-400 leading-tight">
-                        METODE DETEKSI VERIFIKASI: ENKRIPSI AES-256 SECURED<br />
-                        [VALIDASI DIGITAL SERTIFIKAT TUNTAS]
-                      </div>
-                      <p className="text-[7.5px] text-slate-400 leading-normal font-sans">
-                        Seluruh isian di atas draf legalitas sah yang diterbitkan secara elektronik demi kepentingan kepatuhan ekspor dari wilayah hukum Republik Indonesia.
-                      </p>
-                    </div>
-
-                    <div className="text-center space-y-3 flex flex-col items-center shrink-0">
-                      <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider font-mono">
-                        Lembar Tanda Tangan &amp; Cap Resmi:
-                      </span>
-                      
-                      <div className="relative flex items-center justify-center">
-                        <div className="border border-double border-blue-500/75 rounded-full px-4 py-1.5 font-mono text-[7px] font-black text-blue-500/75 tracking-widest uppercase rotate-2 bg-white/70 relative z-10">
-                          VERIFIED SUBMITTED
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center opacity-10 select-none scale-125 z-0">
-                          ⭐ 📄 ⭐
-                        </div>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <p className="text-[9.5px] font-serif font-black text-slate-900 underline">
-                          {currentUser?.name || 'Hendry Kurniawan'}
-                        </p>
-                        <p className="text-[7px] font-mono text-slate-400 uppercase font-black">
-                          Authorized Signer for {currentUser?.role || 'Trader'}
-                        </p>
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-
-          {/* Quick instructions alert */}
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-2.5 items-start text-xs font-sans text-slate-700">
-            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-slate-900 mb-0.5">💡 Tips Cetak &amp; Simpan Dokumen Negara</p>
-              <p className="text-slate-500 leading-relaxed text-[11px]">
-                Gunakan tombol &quot;Unduh &amp; Cetak Resmi&quot; untuk menggenerate dokumen fisik asli. Berkas akan terunduh sebagai file HTML berformat media cetak standar. Setelah Anda membuka file tersebut, peramban Anda akan secara otomatis memicu dialog cetak halaman (Print to PDF) bersusun rapi letterhead pabean Indonesia!
-              </p>
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
-      )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

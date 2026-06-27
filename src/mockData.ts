@@ -8,6 +8,7 @@ export const mockUsers: UserProfile[] = [
     email: 'admin@exportflow.com',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     companyName: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)',
+    phone: '+6281234567890',
   },
   {
     id: 'usr-trader',
@@ -18,6 +19,7 @@ export const mockUsers: UserProfile[] = [
     companyName: 'PT Multi Raksa Madani',
     address: 'Sudirman Central Business District, Jakarta',
     country: 'Indonesia',
+    phone: '+6281122334455',
   },
   {
     id: 'usr-buyer',
@@ -28,6 +30,7 @@ export const mockUsers: UserProfile[] = [
     companyName: 'EuroFoods Import GmbH',
     address: 'Kaiserstraße 12, Frankfurt am Main',
     country: 'Germany',
+    phone: '+491701234567',
   },
   {
     id: 'usr-forwarder',
@@ -38,6 +41,7 @@ export const mockUsers: UserProfile[] = [
     companyName: 'PT Samudera Logistik Internasional',
     address: 'Tanjung Priok Port Area, Jakarta',
     country: 'Indonesia',
+    phone: '+6285799887766',
   },
   {
     id: 'usr-supplier',
@@ -48,6 +52,7 @@ export const mockUsers: UserProfile[] = [
     companyName: 'Koperasi Tani rempah Organik Bali',
     address: 'Kintamani, Bangli, Bali',
     country: 'Indonesia',
+    phone: '+6281353535353',
   },
 ];
 
@@ -329,11 +334,9 @@ export const initialShipments = (): ExportShipment[] => [
     etd: '2026-06-25',
     eta: '2026-07-28',
     trackingNumber: 'SMDR-NT-9821389',
-    currentStep: 'Verification',
+    currentStep: 'Draft',
     stepHistory: [
-      { step: 'Draft', timestamp: '2026-06-01T09:00:00Z', updatedBy: 'usr-trader', comments: 'Sales contract ditandatangani oleh Buyer & Trader.' },
-      { step: 'Sourcing', timestamp: '2026-06-08T11:30:00Z', updatedBy: 'usr-supplier', comments: 'Bahan komoditas pala dari tani Bali sudah dikemas ke gudang transit.' },
-      { step: 'Verification', timestamp: '2026-06-15T15:00:00Z', updatedBy: 'usr-trader', comments: 'Pengajuan Sertifikasi Karantina Pertanian & Uji laboratorium aflatoksin sedang berjalan.' }
+      { step: 'Draft', timestamp: '2026-06-01T09:00:00Z', updatedBy: 'usr-trader', comments: 'Sales contract ditandatangani oleh Buyer & Trader.' }
     ],
     documents: [],
     certifications: []
@@ -365,15 +368,9 @@ export const initialShipments = (): ExportShipment[] => [
     etd: '2026-06-15',
     eta: '2026-07-16',
     trackingNumber: 'GEXP-COF-110294',
-    currentStep: 'Shipping',
+    currentStep: 'Draft',
     stepHistory: [
-      { step: 'Draft', timestamp: '2026-05-10T09:00:00Z', updatedBy: 'usr-trader', comments: 'Perjanjian Kontrak Selesai.' },
-      { step: 'Sourcing', timestamp: '2026-05-20T10:00:00Z', updatedBy: 'usr-supplier', comments: 'Kopi dipacking dalam goni berlogo standar ekspor makanan.' },
-      { step: 'Verification', timestamp: '2026-05-28T09:00:00Z', updatedBy: 'usr-trader', comments: 'Bebas hama & sertifikat halal divalidasi kementerian.' },
-      { step: 'Documents', timestamp: '2026-06-02T16:00:00Z', updatedBy: 'usr-trader', comments: 'Pemberitahuan Ekspor Barang (PEB) disetujui Bea Cukai.' },
-      { step: 'Customs', timestamp: '2026-06-10T14:00:00Z', updatedBy: 'usr-admin', comments: 'Pemeriksaan fisik pabean selesai. NPE (Nota Pelayanan Ekspor) diterbitkan.' },
-      { step: 'Loading', timestamp: '2026-06-12T11:00:00Z', updatedBy: 'usr-forwarder', comments: 'Barang masuk ke dalam Stuffing Container 40ft FCL.' },
-      { step: 'Shipping', timestamp: '2026-06-15T08:00:00Z', updatedBy: 'usr-forwarder', comments: 'Vessel berlayar meninggalkan pelabuhan Tanjung Priok.' }
+      { step: 'Draft', timestamp: '2026-05-10T09:00:00Z', updatedBy: 'usr-trader', comments: 'Perjanjian Kontrak Selesai.' }
     ],
     documents: [],
     certifications: []
@@ -405,10 +402,9 @@ export const initialShipments = (): ExportShipment[] => [
     etd: '2026-07-02',
     eta: '2026-08-04',
     trackingNumber: 'HMPR-BRQ-332918',
-    currentStep: 'Sourcing',
+    currentStep: 'Draft',
     stepHistory: [
-      { step: 'Draft', timestamp: '2026-06-10T11:00:00Z', updatedBy: 'usr-trader', comments: 'Kontrak disetujui, pembayaran L/C sudah dibuka oleh buyer bank.' },
-      { step: 'Sourcing', timestamp: '2026-06-18T14:45:00Z', updatedBy: 'usr-supplier', comments: 'Supplier mulai mencetak kemasan kustom buyer dan pemanasan arang.' }
+      { step: 'Draft', timestamp: '2026-06-10T11:00:00Z', updatedBy: 'usr-trader', comments: 'Kontrak disetujui, pembayaran L/C sudah dibuka oleh buyer bank.' }
     ],
     documents: [],
     certifications: []
@@ -440,16 +436,9 @@ export const initialShipments = (): ExportShipment[] => [
     etd: '2026-05-01',
     eta: '2026-05-28',
     trackingNumber: 'GLDP-CPO-77018',
-    currentStep: 'Completed',
+    currentStep: 'Draft',
     stepHistory: [
-      { step: 'Draft', timestamp: '2026-04-10T09:00:00Z', updatedBy: 'usr-trader' },
-      { step: 'Sourcing', timestamp: '2026-04-15T09:00:00Z', updatedBy: 'usr-supplier' },
-      { step: 'Verification', timestamp: '2026-04-20T09:00:00Z', updatedBy: 'usr-trader' },
-      { step: 'Documents', timestamp: '2026-04-24T09:00:00Z', updatedBy: 'usr-trader' },
-      { step: 'Customs', timestamp: '2026-04-28T09:00:00Z', updatedBy: 'usr-admin' },
-      { step: 'Loading', timestamp: '2026-04-30T09:00:00Z', updatedBy: 'usr-forwarder' },
-      { step: 'Shipping', timestamp: '2026-05-01T09:00:00Z', updatedBy: 'usr-forwarder' },
-      { step: 'Completed', timestamp: '2026-05-28T16:00:00Z', updatedBy: 'usr-buyer', comments: 'Barang diterima dengan selamat di pelabuhan Rotterdam. Dokumen clearance CO, BL asli, Phytosanitary, Halal diserahkan lengkap.' }
+      { step: 'Draft', timestamp: '2026-04-10T09:00:00Z', updatedBy: 'usr-trader' }
     ],
     documents: [],
     certifications: []
@@ -481,12 +470,9 @@ export const initialShipments = (): ExportShipment[] => [
     etd: '2026-07-05',
     eta: '2026-08-08',
     trackingNumber: 'GEXP-COF-110295',
-    currentStep: 'Documents',
+    currentStep: 'Draft',
     stepHistory: [
-      { step: 'Draft', timestamp: '2026-06-01T09:00:00Z', updatedBy: 'usr-trader', comments: 'Sales Contract dan Purchase Order resmi disahkan oleh eksportir & importir.' },
-      { step: 'Sourcing', timestamp: '2026-06-08T10:00:00Z', updatedBy: 'usr-supplier', comments: 'Kopi dipacking dalam karung goni standar ekspor dan dipindahkan ke Gudang Transit Utama.' },
-      { step: 'Verification', timestamp: '2026-06-15T11:00:00Z', updatedBy: 'usr-trader', comments: 'Pengujian lab kadar air (12%) selesai & sertifikat Phytosanitary serta Halal diterbitkan oleh balai karantina.' },
-      { step: 'Documents', timestamp: '2026-06-19T09:15:00Z', updatedBy: 'usr-trader', comments: 'Memulai penyusunan dokumen ekspor wajib (Invoice, Packing List, & COO) sebelum kepabeanan.' }
+      { step: 'Draft', timestamp: '2026-06-01T09:00:00Z', updatedBy: 'usr-trader', comments: 'Sales Contract dan Purchase Order resmi disahkan oleh eksportir & importir.' }
     ],
     documents: [],
     certifications: []
@@ -545,58 +531,23 @@ export const WORKFLOW_STEPS: Array<{
 }> = [
   {
     step: 'Draft',
-    label: 'Kontrak Penjualan',
-    description: 'Trader & Buyer menyusun kontrak penjualan (Sales Contract), menyepakati komoditas, metode pengiriman (FOB/CIF), harga, dan Letter of Credit (L/C).',
+    label: 'Negosiasi & Kontrak',
+    description: 'Meja perundingan draf kontrak (LOI, FCO, MoU), penyesuaian klausul secara interaktif secara real-time, dan penandatanganan bilateral Proforma Invoice (PI).',
     actor: 'Trader',
     expectedDuration: '3-7 Hari'
   },
   {
-    step: 'Sourcing',
-    label: 'Penyediaan Barang',
-    description: 'Supplier memproduksi barang, melakukan pengemasan standar ekspor, serta mengangkut barang ke gudang transit utama.',
-    actor: 'Supplier',
-    expectedDuration: '7-14 Hari'
-  },
-  {
-    step: 'Verification',
-    label: 'Sertifikasi & Karantina',
-    description: 'Melakukan sertifikasi mutu, sertifikat halal, pengujian lab mutu pangan, phytosanitary certificate karantina pertanian, atau fumigasi kayu.',
-    actor: 'Trader',
-    expectedDuration: '3-5 Hari'
-  },
-  {
-    step: 'Documents',
-    label: 'Pembuatan Dokumen',
-    description: 'Pembuatan dokumen wajib seperti Commercial Invoice, Packing List (PL), Surat Keterangan Asal (SKA/COO), dan pengajuan ekspor bea cukai.',
-    actor: 'Trader',
-    expectedDuration: '2-4 Hari'
-  },
-  {
-    step: 'Customs',
-    label: 'Pabean & Cukai (NPE)',
-    description: 'Pengajuan Pemberitahuan Ekspor Barang (PEB) ke Bea Cukai RI. Pemeriksaan acak pabean dan penerbitan Nota Pelayanan Ekspor (NPE).',
-    actor: 'Owner/Direktur',
-    expectedDuration: '1-2 Hari'
-  },
-  {
-    step: 'Loading',
-    label: 'Pemuatan Logistik',
-    description: 'Forwarder mengatur transportasi, men-stuffing muatan ke peti kemas pelabuhan, menerbitkan draft Bill of Lading (B/L) serta memuat kargo ke atas kapal.',
-    actor: 'Forwarder',
-    expectedDuration: '2-3 Hari'
-  },
-  {
     step: 'Shipping',
-    label: 'Pelayaran Kargo',
-    description: 'Kapal dalam kondisi berlayar di laut bebas. Melacak status pelayaran koordinat secara real-time demi kenyamanan Buyer di luar negeri.',
-    actor: 'Forwarder',
-    expectedDuration: '14-35 Hari'
+    label: 'Proses Logistik & Pencairan L/C',
+    description: 'Rangkaian proses terintegrasi mulai dari Sourcing komoditas tani, Kepabeanan Ekspor (COO/PEB), Pelayaran Samudra (B/L), hingga pencairan dana Letter of Credit (L/C).',
+    actor: 'Trader',
+    expectedDuration: '20-35 Hari'
   },
   {
     step: 'Completed',
     label: 'Selesai & Serah Terima',
-    description: 'Kapal berlabuh, barang diclearance di port tujuan, dokumen asli ditukar untuk klaim cargo. Transaksi tuntas sempurna.',
+    description: 'Kapal berlabuh, barang diclearance di port tujuan (Hamburg), serah terima kargo fisik, dan transaksi ditutup sempurna.',
     actor: 'Buyer',
-    expectedDuration: '1-3 Hari'
+    expectedDuration: '2-3 Hari'
   }
 ];
