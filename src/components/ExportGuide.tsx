@@ -637,12 +637,12 @@ export default function ExportGuide() {
                   </div>
 
                   {/* Step ID Label */}
-                  <span className={`text-[8px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
                     Tahap 0{idx + 1}
                   </span>
 
                   {/* Step Short Title */}
-                  <p className={`text-[9px] font-bold mt-0.5 line-clamp-2 leading-snug uppercase tracking-tight ${isActive ? 'text-white font-black' : 'text-slate-300'}`}>
+                  <p className={`text-xs font-bold mt-0.5 line-clamp-2 leading-snug uppercase tracking-tight ${isActive ? 'text-white font-black' : 'text-slate-300'}`}>
                     {step.title.split(' (')[0]}
                   </p>
                 </button>
@@ -656,10 +656,10 @@ export default function ExportGuide() {
       <div className="space-y-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 relative">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-              <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${guideSteps[activeStepIndex].badgeColor}`}>
+              <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${guideSteps[activeStepIndex].badgeColor}`}>
                 {guideSteps[activeStepIndex].badge}
               </span>
-              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
+              <span className="text-xs font-mono font-bold text-slate-400 uppercase">
                 TAHAP {activeStepIndex + 1} DARI 6
               </span>
             </div>
@@ -669,31 +669,31 @@ export default function ExportGuide() {
               <h2 className="text-lg sm:text-xl font-black text-slate-900 font-sans uppercase tracking-tight">
                 {guideSteps[activeStepIndex].title}
               </h2>
-              <p className="text-xs text-slate-400 font-bold font-sans italic">
+              <p className="text-sm text-slate-400 font-bold font-sans italic">
                 "{guideSteps[activeStepIndex].subtitle}"
               </p>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-2">
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed pt-2">
                 {guideSteps[activeStepIndex].description}
               </p>
             </div>
 
             {/* Analogi Orang Awam */}
             <div className="bg-emerald-50/75 border border-emerald-100 rounded-xl p-4 space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 flex items-center gap-1.5">
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-800 flex items-center gap-1.5">
                 <HelpCircle className="w-3.5 h-3.5" />
                 Analogi Sederhana untuk Orang Awam :
               </span>
-              <p className="text-xs text-emerald-950 font-medium leading-relaxed">
+              <p className="text-sm text-emerald-950 font-medium leading-relaxed">
                 {guideSteps[activeStepIndex].laymanAnalogy}
               </p>
             </div>
 
             {/* Key Actors */}
             <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Aktor / Pihak yang Terlibat :</span>
+              <span className="text-xs font-black uppercase text-slate-500 tracking-wider">Aktor / Pihak yang Terlibat :</span>
               <div className="flex flex-wrap gap-2">
                 {guideSteps[activeStepIndex].keyActors.map((actor, i) => (
-                  <span key={i} className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                  <span key={i} className="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                     {actor}
                   </span>
                 ))}
@@ -702,7 +702,7 @@ export default function ExportGuide() {
 
             {/* Documents Generated */}
             <div className="space-y-3">
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-slate-900" />
                 Rantai Dokumen yang Terbit di Tahap Ini :
               </span>
@@ -711,21 +711,21 @@ export default function ExportGuide() {
                   <button
                     key={i}
                     onClick={() => handleOpenDoc(doc.name, doc.issuer)}
-                    className="w-full text-left border border-slate-200 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-100 rounded-xl p-3 bg-slate-50/50 space-y-2 hover:bg-white transition-all transform hover:-translate-y-0.5 active:scale-98 group"
+                    className="w-full text-left border border-slate-200 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-100 rounded-xl p-3.5 bg-slate-50/50 space-y-2.5 hover:bg-white transition-all transform hover:-translate-y-0.5 active:scale-98 group"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-blue-600 group-hover:text-emerald-600 transition-colors" />
-                        <span className="text-xs font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{doc.name}</span>
+                        <FileText className="w-4 h-4 text-blue-600 group-hover:text-emerald-600 transition-colors" />
+                        <span className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{doc.name}</span>
                       </div>
-                      <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                         BUKA / EDIT / CETAK ➔
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-normal">{doc.desc}</p>
-                    <div className="pt-2 border-t border-slate-100 mt-1 flex justify-between items-center text-[9px] font-mono font-bold text-slate-400">
+                    <p className="text-xs sm:text-sm text-slate-500 leading-normal">{doc.desc}</p>
+                    <div className="pt-2 border-t border-slate-100 mt-1 flex justify-between items-center text-xs font-mono font-bold text-slate-400">
                       <span>ORGANISASI:</span>
-                      <span className="text-slate-600 bg-slate-150 px-1.5 py-0.5 rounded">{doc.issuer}</span>
+                      <span className="text-slate-600 bg-slate-150 px-2 py-0.5 rounded">{doc.issuer}</span>
                     </div>
                   </button>
                 ))}

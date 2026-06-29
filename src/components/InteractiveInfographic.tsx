@@ -60,6 +60,7 @@ const UNIFIED_STEPS: UnifiedStepInfo[] = [
 interface InteractiveInfographicProps {
   shipment: ExportShipment;
   currentUser: UserProfile | null;
+  currentLanguage?: string;
   onSelectUser: (user: UserProfile) => void;
   onUpdateStep: (shipmentId: string, nextStep: ShipmentStep, comments: string) => void;
   onOpenDocumentEditor: () => void;
@@ -78,11 +79,15 @@ interface InteractiveInfographicProps {
   }) => void;
   autoOpenLoi?: boolean;
   onResetAutoOpenLoi?: () => void;
+  targetStepIndex?: number;
+  targetSubStepIndex?: number;
+  onResetTargetStepIndices?: () => void;
 }
 
 export default function InteractiveInfographic({
   shipment,
   currentUser,
+  currentLanguage,
   onSelectUser,
   onUpdateStep,
   onOpenDocumentEditor,
@@ -91,7 +96,10 @@ export default function InteractiveInfographic({
   onNegoStepIdChange,
   onUpdateShipmentFromDeal,
   autoOpenLoi,
-  onResetAutoOpenLoi
+  onResetAutoOpenLoi,
+  targetStepIndex,
+  targetSubStepIndex,
+  onResetTargetStepIndices
 }: InteractiveInfographicProps) {
   
   // Index of the actual/real shipment progress step
@@ -105,18 +113,7 @@ export default function InteractiveInfographic({
   };
 
   const actualStepIndex = getActualUnifiedIndex();
-  
-  // Currently inspected step on the infographic map (default to the current active step)
-  const [inspectedStepIndex, setInspectedStepIndex] = useState<number>(actualStepIndex);
-  
-  // Track selected actor profile inside the Kamus tab
-  const activeStepActor = UNIFIED_STEPS[actualStepIndex]?.actor || 'Trader';
-  const [selectedRole, setSelectedRole] = useState<UserRole>(activeStepActor);
-
-  // Dynamic state for custom editable document template fields
-  const [docFields, setDocFields] = useState<{[key: string]: string}>({});
-  const [docSavedMessage, setDocSavedMessage] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const isFullyCompleted = shipment.currentStep === 'Completed';
 
   // For Phase II: Logistics simulation tracking (0 = Sourcing, 1 = Customs, 2 = Shipping, 3 = L/C)
   const [activeLogisticsSubStep, setActiveLogisticsSubStep] = useState<number>(0);
@@ -131,6 +128,32 @@ export default function InteractiveInfographic({
     }
     return [];
   });
+
+  // Calculate dynamic overall progress percentage
+  const progressPercent = (() => {
+    if (isFullyCompleted) return 100;
+    if (actualStepIndex === 0) {
+      const currentNegoId = negoStepId || 2;
+      if (currentNegoId === 2) return 10;
+      if (currentNegoId === 3) return 18;
+      if (currentNegoId === 4) return 26;
+      if (currentNegoId === 5) return 33;
+      return 15;
+    }
+    if (actualStepIndex === 1) {
+      const subCount = completedLogisticsSubSteps.length; // 0 to 4
+      return Math.min(95, 33 + subCount * 15); // 33% to 93%
+    }
+    return 0;
+  })();
+
+  const [inspectedStepIndex, setInspectedStepIndex] = useState<number>(actualStepIndex);
+  const activeStepActor = UNIFIED_STEPS[actualStepIndex]?.actor || 'Trader';
+  const [selectedRole, setSelectedRole] = useState<UserRole>(activeStepActor);
+
+  const [docFields, setDocFields] = useState<{[key: string]: string}>({});
+  const [docSavedMessage, setDocSavedMessage] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem(`exportflow_completed_substeps_${shipment.id}`, JSON.stringify(completedLogisticsSubSteps));
@@ -251,6 +274,7 @@ export default function InteractiveInfographic({
   const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(true);
   const [isStepPopupOpen, setIsStepPopupOpen] = useState<boolean>(false);
   const [showCommercialArchive, setShowCommercialArchive] = useState<boolean>(false);
+  const [accessDeniedMessage, setAccessDeniedMessage] = useState<string | null>(null);
 
   // Trigger auto-focus whenever the actual active step advances
   useEffect(() => {
@@ -271,6 +295,19 @@ export default function InteractiveInfographic({
       setIsStepPopupOpen(true);
     }
   }, [autoOpenLoi]);
+
+  // Deep-linking target handling from Notification Center / Task List
+  useEffect(() => {
+    if (targetStepIndex !== undefined) {
+      setInspectedStepIndex(targetStepIndex);
+      if (targetSubStepIndex !== undefined) {
+        setActiveLogisticsSubStep(targetSubStepIndex);
+      }
+      if (onResetTargetStepIndices) {
+        onResetTargetStepIndices();
+      }
+    }
+  }, [targetStepIndex, targetSubStepIndex, onResetTargetStepIndices]);
 
   useEffect(() => {
     // Generate default fields based on inspectedStepIndex & shipment
@@ -637,7 +674,6 @@ export default function InteractiveInfographic({
     setOnPageTab('actions');
   };
 
-  const isFullyCompleted = shipment.currentStep === 'Completed';
   const isCurrentActiveStep = inspectedStepIndex === actualStepIndex;
   const isStepCompleted = inspectedStepIndex < actualStepIndex || isFullyCompleted;
   const isStepFuture = inspectedStepIndex > actualStepIndex && !isFullyCompleted;
@@ -1105,6 +1141,7 @@ export default function InteractiveInfographic({
       
       {/* Conveyor stepper belt pipeline */}
       <div className="bg-white rounded-2xl border border-slate-150 p-4 sm:p-5 shadow-xs relative">
+
         {/* Single, continuous horizontal conveyor stepper belt without nested box-cards */}
         <div className="relative py-4 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200">
           <div className="min-w-[1080px] relative px-4 pb-2">
@@ -1115,105 +1152,211 @@ export default function InteractiveInfographic({
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span>Alur Proses Dagang &amp; Logistik Ekspor Terpadu (3 Langkah)</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono">ALUR TRANS-NASIONAL UTUH</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-250 px-2.5 py-0.5 rounded-full shadow-3xs">
+                  <span className="text-[9.5px] text-indigo-600 font-extrabold uppercase font-sans">Progres:</span>
+                  <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden shrink-0">
+                    <div 
+                      className="bg-indigo-600 h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <span className="text-[10.5px] font-mono font-black text-indigo-700">{progressPercent}%</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">ALUR TRANS-NASIONAL UTUH</span>
+              </div>
             </div>
 
-            {/* Single background track line spanning across all 3 steps */}
-            <div className="absolute left-[10%] right-[10%] top-[56px] h-1 bg-slate-150 rounded-full overflow-hidden -z-10">
-              <div 
-                className="h-full bg-emerald-500 transition-all duration-700"
-                style={{ 
-                  width: `${(actualStepIndex / (UNIFIED_STEPS.length - 1)) * 100}%` 
-                }}
-              />
-            </div>
-
-            {/* Steps container */}
-            <div className="grid grid-cols-3 relative z-10">
-              {UNIFIED_STEPS.map((st, idx) => {
-                const isPassed = isFullyCompleted ? true : idx < actualStepIndex;
-                const isActiveNow = isFullyCompleted ? false : idx === actualStepIndex;
-                const isBeingInspected = idx === inspectedStepIndex;
-                
-                let statusBorder = 'border-slate-300 bg-white text-slate-450';
-                if (isPassed) statusBorder = 'border-emerald-500 bg-emerald-50 text-emerald-600';
-                if (isActiveNow) statusBorder = 'border-blue-600 bg-blue-50 text-blue-700 font-bold ring-4 ring-blue-100 shadow-md';
-                
-                return (
-                  <div 
-                    key={st.stepId}
-                    onClick={() => {
-                      setInspectedStepIndex(idx);
-                      setSelectedRole(UNIFIED_STEPS[idx].actor);
-                      setOnPageTab('actions');
-                      setIsStepPopupOpen(true);
-                    }}
-                    className={`flex flex-col items-center text-center relative focus:outline-none select-none cursor-pointer group transition-all duration-200 transform ${
-                      isBeingInspected ? 'scale-[1.05]' : 'hover:scale-[1.02]'
-                    }`}
-                  >
-                    {/* Circle container */}
-                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all relative z-10 ${statusBorder} ${
-                      isBeingInspected ? 'ring-4 ring-indigo-500/30 border-indigo-500 bg-indigo-50 text-indigo-750 font-bold shadow-xs' : ''
-                    }`}>
-                      {isActiveNow && (
-                        <span className="absolute inset-0 rounded-full bg-blue-500/15 animate-ping" />
-                      )}
-                      {getStepIcon(st.stepIcon, 'w-4.5 h-4.5')}
-                      {isPassed && (
-                        <span className="absolute -top-1 -right-1 rounded-full bg-emerald-500 text-white p-0.5 border border-white flex items-center justify-center shadow-3xs z-20 animate-none">
-                          <Check className="w-2 h-2 stroke-[3]" />
-                        </span>
-                      )}
-
-                      {/* Initials indicator badge */}
-                      <span className={`absolute -bottom-1 -right-1 text-[7.5px] font-sans font-bold leading-none uppercase tracking-wider px-1 py-0.5 rounded-full border border-white shadow-3xs text-white z-20 ${
-                        st.actor === 'Owner/Direktur' 
-                          ? 'bg-purple-600' 
-                          : st.actor === 'Trader'
-                            ? 'bg-indigo-600'
-                            : st.actor === 'Buyer'
-                              ? 'bg-blue-600'
-                              : st.actor === 'Forwarder'
-                                ? 'bg-amber-600'
-                                : st.actor === 'Supplier'
-                                  ? 'bg-teal-600'
-                                  : 'bg-slate-800'
-                      }`}>
-                        {st.actor === 'Owner/Direktur' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
+            {/* Steps and Product Details Layout */}
+            <div className="grid grid-cols-4 gap-6 relative z-10 items-stretch">
+              
+              {/* Product Info Card (Column 1) */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col justify-between shadow-3xs h-full relative overflow-hidden transition-all hover:shadow-2xs hover:border-slate-300">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse shrink-0" />
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-500 font-sans">Kargo Transaksi</span>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-800 line-clamp-2 leading-snug tracking-tight">
+                      {shipment.productName}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      <span className="text-[11px] font-mono font-black px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-150 text-indigo-700 inline-block">
+                        {shipment.contractNumber}
                       </span>
-                    </div>
-
-                    {/* Step Index Label */}
-                    <span className="text-[8.5px] font-black uppercase tracking-wider font-mono mt-2.5 text-slate-500">
-                      Langkah {idx + 1}
-                    </span>
-
-                    {/* Info label */}
-                    <p className={`text-[10px] leading-tight font-sans font-bold mt-1 max-w-[90px] min-h-[30px] line-clamp-2 ${
-                      isBeingInspected 
-                        ? 'text-indigo-750 font-extrabold' 
-                        : isActiveNow 
-                          ? 'font-extrabold text-blue-700' 
-                          : 'text-slate-600 group-hover:text-slate-900'
-                    }`}>
-                      {st.label}
-                    </p>
-
-                    {/* Sub-label for completion status */}
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className={`text-[8.5px] font-medium tracking-tight font-sans ${
-                        isPassed ? 'text-emerald-600 font-bold' : isActiveNow ? 'text-blue-600 font-bold animate-pulse' : 'text-slate-400'
-                      }`}>
-                        {isPassed ? 'Selesai' : isActiveNow ? 'Aktif' : 'Menunggu'}
+                      <span className="text-[11px] font-mono font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-150 uppercase animate-pulse inline-block">
+                        {shipment.currentStep}
                       </span>
-                      {isBeingInspected && (
-                        <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" />
-                      )}
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="space-y-2 border-t border-slate-100 pt-2.5 text-xs">
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="font-semibold text-[11px] sm:text-xs">Volume Kargo:</span>
+                      <span className="font-mono font-black text-slate-850 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">{shipment.quantity} {shipment.unit}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="font-semibold text-[11px] sm:text-xs">Total Nilai:</span>
+                      <span className="font-mono font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">
+                        ${shipment.totalValue.toLocaleString('id-ID')} {shipment.currency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="font-semibold text-[11px] sm:text-xs">Incoterms:</span>
+                      <span className="font-extrabold text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">{shipment.incoterms || 'FOB'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-600">
+                      <span className="font-semibold text-[11px] sm:text-xs">Rute Ekspor:</span>
+                      <span className="font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded max-w-[150px] truncate text-[11px] sm:text-xs" title={`${shipment.portOfLoading} → ${shipment.portOfDischarge}`}>
+                        {shipment.portOfLoading.split(' ').pop()} → {shipment.portOfDischarge.split(' ').pop()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Col span 3 for the steps, with its own track line and 3-step grid */}
+              <div className="col-span-3 relative flex flex-col justify-center">
+                
+                {/* Single background track line spanning across all 3 steps */}
+                <div className="absolute left-[16.67%] right-[16.67%] top-[36px] h-1 bg-slate-150 rounded-full overflow-hidden -z-10">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-700"
+                    style={{ 
+                      width: `${(actualStepIndex / (UNIFIED_STEPS.length - 1)) * 100}%` 
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 relative">
+                  {UNIFIED_STEPS.map((st, idx) => {
+                    const isPassed = isFullyCompleted ? true : idx < actualStepIndex;
+                    const isActiveNow = isFullyCompleted ? false : idx === actualStepIndex;
+                    const isBeingInspected = idx === inspectedStepIndex;
+                    const isLocked = idx > actualStepIndex && !isFullyCompleted;
+                    const isBuyerRestricted = currentUser?.role === 'Buyer' && idx === 1;
+                    
+                    let statusBorder = 'border-slate-300 bg-white text-slate-450';
+                    if (isLocked) {
+                      statusBorder = 'border-slate-200 bg-slate-50 text-slate-300';
+                    } else if (isBuyerRestricted) {
+                      statusBorder = 'border-amber-200 bg-amber-50/50 text-amber-600';
+                    } else if (isPassed) {
+                      statusBorder = 'border-emerald-500 bg-emerald-50 text-emerald-600';
+                    } else if (isActiveNow) {
+                      statusBorder = 'border-blue-600 bg-blue-50 text-blue-700 font-bold ring-4 ring-blue-100 shadow-md';
+                    }
+                    
+                    return (
+                      <div 
+                        key={st.stepId}
+                        onClick={() => {
+                          if (isLocked) {
+                            return; // Prevent clicking future/locked steps
+                          }
+                          
+                          if (isBuyerRestricted) {
+                            setAccessDeniedMessage(
+                              "Akses Terbatas: Tahapan logistik & pemrosesan dokumen L/C merupakan ranah kerja internal eksportir (Trader, Forwarder, dan Supplier). Sebagai Buyer, Anda hanya dapat memantau estimasi progres melalui bilah kemajuan di atas."
+                            );
+                            return;
+                          }
+
+                          setInspectedStepIndex(idx);
+                          setSelectedRole(UNIFIED_STEPS[idx].actor);
+                          setOnPageTab('actions');
+                          setIsStepPopupOpen(true);
+                        }}
+                        className={`flex flex-col items-center text-center relative focus:outline-none select-none group transition-all duration-200 transform ${
+                          isLocked
+                            ? 'cursor-not-allowed opacity-50'
+                            : isBuyerRestricted
+                              ? 'cursor-not-allowed'
+                              : `cursor-pointer ${isBeingInspected ? 'scale-[1.05]' : 'hover:scale-[1.02]'}`
+                        }`}
+                      >
+                        {/* Circle container */}
+                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all relative z-10 ${statusBorder} ${
+                          isBeingInspected && !isLocked && !isBuyerRestricted ? 'ring-4 ring-indigo-500/30 border-indigo-500 bg-indigo-50 text-indigo-750 font-bold shadow-xs' : ''
+                        }`}>
+                          {isActiveNow && !isBuyerRestricted && (
+                            <span className="absolute inset-0 rounded-full bg-blue-500/15 animate-ping" />
+                          )}
+                          {isLocked ? (
+                            <Lock className="w-4 h-4 text-slate-300" />
+                          ) : isBuyerRestricted ? (
+                            <Lock className="w-4 h-4 text-amber-500" />
+                          ) : getStepIcon(st.stepIcon, 'w-4.5 h-4.5')}
+                          {isPassed && !isBuyerRestricted && (
+                            <span className="absolute -top-1 -right-1 rounded-full bg-emerald-500 text-white p-0.5 border border-white flex items-center justify-center shadow-3xs z-20 animate-none">
+                              <Check className="w-2 h-2 stroke-[3]" />
+                            </span>
+                          )}
+
+                          {/* Initials indicator badge */}
+                          <span className={`absolute -bottom-1 -right-1 text-[7.5px] font-sans font-bold leading-none uppercase tracking-wider px-1 py-0.5 rounded-full border border-white shadow-3xs text-white z-20 ${
+                            isLocked 
+                              ? 'bg-slate-300'
+                              : isBuyerRestricted
+                                ? 'bg-amber-500'
+                                : st.actor === 'Owner/Direktur' 
+                                  ? 'bg-purple-600' 
+                                  : st.actor === 'Trader'
+                                    ? 'bg-indigo-600'
+                                    : st.actor === 'Buyer'
+                                      ? 'bg-blue-600'
+                                      : st.actor === 'Forwarder'
+                                        ? 'bg-amber-600'
+                                        : st.actor === 'Supplier'
+                                          ? 'bg-teal-600'
+                                          : 'bg-slate-800'
+                          }`}>
+                            {isBuyerRestricted ? 'LOCK' : st.actor === 'Owner/Direktur' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* Step Index Label */}
+                        <span className="text-xs font-black uppercase tracking-wider font-mono mt-2.5 text-slate-500">
+                          Langkah {idx + 1}
+                        </span>
+
+                        {/* Info label */}
+                        <p className={`text-xs sm:text-sm leading-snug font-sans font-bold mt-1.5 max-w-[140px] min-h-[36px] line-clamp-2 ${
+                          isBeingInspected && !isLocked && !isBuyerRestricted
+                            ? 'text-indigo-750 font-extrabold' 
+                            : isActiveNow && !isBuyerRestricted
+                              ? 'font-extrabold text-blue-700' 
+                              : 'text-slate-600 group-hover:text-slate-900'
+                        }`}>
+                          {st.label}
+                        </p>
+
+                        {/* Sub-label for completion status */}
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className={`text-[11px] sm:text-xs font-bold tracking-tight font-sans flex items-center gap-0.5 ${
+                            isBuyerRestricted
+                              ? 'text-amber-600 font-bold'
+                              : isPassed
+                                ? 'text-emerald-600 font-bold'
+                                : isActiveNow
+                                  ? 'text-blue-600 font-bold animate-pulse'
+                                  : 'text-slate-450'
+                          }`}>
+                            {isBuyerRestricted ? 'Hanya Pantau' : isPassed ? 'Selesai' : isActiveNow ? 'Aktif' : 'Belum Terbuka'}
+                            {(isLocked || isBuyerRestricted) && <Lock className="w-2.5 h-2.5 text-slate-400" />}
+                          </span>
+                          {isBeingInspected && !isLocked && !isBuyerRestricted && (
+                            <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1237,38 +1380,62 @@ export default function InteractiveInfographic({
               className="relative w-full max-w-7xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]"
             >
               {/* Modal Header */}
-              <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between border-b border-slate-800 shrink-0 select-none">
+              <div className={`px-4 py-3 flex items-center justify-between shrink-0 select-none border-b ${
+                inspectedStepIndex === 0 
+                  ? 'bg-white text-slate-900 border-slate-200' 
+                  : 'bg-slate-900 text-white border-slate-800'
+              }`}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-1.5 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider rounded bg-indigo-600 text-white shrink-0">
+                  <span className="px-2 py-1 text-xs font-mono font-black uppercase tracking-wider rounded bg-indigo-600 text-white shrink-0">
                     LANGKAH {inspectedStepIndex + 1} / 3
                   </span>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <h3 className="font-bold text-xs sm:text-sm tracking-tight text-white leading-tight">
+                    <h3 className={`font-bold text-sm sm:text-base tracking-tight leading-tight ${
+                      inspectedStepIndex === 0 ? 'text-slate-900' : 'text-white'
+                    }`}>
                       {UNIFIED_STEPS[inspectedStepIndex].label}
                     </h3>
-                    <span className="text-[10px] text-slate-400 font-sans">
-                      • Penanggung Jawab: <strong className="text-slate-200 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].actor}</strong>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-sans hidden sm:inline">
-                      • Durasi: <strong className="text-slate-200 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].expectedDuration}</strong>
-                    </span>
+                    {inspectedStepIndex === 0 ? (
+                      <div id="nego-header-addon" className="flex items-center gap-3 flex-wrap ml-3" />
+                    ) : (
+                      <>
+                        <span className={`text-xs font-sans ${
+                          inspectedStepIndex === 0 ? 'text-slate-500' : 'text-slate-400'
+                        }`}>
+                          • Penanggung Jawab: <strong className={inspectedStepIndex === 0 ? 'text-slate-800 font-semibold' : 'text-slate-200 font-semibold'}>{UNIFIED_STEPS[inspectedStepIndex].actor}</strong>
+                        </span>
+                        <span className={`text-xs font-sans hidden sm:inline ${
+                          inspectedStepIndex === 0 ? 'text-slate-500' : 'text-slate-400'
+                        }`}>
+                          • Durasi: <strong className={inspectedStepIndex === 0 ? 'text-slate-800 font-semibold' : 'text-slate-200 font-semibold'}>{UNIFIED_STEPS[inspectedStepIndex].expectedDuration}</strong>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsStepPopupOpen(false)}
-                  className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all focus:outline-none cursor-pointer shrink-0 ml-2"
+                  className={`p-1 rounded-lg transition-all focus:outline-none cursor-pointer shrink-0 ml-2 ${
+                    inspectedStepIndex === 0
+                      ? 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
+                      : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto flex-1 bg-slate-950">
+              <div className={`p-6 overflow-y-auto flex-1 ${
+                inspectedStepIndex === 0 ? 'bg-white' : 'bg-slate-950'
+              }`}>
                 {inspectedStepIndex === 0 ? (
                   <div className="w-full animate-fadeIn max-w-5xl mx-auto py-2">
                     <CommercialNegotiationGateway
+                      key={shipment.id}
                       shipment={shipment}
                       currentUser={currentUser}
+                      currentLanguage={currentLanguage}
                       onUpdateShipmentFromDeal={onUpdateShipmentFromDeal}
                       onSelectUser={onSelectUser}
                       isArchiveMode={shipment.currentStep !== 'Draft'}
@@ -1281,72 +1448,7 @@ export default function InteractiveInfographic({
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                       
                       {inspectedStepIndex === 1 && (
-                        <div className="lg:col-span-12 bg-slate-900 border border-slate-800 p-5 rounded-2xl relative shadow-md space-y-5 text-white">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="p-1 bg-indigo-600 rounded text-white text-[10px] font-black uppercase font-mono tracking-wider">
-                                SIMULASI PERAN
-                              </span>
-                              <h4 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
-                                <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
-                                Estafet Ekspor &amp; Logistik Terintegrasi (Goal: L/C)
-                              </h4>
-                            </div>
-                            <div className="text-[11px] text-slate-400 font-mono">
-                              Selesai: <strong className="text-emerald-400 font-bold">{completedLogisticsSubSteps.length}/4</strong> Sub-Tahap
-                            </div>
-                          </div>
-
-                          {/* Sub-steps selection buttons bar */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {[
-                              { label: '1. Sourcing Tani', role: 'Supplier', company: shipment.supplierCompany || 'Koperasi Tani', color: 'teal', icon: ShoppingBag },
-                              { label: '2. Bea Cukai PEB', role: 'Trader', company: 'PT Multi Raksa Madani', color: 'indigo', icon: Shield },
-                              { label: '3. Pelayaran B/L', role: 'Forwarder', company: 'PT Samudera Logistik', color: 'amber', icon: Truck },
-                              { label: '4. Pencairan L/C', role: 'Bank', company: 'Bank Koresponden', color: 'emerald', icon: Award }
-                            ].map((sub, sIdx) => {
-                              const isDone = completedLogisticsSubSteps.includes(sIdx);
-                              const isAct = activeLogisticsSubStep === sIdx;
-                              const IconComp = sub.icon;
-                              
-                              return (
-                                <button
-                                  key={sIdx}
-                                  onClick={() => {
-                                    setActiveLogisticsSubStep(sIdx);
-                                    setSelectedRole(sub.role as UserRole);
-                                  }}
-                                  className={`relative p-3 rounded-xl border text-left flex flex-col justify-between transition-all duration-200 cursor-pointer ${
-                                    isAct 
-                                      ? 'bg-slate-950 border-indigo-500 text-white ring-2 ring-indigo-500/20' 
-                                      : isDone
-                                        ? 'bg-slate-900/40 border-emerald-500/30 text-emerald-400/90 hover:bg-slate-900/60'
-                                        : 'bg-slate-900/20 border-slate-800 text-slate-400 hover:bg-slate-900/40'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between w-full">
-                                    <span className={`text-[9.5px] font-black font-mono uppercase tracking-wider ${
-                                      isAct ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-500'
-                                    }`}>
-                                      {sub.label}
-                                    </span>
-                                    {isDone ? (
-                                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                                    ) : (
-                                      <IconComp className={`w-3.5 h-3.5 shrink-0 ${isAct ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
-                                    )}
-                                  </div>
-                                  <div className="mt-2 text-xs font-bold truncate leading-tight">
-                                    {sub.role}
-                                  </div>
-                                  <div className="text-[9px] text-slate-500 font-medium truncate mt-0.5">
-                                    {sub.company}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-
+                        <div className="lg:col-span-12 bg-slate-900 border border-slate-800 p-5 rounded-2xl relative shadow-md space-y-4 text-white">
                           {/* Detail role task simulation box */}
                           {(() => {
                             const subDetails = [
@@ -1389,16 +1491,50 @@ export default function InteractiveInfographic({
                             
                             return (
                               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                                {/* Compact Linear Progress Step Indicator */}
+                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pb-2.5 border-b border-slate-900 mb-1">
+                                  {[
+                                    { label: 'Sourcing Tani', role: 'Supplier' },
+                                    { label: 'Bea Cukai PEB', role: 'Trader' },
+                                    { label: 'Pelayaran B/L', role: 'Forwarder' },
+                                    { label: 'Pencairan L/C', role: 'Bank' }
+                                  ].map((stepInfo, idx) => {
+                                    const isDone = completedLogisticsSubSteps.includes(idx);
+                                    const isActive = activeLogisticsSubStep === idx;
+                                    return (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveLogisticsSubStep(idx);
+                                          setSelectedRole(stepInfo.role as UserRole);
+                                        }}
+                                        className={`flex-1 min-w-[100px] py-1.5 px-2 rounded-lg border text-center transition-all cursor-pointer ${
+                                          isActive
+                                            ? 'bg-indigo-500/15 border-indigo-550 text-indigo-400 shadow-xs'
+                                            : isDone
+                                              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10'
+                                              : 'bg-slate-900 border-slate-850/70 text-slate-500 hover:bg-slate-900/60'
+                                        }`}
+                                      >
+                                        <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider font-mono">
+                                          {idx + 1}. {stepInfo.label}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
                                   <div>
-                                    <h5 className="font-extrabold text-xs text-slate-100 tracking-tight">
+                                    <h5 className="font-black text-sm sm:text-base text-slate-100 tracking-tight">
                                       {subDetails.title}
                                     </h5>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">
-                                      Bertindak Sebagai: <strong className="text-indigo-400">{subDetails.role}</strong>
+                                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                                      Bertindak Sebagai: <strong className="text-indigo-400 font-bold">{subDetails.role}</strong>
                                     </p>
                                   </div>
-                                  <span className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                  <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
                                     isCurrentSubDone 
                                       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                                       : isPreviousStepsDone 
@@ -1409,23 +1545,23 @@ export default function InteractiveInfographic({
                                   </span>
                                 </div>
 
-                                <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                                <p className="text-sm text-slate-200 leading-relaxed font-sans">
                                   {subDetails.desc}
                                 </p>
 
                                 {/* Section: Lampiran Dokumen Sub-Tahap */}
-                                <div className="border-t border-slate-800/80 pt-3 mt-3 space-y-3">
+                                <div className="border-t border-slate-800/80 pt-3.5 mt-3.5 space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
-                                      <Paperclip className="w-3.5 h-3.5 text-indigo-400" />
+                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-200">
+                                      <Paperclip className="w-4 h-4 text-indigo-400" />
                                       <span>Dokumen Lampiran ({uploadedSubStepFiles[activeLogisticsSubStep]?.length || 0})</span>
                                     </div>
-                                    <span className="text-[9px] text-slate-400 font-mono">Maks: 1 Berkas / 2MB</span>
+                                    <span className="text-[11px] sm:text-xs text-slate-300 font-mono">Maks: 1 Berkas / 2MB</span>
                                   </div>
 
                                   {/* Error message if file is too large */}
                                   {subStepUploadError[activeLogisticsSubStep] && (
-                                    <div className="p-2 bg-rose-950/40 border border-rose-500/20 text-rose-400 text-[10px] rounded-lg font-semibold mt-2 text-left">
+                                    <div className="p-2.5 bg-rose-950/40 border border-rose-500/20 text-rose-400 text-xs rounded-lg font-semibold mt-2 text-left">
                                       {subStepUploadError[activeLogisticsSubStep]}
                                     </div>
                                   )}
@@ -1436,40 +1572,40 @@ export default function InteractiveInfographic({
                                       {uploadedSubStepFiles[activeLogisticsSubStep].map(file => (
                                         <div 
                                           key={file.id} 
-                                          className="flex items-center justify-between p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs"
+                                          className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs"
                                         >
                                           <button 
                                             onClick={() => downloadFile(file)}
-                                            className="flex items-center gap-2.5 min-w-0 text-left hover:text-indigo-400 transition-colors group cursor-pointer flex-1"
+                                            className="flex items-center gap-3 min-w-0 text-left hover:text-indigo-400 transition-colors group cursor-pointer flex-1"
                                             title="Unduh Berkas"
                                           >
-                                            <FileText className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 shrink-0" />
+                                            <FileText className="w-4.5 h-4.5 text-slate-400 group-hover:text-indigo-400 shrink-0" />
                                             <div className="truncate">
                                               <p className="font-bold text-slate-200 group-hover:underline truncate">{file.name}</p>
-                                              <p className="text-[9px] text-slate-500">{file.size} • Diunggah {file.date}</p>
+                                              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{file.size} • Diunggah {file.date}</p>
                                             </div>
                                           </button>
-                                          <div className="flex items-center gap-1">
+                                          <div className="flex items-center gap-1.5">
                                             <button
                                               onClick={() => downloadFile(file)}
-                                              className="p-1.5 hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 rounded transition-all cursor-pointer"
+                                              className="p-1.5 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 rounded transition-all cursor-pointer"
                                               title="Unduh Dokumen"
                                             >
-                                              <FileDown className="w-3.5 h-3.5" />
+                                              <FileDown className="w-4 h-4" />
                                             </button>
                                             <button
                                               onClick={() => handleDeleteFile(activeLogisticsSubStep, file.id)}
-                                              className="p-1.5 hover:bg-slate-800 text-rose-400 hover:text-rose-300 rounded transition-all cursor-pointer"
+                                              className="p-1.5 hover:bg-slate-850 text-rose-400 hover:text-rose-300 rounded transition-all cursor-pointer"
                                               title="Hapus Dokumen"
                                             >
-                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <Trash2 className="w-4 h-4" />
                                             </button>
                                           </div>
                                         </div>
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="text-[10px] text-slate-500 italic text-center py-1">
+                                    <div className="text-xs text-slate-400 italic text-center py-2 bg-slate-900/10 rounded-xl border border-dashed border-slate-800/40">
                                       Belum ada dokumen yang diunggah.
                                     </div>
                                   )}
@@ -1492,7 +1628,7 @@ export default function InteractiveInfographic({
                                           handleUploadFile(activeLogisticsSubStep, e.dataTransfer.files[0]);
                                         }
                                       }}
-                                      className={`border-2 border-dashed rounded-xl p-3 text-center transition-all cursor-pointer ${
+                                      className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${
                                         dragActive[activeLogisticsSubStep]
                                           ? 'border-indigo-500 bg-indigo-500/10 text-white'
                                           : 'border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60'
@@ -1512,12 +1648,12 @@ export default function InteractiveInfographic({
                                           }
                                         }}
                                       />
-                                      <div className="flex flex-col items-center gap-1">
-                                        <Upload className="w-5 h-5 text-indigo-400 animate-pulse" />
-                                        <p className="text-[10px] font-bold text-slate-300">
+                                      <div className="flex flex-col items-center gap-1.5">
+                                        <Upload className="w-6 h-6 text-indigo-400 animate-pulse" />
+                                        <p className="text-xs sm:text-sm font-black text-slate-200">
                                           Tarik & letakkan berkas di sini, atau <span className="text-indigo-400 hover:underline">cari berkas</span>
                                         </p>
-                                        <p className="text-[9px] text-slate-500">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
+                                        <p className="text-[11px] sm:text-xs text-slate-400">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
                                       </div>
                                     </div>
                                   )}
@@ -2251,6 +2387,51 @@ export default function InteractiveInfographic({
 
                   </>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {accessDeniedMessage && (
+          <div 
+            onClick={() => setAccessDeniedMessage(null)}
+            className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          >
+            <motion.div 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden text-left"
+            >
+              <div className="bg-amber-50 border-b border-amber-100 p-5 flex items-center gap-3">
+                <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-800 font-sans">Akses Dibatasi</h3>
+                  <p className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-0.5 font-sans">Peran Saat Ini: Buyer (Pembeli)</p>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-xs text-slate-600 leading-relaxed font-sans font-medium">
+                  {accessDeniedMessage}
+                </p>
+                
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex items-start gap-2.5">
+                  <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="text-[10.5px] text-slate-500 leading-normal font-sans">
+                    Fase logistik ini diproses secara internal oleh <strong>Trader</strong>, <strong>Supplier</strong>, dan <strong>Forwarder</strong> untuk pengurusan sertifikasi karantina, PEB, dan pemuatan kapal.
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex justify-end">
+                <button
+                  onClick={() => setAccessDeniedMessage(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[10.5px] font-black rounded-lg transition-all shadow-sm cursor-pointer uppercase tracking-wider font-sans"
+                >
+                  Saya Mengerti
+                </button>
               </div>
             </motion.div>
           </div>
