@@ -113,21 +113,21 @@ export default function DocumentViewer({
     switch (document.status) {
       case 'Approved':
         return (
-          <div className="border-3 border-double border-emerald-500 text-emerald-600 font-bold text-[10px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider shadow-xs bg-white text-center">
+          <div className="border-3 border-double border-emerald-500 text-emerald-600 font-bold text-[12px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider shadow-xs bg-white text-center">
             ★ RESMI DISAHKAN ★<br />
             DIRECTOR / OMNDER / BEACUKAI RI
           </div>
         );
       case 'Issued':
         return (
-          <div className="border-3 border-double border-blue-500 text-blue-600 font-bold text-[10px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider bg-white text-center animate-pulse">
+          <div className="border-3 border-double border-blue-500 text-blue-600 font-bold text-[12px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider bg-white text-center animate-pulse">
             SURAT PENGAJUAN AKTIF<br />
             MENUNGGU PENGESAHAN
           </div>
         );
       default:
         return (
-          <div className="border-3 border-double border-amber-550 border-amber-600 text-amber-600 font-bold text-[10px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider bg-white text-center">
+          <div className="border-3 border-double border-amber-550 border-amber-600 text-amber-600 font-bold text-[12px] uppercase px-3 py-1.5 rounded-sm inline-block transform rotate-[-4deg] tracking-wider bg-white text-center">
             DRAF INTERNAL BELUM DIAJUKAN<br />
             (DRAFT UN-SUBMITTED)
           </div>
@@ -192,7 +192,7 @@ export default function DocumentViewer({
             {currentUser?.role === 'Superadmin' && onApproveDocument && (
               <button
                 onClick={() => onApproveDocument(document.id)}
-                className="py-1 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold uppercase text-[10px] tracking-wide transition-colors self-end sm:self-auto shrink-0 shadow-xs"
+                className="py-1 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold uppercase text-[12px] tracking-wide transition-colors self-end sm:self-auto shrink-0 shadow-xs"
               >
                 ✓ Beri Pengesahan Resmi
               </button>
@@ -211,7 +211,7 @@ export default function DocumentViewer({
             {onSubmitDocumentForApproval && (
               <button
                 onClick={() => onSubmitDocumentForApproval(document.id)}
-                className="py-1 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold uppercase text-[10px] tracking-wide transition-all self-end sm:self-auto shrink-0 animate-bounce"
+                className="py-1 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold uppercase text-[12px] tracking-wide transition-all self-end sm:self-auto shrink-0 animate-bounce"
               >
                 ✉ Kirim Surat Pengajuan &rarr;
               </button>
@@ -228,9 +228,9 @@ export default function DocumentViewer({
             {/* Header document letterhead */}
             <div className="flex justify-between items-start border-b-2 border-gray-900 pb-6 mb-6">
               <div>
-                <span className="text-[10px] tracking-widest font-mono text-gray-400 block uppercase">Republic of Indonesia</span>
+                <span className="text-[12px] tracking-widest font-mono text-gray-400 block uppercase">Republic of Indonesia</span>
                 <span className="text-xl font-bold tracking-tight uppercase text-slate-900">Customs & Trade Logistics Network</span>
-                <p className="text-[10px] text-gray-500 mt-1">Sistem Terpadu Tata Kelola Ekspor (ExportFlow)</p>
+                <p className="text-[12px] text-gray-500 mt-1">Sistem Terpadu Tata Kelola Ekspor (ExportFlow)</p>
               </div>
               <div className="text-right">
                 <span className="text-xs font-mono font-bold text-gray-400 block py-0.5">DOKUMEN RESMI</span>
@@ -242,13 +242,13 @@ export default function DocumentViewer({
             {/* Shipper and Consignee Information */}
             <div className="grid grid-cols-2 gap-6 border border-gray-200 mb-6">
               <div className="p-4 border-r border-gray-200">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-wider">1. Exporter (Eksportir) / Shipper :</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase tracking-wider">1. Exporter (Eksportir) / Shipper :</span>
                 <p className="text-xs font-bold text-slate-900 mt-1 whitespace-pre-line leading-relaxed">
                   {document.details.exporter}
                 </p>
               </div>
               <div className="p-4">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-wider">2. Importer (Importir) / Consignee :</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase tracking-wider">2. Importer (Importir) / Consignee :</span>
                 <p className="text-xs font-bold text-slate-900 mt-1 whitespace-pre-line leading-relaxed">
                   {document.details.importer}
                 </p>
@@ -258,33 +258,33 @@ export default function DocumentViewer({
             {/* Shipping Information Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 border border-gray-200 mb-6 font-sans">
               <div className="p-3 border-r border-b border-gray-200">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Vessel & Voyage No.</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Vessel & Voyage No.</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.vesselName || '-'}</span>
               </div>
               <div className="p-3 border-r border-b border-gray-200">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Port of Loading</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Port of Loading</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.portOfLoading || '-'}</span>
               </div>
               <div className="p-3 border-r border-b border-gray-200">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Port of Discharge</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Port of Discharge</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.portOfDischarge || '-'}</span>
               </div>
               <div className="p-3 border-b border-gray-200">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Payment Terms</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Payment Terms</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.paymentTerms || '-'}</span>
               </div>
               <div className="p-3 border-r border-gray-200 col-span-2">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Shipping Marks & Container Numbers</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Shipping Marks & Container Numbers</span>
                 <span className="text-xs font-mono text-gray-800 mt-0.5 block whitespace-pre-line leading-normal">
                   {document.details.shippingMark || 'N/M'}
                 </span>
               </div>
               <div className="p-3 border-r border-gray-200 font-mono">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Net Weight</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Net Weight</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.weightNet || '-'}</span>
               </div>
               <div className="p-3 font-mono">
-                <span className="text-[9px] font-bold text-gray-400 block uppercase">Gross Weight</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Gross Weight</span>
                 <span className="text-xs font-semibold text-gray-900 mt-0.5 block">{document.details.weightGross || '-'}</span>
               </div>
             </div>
@@ -293,12 +293,12 @@ export default function DocumentViewer({
             <table className="mb-6">
               <thead>
                 <tr>
-                  <th className="w-12 text-center uppercase tracking-wider text-[10px]">No</th>
-                  <th className="uppercase tracking-wider text-[10px]">Description of Goods</th>
-                  <th className="w-24 text-center uppercase tracking-wider text-[10px]">HS Code</th>
-                  <th className="w-24 text-right uppercase tracking-wider text-[10px]">Quantity</th>
-                  <th className="w-28 text-right uppercase tracking-wider text-[10px]">Unit Price (USD)</th>
-                  <th className="w-32 text-right uppercase tracking-wider text-[10px]">Amount (USD)</th>
+                  <th className="w-12 text-center uppercase tracking-wider text-[12px]">No</th>
+                  <th className="uppercase tracking-wider text-[12px]">Description of Goods</th>
+                  <th className="w-24 text-center uppercase tracking-wider text-[12px]">HS Code</th>
+                  <th className="w-24 text-right uppercase tracking-wider text-[12px]">Quantity</th>
+                  <th className="w-28 text-right uppercase tracking-wider text-[12px]">Unit Price (USD)</th>
+                  <th className="w-32 text-right uppercase tracking-wider text-[12px]">Amount (USD)</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,7 +314,7 @@ export default function DocumentViewer({
                 ))}
                 {/* Total Row */}
                 <tr>
-                  <td colSpan={5} className="text-right font-bold uppercase text-[11px] bg-gray-50">Total FOB Amount (USD) :</td>
+                  <td colSpan={5} className="text-right font-bold uppercase text-[12px] bg-gray-50">Total FOB Amount (USD) :</td>
                   <td className="text-right font-bold text-blue-800 font-mono text-sm bg-gray-50">
                     ${document.details.totalAmount.toLocaleString('id-ID')}
                   </td>
@@ -333,12 +333,12 @@ export default function DocumentViewer({
             {/* Footers, Stamps, & Signatures */}
             <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-100 min-h-[140px]">
               <div className="text-center">
-                <span className="text-[10px] font-bold text-gray-400 block uppercase">Sistem Kredensial</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Sistem Kredensial</span>
                 <div className="mt-4">
-                  <span className="text-[9px] font-mono text-gray-400 bg-gray-50 p-1.5 border border-gray-100 rounded block text-left truncate">
+                  <span className="text-[12px] font-mono text-gray-400 bg-gray-50 p-1.5 border border-gray-100 rounded block text-left truncate">
                     UUID: {document.id}
                   </span>
-                  <span className="text-[9px] font-mono text-gray-400 block text-left mt-1">
+                  <span className="text-[12px] font-mono text-gray-400 block text-left mt-1">
                     Issued Date: {document.issuedDate || document.createdAt.slice(0, 10)}
                   </span>
                 </div>
@@ -350,20 +350,20 @@ export default function DocumentViewer({
               </div>
 
               <div className="text-center select-none">
-                <span className="text-[10px] font-bold text-gray-400 block uppercase">Authorised Signatory</span>
+                <span className="text-[12px] font-bold text-gray-400 block uppercase">Authorised Signatory</span>
                 <div className="mt-6 border-b border-gray-300 w-40 mx-auto h-8 flex items-center justify-center">
                   <span className="font-serif italic text-sm text-blue-800 tracking-widest">
                     {document.createdBy === 'usr-trader' ? 'H. Kurniawan' : 'Siti Aminah'}
                   </span>
                 </div>
-                <span className="text-[9px] font-semibold text-gray-500 block mt-1">PT Multi Raksa Madani</span>
+                <span className="text-[12px] font-semibold text-gray-500 block mt-1">PT Multi Raksa Madani</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer info banner */}
-        <div className="p-4 bg-gray-50 border-t border-gray-100 text-center text-[11px] text-gray-400">
+        <div className="p-4 bg-gray-50 border-t border-gray-100 text-center text-[12px] text-gray-400">
           Gunakan tombol &ldquo;Cetak Dokumen&rdquo; di kanan atas untuk memicu dialog print sistem operasi secara otomatis bebas dari elemen navigasi luar.
         </div>
 

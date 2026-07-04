@@ -212,3 +212,19 @@ export async function saveCompanyProfileToFirestore(profile: any) {
     console.error('Error saving company profile to Firestore:', error);
   }
 }
+
+export async function deleteShipmentFromFirestore(shipmentId: string) {
+  try {
+    await deleteDoc(doc(db, SHIPMENTS_COL, shipmentId));
+  } catch (error) {
+    console.error('Error deleting shipment from Firestore:', error);
+  }
+}
+
+export async function deleteSampleRequestFromFirestore(sampleId: string) {
+  try {
+    await deleteDoc(doc(db, SAMPLE_REQS_COL, sampleId));
+  } catch (error) {
+    console.error('Error deleting sample request from Firestore:', error);
+  }
+}

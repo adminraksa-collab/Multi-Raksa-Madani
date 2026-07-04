@@ -361,7 +361,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
         {isGov ? (
           <div className="border-b-2 border-slate-900 pb-3 text-center space-y-1">
             <h4 className="text-sm font-sans font-black uppercase tracking-widest text-slate-900">REPUBLIK INDONESIA</h4>
-            <p className="text-[9px] font-sans font-bold uppercase text-slate-500 tracking-wide">
+            <p className="text-[12px] font-sans font-bold uppercase text-slate-500 tracking-wide">
               {name.includes('Phytosanitary') ? 'BADAN KARANTINA PERTANIAN • INDONESIAN AGRICULTURAL QUARANTINE AGENCY' :
                name.includes('Origin') || name.includes('SKA') ? 'MINISTRY OF TRADE • KEMENTERIAN PERDAGANGAN REPUBLIK INDONESIA' :
                'DIREKTORAT JENDERAL BEA DAN CUKAI • DIRECTORATE GENERAL OF CUSTOMS AND EXCISE'}
@@ -371,24 +371,24 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
           </div>
         ) : isSwift ? (
           <div className="border-b border-dashed border-slate-400 pb-2 space-y-1 font-mono">
-            <div className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded inline-block">
+            <div className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded inline-block">
               MT103 SWIFT MESSAGE SENDER RECORD • CONFIRMED SEED
             </div>
-            <p className="text-[8px] text-slate-500">TIMESTAMP RECONCILIATION: {new Date().toISOString()}</p>
+            <p className="text-[12px] text-slate-500">TIMESTAMP RECONCILIATION: {new Date().toISOString()}</p>
           </div>
         ) : isSurveyor ? (
           <div className="border-b-2 border-slate-800 pb-3 text-center space-y-1">
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">SUCOFINDO LABORATORIES INDONESIA</h4>
-            <p className="text-[8px] text-slate-400 uppercase tracking-widest font-sans font-bold">Laporan Sertifikat Analisis Independen & Verifikasi Kargo</p>
+            <p className="text-[12px] text-slate-400 uppercase tracking-widest font-sans font-bold">Laporan Sertifikat Analisis Independen & Verifikasi Kargo</p>
             <div className="h-0.5 bg-slate-800 w-full mt-2" />
           </div>
         ) : (
           <div className="border-b-2 border-slate-800 pb-3 flex justify-between items-start">
             <div className="space-y-1">
               <h4 className="text-xs sm:text-sm font-sans font-black uppercase tracking-wider text-slate-900">PT MULTI RAKSA MADANI</h4>
-              <p className="text-[8px] text-slate-450 uppercase tracking-wider font-sans leading-tight">Gedung Cyber 2, Jakarta, Indonesia • customercare@agrinusantara.co.id</p>
+              <p className="text-[12px] text-slate-450 uppercase tracking-wider font-sans leading-tight">Gedung Cyber 2, Jakarta, Indonesia • customercare@agrinusantara.co.id</p>
             </div>
-            <div className="text-right text-[8px] font-mono font-bold text-slate-400">
+            <div className="text-right text-[12px] font-mono font-bold text-slate-400">
               ORIGINAL DRAFT COPY
             </div>
           </div>
@@ -399,16 +399,16 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
           <h3 className="text-xs sm:text-sm font-sans font-black uppercase tracking-widest text-slate-900 underline decoration-double decoration-slate-400 underline-offset-4">
             {name}
           </h3>
-          <p className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-bold">
+          <p className="text-[12px] font-mono text-slate-500 uppercase tracking-widest font-bold">
             NO: {formData.contractNo || formData.invoiceNo || formData.coaNo || formData.certNo || formData.cooNo || formData.pebNo || formData.npeNo || formData.blNo || formData.swiftRef || 'DRAFT-990812-RI'}
           </p>
         </div>
 
         {/* Content Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[9px] text-slate-800 font-sans border border-slate-200 rounded-lg p-4 bg-slate-50/25">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[12px] text-slate-800 font-sans border border-slate-200 rounded-lg p-4 bg-slate-50/25">
           {Object.entries(formData).map(([key, value]) => (
             <div key={key} className="border-b border-slate-100 pb-2 flex flex-col justify-between">
-              <span className="font-mono text-[7.5px] text-slate-400 font-black uppercase tracking-wider">
+              <span className="font-mono text-[12px] text-slate-400 font-black uppercase tracking-wider">
                 {getFriendlyLabel(key).split(' (')[0]}
               </span>
               <span className="font-serif font-black text-slate-900 mt-1 break-words max-w-full">
@@ -421,23 +421,23 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
         {/* Specimen Stamp Block and Legal Disclaimers */}
         <div className="pt-8 border-t border-dashed border-slate-200 grid grid-cols-2 gap-6 items-end mt-12 pb-4">
           <div className="space-y-1 font-sans">
-            <div className="border border-slate-300 rounded p-1.5 inline-block text-[7.5px] font-mono text-slate-400 leading-tight">
+            <div className="border border-slate-300 rounded p-1.5 inline-block text-[12px] font-mono text-slate-400 leading-tight">
               QR AUTHENTICATION SECURE<br />
               [SCAN TO VERIFY INTEGRITY]
             </div>
-            <p className="text-[7px] text-slate-400 leading-normal">
+            <p className="text-[12px] text-slate-400 leading-normal">
               Seluruh isian di atas draf legalitas sah yang diterbitkan secara elektronik demi kepentingan kepatuhan ekspor dari wilayah hukum Republik Indonesia.
             </p>
           </div>
 
           <div className="text-center space-y-6 flex flex-col items-center">
-            <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider font-sans">
+            <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider font-sans">
               Lembar Tanda Tangan & Cap Resmi:
             </span>
             
             {/* Visual Red/Blue Stamp Replica */}
             <div className="relative flex items-center justify-center">
-              <div className="border-2 border-double border-blue-500/80 rounded-full px-4 py-2 font-mono text-[7px] font-black text-blue-500/80 tracking-widest uppercase rotate-12 bg-white/50 relative z-10 shadow-xs">
+              <div className="border-2 border-double border-blue-500/80 rounded-full px-4 py-2 font-mono text-[12px] font-black text-blue-500/80 tracking-widest uppercase rotate-12 bg-white/50 relative z-10 shadow-xs">
                 VERIFIED COPY • ORIGINAL
               </div>
               <div className="absolute inset-0 flex items-center justify-center opacity-30 select-none scale-125 z-0">
@@ -446,10 +446,10 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-[8.5px] font-serif font-black text-slate-900 underline">
+              <p className="text-[12px] font-serif font-black text-slate-900 underline">
                 {formData.officerName || formData.approvingOfficer || formData.inspector || 'COMMISSIONER OF OATHS'}
               </p>
-              <p className="text-[7px] font-mono text-slate-400 uppercase font-black">
+              <p className="text-[12px] font-mono text-slate-400 uppercase font-black">
                 Authorized Signatory for {selectedDoc.issuer}
               </p>
             </div>
@@ -711,9 +711,9 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
               <Map className="w-3.5 h-3.5 text-emerald-400" />
               Peta Alur Perjalanan Ekspor Indonesia (Infografis Interaktif)
             </h3>
-            <p className="text-[9px] text-slate-400 leading-normal">Klik salah satu node di bawah untuk melihat rincian penjelasan taktis dan analoginya</p>
+            <p className="text-[12px] text-slate-400 leading-normal">Klik salah satu node di bawah untuk melihat rincian penjelasan taktis dan analoginya</p>
           </div>
-          <span className="shrink-0 bg-slate-850 py-0.5 px-2 rounded-md border border-slate-750 text-[9px] font-mono text-emerald-300 uppercase tracking-widest text-center self-start sm:self-center">
+          <span className="shrink-0 bg-slate-850 py-0.5 px-2 rounded-md border border-slate-750 text-[12px] font-mono text-emerald-300 uppercase tracking-widest text-center self-start sm:self-center">
             ⚓ ALKI ➔ Ekspor Global
           </span>
         </div>
@@ -759,7 +759,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                   </div>
 
                   {/* Step ID Label */}
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  <span className={`text-[12px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
                     {currentLanguage === 'id' ? 'Tahap' : 'Step'} 0{idx + 1}
                   </span>
 
@@ -842,7 +842,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                         <FileText className="w-4 h-4 text-blue-600 group-hover:text-emerald-600 transition-colors" />
                         <span className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{doc.name}</span>
                       </div>
-                      <span className="text-[11px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[12px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                         {currentLanguage === 'id' ? 'BUKA / EDIT / CETAK ➔' : 'OPEN / EDIT / PRINT ➔'}
                       </span>
                     </div>
@@ -888,7 +888,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
       {/* Simulator Flow Connection Section (Bento Card Style) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
         <div className="space-y-3">
-          <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 inline-block">
+          <span className="text-[12px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 inline-block">
             {currentLanguage === 'id' ? 'BAGAIMANA CARA KERJA SISTEM REAL-TIME KAMI?' : 'HOW DOES OUR REAL-TIME SYSTEM WORK?'}
           </span>
           <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
@@ -915,7 +915,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
               <h4 className="text-xs font-black text-slate-900 uppercase">
                 {currentLanguage === 'id' ? 'Simulasi Praktis Mandiri' : 'Self-Guided Practical Simulation'}
               </h4>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[12px] text-slate-400">
                 {currentLanguage === 'id' ? 'Asah kemampuan administrasi perdagangan internasional' : 'Hone your international trade administration skills'}
               </p>
             </div>
@@ -1008,7 +1008,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                     PRATINJAU DOKUMEN RESMI (SAMPEL RIIL)
                   </h3>
                 </div>
-                <p className="text-[10px] text-slate-600 font-bold">
+                <p className="text-[12px] text-slate-600 font-bold">
                   Dokumen: <span className="text-emerald-700 font-black">{selectedDoc.name}</span> | Terbit Resmi oleh: <span className="text-emerald-700 font-black">{selectedDoc.issuer}</span>
                 </p>
               </div>
@@ -1020,7 +1020,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                       handleOpenDoc(selectedDoc.name, selectedDoc.issuer);
                     }
                   }}
-                  className="px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors flex items-center gap-1 border border-slate-300"
+                  className="px-2.5 py-1.5 rounded-lg text-[12px] sm:text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors flex items-center gap-1 border border-slate-300"
                   title="Reset data semula"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -1029,7 +1029,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
 
                 <button
                   onClick={handleDownload}
-                  className="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black bg-blue-600 hover:bg-blue-500 text-white transition-all flex items-center gap-1.5 shadow-md border border-blue-400 hover:scale-[1.03] active:scale-95 duration-150 ring-2 ring-blue-500/10"
+                  className="px-3 py-1.5 rounded-lg text-[12px] sm:text-xs font-black bg-blue-600 hover:bg-blue-500 text-white transition-all flex items-center gap-1.5 shadow-md border border-blue-400 hover:scale-[1.03] active:scale-95 duration-150 ring-2 ring-blue-500/10"
                   title="Unduh dokumen. Ketika file dibuka di komputer Anda, dialog printernya akan langsung terbuka otomatis!"
                 >
                   <Download className="w-3.5 h-3.5 animate-pulse" />
@@ -1046,7 +1046,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
             </div>
 
             {/* Dynamic Warning Banner */}
-            <div className="bg-amber-50 border-b border-amber-100 p-3 text-center text-[10px] text-amber-900 font-medium shrink-0 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <div className="bg-amber-50 border-b border-amber-100 p-3 text-center text-[12px] text-amber-900 font-medium shrink-0 flex flex-col sm:flex-row items-center justify-center gap-2">
               <span className="font-bold flex items-center gap-1">
                 ⚠️ Mode Live Editor:
               </span>
@@ -1070,7 +1070,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                     href={window.location.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-white text-red-700 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg text-[11px] font-black tracking-normal uppercase transition-all shadow-sm shrink-0 flex items-center gap-1"
+                    className="bg-white text-red-700 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg text-[12px] font-black tracking-normal uppercase transition-all shadow-sm shrink-0 flex items-center gap-1"
                   >
                     <span>Buka Di Tab Baru ↗️</span>
                   </a>
@@ -1090,7 +1090,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
               
               {/* LEFT COLUMN: EDITOR FORM FIELDS (2/5) */}
               <div className="w-full lg:w-5/12 border-b lg:border-b-0 lg:border-r border-slate-200 p-4 sm:p-5 overflow-y-auto bg-slate-50 space-y-4">
-                <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-[10px] font-black tracking-wider text-slate-700 uppercase">
+                <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-[12px] font-black tracking-wider text-slate-700 uppercase">
                   ⚙️ KOLOM PENGISIAN FORMULIR
                 </div>
 
@@ -1099,7 +1099,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                 <div className="grid grid-cols-1 gap-3.5">
                   {Object.keys(formData).map((key) => (
                     <div key={key} className="space-y-1">
-                      <label className="block text-[10px] font-black uppercase text-slate-600 font-sans tracking-wide">
+                      <label className="block text-[12px] font-black uppercase text-slate-600 font-sans tracking-wide">
                         {getFriendlyLabel(key)}
                       </label>
                       {formData[key].length > 40 ? (
@@ -1137,7 +1137,7 @@ export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps
                 {/* Sheet wrapper */}
                 <div 
                   id="export-print-area"
-                  className="bg-white text-slate-950 w-full max-w-[21cm] min-h-[29.7cm] shadow-xl p-5 sm:p-8 rounded-sm text-left border-4 border-double border-slate-400 relative overflow-hidden text-[10px] leading-relaxed select-text"
+                  className="bg-white text-slate-950 w-full max-w-[21cm] min-h-[29.7cm] shadow-xl p-5 sm:p-8 rounded-sm text-left border-4 border-double border-slate-400 relative overflow-hidden text-[12px] leading-relaxed select-text"
                 >
                   
                   {/* WATERMARK BACKGROUND EFFECT */}

@@ -19,7 +19,9 @@ import {
   saveShipmentToFirestore,
   saveAlertToFirestore,
   saveSampleRequestToFirestore,
-  saveCompanyProfileToFirestore
+  saveCompanyProfileToFirestore,
+  deleteShipmentFromFirestore,
+  deleteSampleRequestFromFirestore
 } from './lib/firebaseService';
 import LoginModal from './components/LoginModal';
 import DocumentEditor from './components/DocumentEditor';
@@ -299,56 +301,23 @@ export default function App() {
           qualityCompliance: 'ISO 9001, SVLK',
           financialGuarantee: 'Bank Escrow SSL',
         };
-        const defaultSampleRequests = [
-          {
-            id: 'samp-101',
-            productId: 'prod-1',
-            productName: 'Kopi Gayo Arabika (Grade 1 Specialty)',
-            buyerName: 'Hiroshi Tanaka',
-            buyerCompany: 'Tanaka Specialty Coffee Ltd.',
-            quantity: '2 kg',
-            courier: 'DHL Express',
-            courierAccount: 'DHL-987654321',
-            shippingAddress: 'Aoyama 3-Chome, Minato-ku, Tokyo 107-0062, Japan',
-            shippingFeePaidBy: 'buyer',
-            shippingFeeAmount: 85,
-            status: 'shipped',
-            trackingNumber: 'TRK-DHL-88772211',
-            createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString()
-          },
-          {
-            id: 'samp-102',
-            productId: 'prod-2',
-            productName: 'Arang Batok Kelapa (Coconut Charcoal Briquettes)',
-            buyerName: 'Sophie Dubois',
-            buyerCompany: 'Paris Hookah Lounge Supply',
-            quantity: '1 kg',
-            courier: 'FedEx International',
-            courierAccount: '',
-            shippingAddress: 'Rue du Faubourg Saint-Antoine, 75011 Paris, France',
-            shippingFeePaidBy: 'buyer',
-            shippingFeeAmount: 110,
-            status: 'pending',
-            trackingNumber: '',
-            createdAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString()
-          }
-        ];
+        const defaultSampleRequests: any[] = [];
         
         const data = await fetchAndSeedInitialData(defaultProfile, defaultSampleRequests);
         
-        if (data.users && data.users.length > 0) {
+        if (data.users) {
           setUsers(data.users);
         }
-        if (data.products && data.products.length > 0) {
+        if (data.products) {
           setProducts(data.products);
         }
-        if (data.shipments && data.shipments.length > 0) {
+        if (data.shipments) {
           setShipments(data.shipments);
         }
-        if (data.alerts && data.alerts.length > 0) {
+        if (data.alerts) {
           setAlerts(data.alerts);
         }
-        if (data.sampleRequests && data.sampleRequests.length > 0) {
+        if (data.sampleRequests) {
           setSampleRequests(data.sampleRequests);
         }
         if (data.companyProfile) {
@@ -500,11 +469,11 @@ export default function App() {
 
     if (isChangingPassword) {
       if (!profileCurrentPassword) {
-        setProfileError('Harap masukkan kata sandi saat ini untuk mengubah kata sandi.');
+        setProfileError(t.currentPasswordReqMsg);
         return;
       }
       if (userCredIndex !== -1 && creds[userCredIndex].password !== profileCurrentPassword) {
-        setProfileError('Kata sandi saat ini salah.');
+        setProfileError(t.currentPasswordWrongMsg);
         return;
       }
       if (profileNewPassword.length < 6) {
@@ -597,7 +566,7 @@ export default function App() {
     }
 
     if (newPassword.length < 6) {
-      setChangePasswordError('Sandi baru minimal harus 6 karakter.');
+      setChangePasswordError(t.passwordMinLengthMsg);
       return;
     }
 
@@ -624,7 +593,7 @@ export default function App() {
     }
 
     if (creds[userCredIndex].password !== currentPassword) {
-      setChangePasswordError('Sandi saat ini salah.');
+      setChangePasswordError(t.currentPasswordWrongMsg);
       return;
     }
 
@@ -632,7 +601,7 @@ export default function App() {
     creds[userCredIndex].password = newPassword;
     localStorage.setItem('exportflow_credentials', JSON.stringify(creds));
 
-    setChangePasswordSuccess('Sandi berhasil diperbarui secara aman!');
+    setChangePasswordSuccess(t.passwordUpdatedMsg);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
@@ -877,7 +846,7 @@ export default function App() {
           title: 'Persetujuan Bea Cukai RI (NPE)',
           message: simulatedCount > 0 
             ? 'Dokumen Cukai ekspor PEB disetujui, Nota Pelayanan Ekspor diterbitkan. Cargo dilepaskan untuk proses Loading.' 
-            : 'Sinyal Bea Cukai dipancarkan. Tidak ada transaksi yang sedang menunggu pemeriksaan Bea Cukai di tahap "Customs" saat ini.',
+            : t.customsSignalSent,
           type: 'success',
           timestamp,
           readBy: []
@@ -939,7 +908,7 @@ export default function App() {
           title: 'Barang Siap oleh Supplier',
           message: updatedCount > 0 
             ? 'Supplier memberikan notifikasi kargo siap angkut dari gudang tani lokal.' 
-            : 'Tidak ada transaksi dengan tahap "Sourcing" saat ini.',
+            : t.noSourcingTransaction,
           type: 'info',
           timestamp,
           readBy: []
@@ -1426,7 +1395,7 @@ export default function App() {
       id: `alt-new-${Date.now()}`,
       shipmentId: newShipmentId,
       contractNumber: newShip.contractNumber,
-      title: 'Draf Kontrak Baru Disepakati',
+      title: t.newDraftContractAgreed,
       message: `Kontrak Penjualan baru "${newShip.contractNumber}" dengan pembeli global ${formData.buyerCompany} resmi ditandatangani. Transaksi dimulai pada langkah Draft!`,
       type: 'success',
       timestamp: new Date().toISOString(),
@@ -1606,8 +1575,8 @@ export default function App() {
       const newAlert: RealTimeAlert = {
         id: 'alert-' + Date.now(),
         type: 'alert',
-        title: 'Akun Terhapus',
-        message: `Akun pendaftaran atas nama ${userObj.name} (${userObj.role}) telah dihapus dari database pabean oleh Superadmin.`,
+        title: t.accountDeletedTitle,
+        message: `Akun pendaftaran atas nama ${userObj.name} (${userObj.role}) ${t.accountDeletedDesc}`,
         timestamp: new Date().toISOString(),
         readBy: []
       };
@@ -1807,7 +1776,7 @@ export default function App() {
       }
       case 'Completed':
         return {
-          label: 'Transaksi Selesai',
+          label: '{t.statsCompleted}',
           color: 'text-emerald-700 bg-emerald-100 border-emerald-200',
           percent: 100
         };
@@ -2053,7 +2022,7 @@ export default function App() {
                   setIsLoginOpen(true);
                   setShowRestrictedAlert(null);
                 }}
-                className="mt-2.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] uppercase tracking-wider font-extrabold flex items-center gap-1.5 hover:bg-indigo-700 transition-colors shadow-2xs"
+                className="mt-2.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[12px] uppercase tracking-wider font-extrabold flex items-center gap-1.5 hover:bg-indigo-700 transition-colors shadow-2xs"
               >
                 <span>Beralih Peran / Login</span>
                 <ArrowRight className="w-3 h-3 text-indigo-200" />
@@ -2073,13 +2042,13 @@ export default function App() {
           <div className="flex flex-wrap gap-1 justify-center">
             <button
               onClick={() => scrollToSection('company-profile-section')}
-              className="text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all text-gray-600 hover:bg-gray-50 bg-slate-50 flex-1 min-w-[70px]"
+              className="text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all text-gray-600 hover:bg-gray-50 bg-slate-50 flex-1 min-w-[70px]"
             >
               Profil
             </button>
             <button
               onClick={() => scrollToSection('featured-commodities')}
-              className="text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all text-gray-600 hover:bg-gray-50 bg-slate-50 flex-1 min-w-[70px]"
+              className="text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all text-gray-600 hover:bg-gray-50 bg-slate-50 flex-1 min-w-[70px]"
             >
               Katalog
             </button>
@@ -2087,7 +2056,7 @@ export default function App() {
               <>
                 <button
                   onClick={() => handleTabClick('workflow')}
-                  className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                  className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
                     activeTab === 'workflow' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
                   }`}
                 >
@@ -2096,7 +2065,7 @@ export default function App() {
                 {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
                   <button
                     onClick={() => handleTabClick('guide')}
-                    className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                    className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
                       activeTab === 'guide' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
                     }`}
                   >
@@ -2106,14 +2075,14 @@ export default function App() {
                 {currentUser?.role === 'Superadmin' ? (
                   <button
                     onClick={() => handleTabClick('users')}
-                    className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                    className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
                       activeTab === 'users' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
                     }`}
                   >
                     Akun
                   </button>
                 ) : (
-                  <div className="text-center py-2 px-1 text-[9.5px] font-bold rounded-lg text-slate-300 bg-slate-100/50 select-none flex items-center justify-center flex-1 min-w-[30px]">
+                  <div className="text-center py-2 px-1 text-[12px] font-bold rounded-lg text-slate-300 bg-slate-100/50 select-none flex items-center justify-center flex-1 min-w-[30px]">
                     •
                   </div>
                 )}
@@ -2163,7 +2132,7 @@ export default function App() {
                     : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
                 }`}
               >
-                Kargo Ekspor ({filteredShipments.length})
+                {t.tabCargoExport} ({filteredShipments.length})
               </button>
               <button
                 onClick={() => setWorkflowSubTab('sample')}
@@ -2173,7 +2142,7 @@ export default function App() {
                     : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
                 }`}
               >
-                Permintaan Sampel ({visibleSampleRequests.length})
+                {t.tabSampleRequest} ({visibleSampleRequests.length})
               </button>
             </div>
 
@@ -2188,10 +2157,10 @@ export default function App() {
                       className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-250 shrink-0 animate-none"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      <span>Kembali ke Daftar Transaksi</span>
+                      <span>{t.backToTransactions}</span>
                     </button>
                     <div className="text-xs text-slate-500 font-bold">
-                      Menampilkan Pelacakan Logistik Rantai Pasok Kontrak: <strong className="font-mono text-indigo-750 bg-indigo-50/70 border border-indigo-150 px-2 py-0.5 rounded ml-1">{activeShipment?.contractNumber}</strong>
+                      {t.trackingLogistics} <strong className="font-mono text-indigo-750 bg-indigo-50/70 border border-indigo-150 px-2 py-0.5 rounded ml-1">{activeShipment?.contractNumber}</strong>
                     </div>
                   </div>
 
@@ -2237,7 +2206,7 @@ export default function App() {
                         <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                         <input
                           type="text"
-                          placeholder="Cari Komoditas/Kontrak/Pelabuhan..."
+                          placeholder={t.searchPlaceholder}
                           value={shipmentSearchQuery}
                           onChange={(e) => setShipmentSearchQuery(e.target.value)}
                           className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
@@ -2247,14 +2216,14 @@ export default function App() {
                       {/* Status Tabs */}
                       <div className="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-200 rounded-xl">
                         {[
-                          { code: 'All', label: 'Semua Status' },
-                          { code: 'Draft', label: 'Draf' },
-                          { code: 'Completed', label: 'Selesai' }
+                          { code: 'All', label: t.statusAll },
+                          { code: 'Draft', label: t.statusDraft },
+                          { code: 'Completed', label: t.statusCompleted }
                         ].map(f => (
                           <button
                             key={f.code}
                             onClick={() => setShipmentStatusFilter(f.code)}
-                            className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
+                            className={`py-1.5 px-3 rounded-lg text-[12px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
                               shipmentStatusFilter === f.code
                                 ? 'bg-white text-indigo-700 shadow-3xs border border-slate-200 font-black'
                                 : 'text-slate-500 hover:text-slate-800 border border-transparent font-bold'
@@ -2269,13 +2238,13 @@ export default function App() {
                     {/* Filter by Buyer (Only for Trader & Superadmin to view different buyers' requests) */}
                     {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
                       <div className="flex items-center gap-2 self-start md:self-auto">
-                        <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Filter Pembeli (Buyer):</span>
+                        <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{t.buyerFilterLabel}</span>
                         <select
                           value={selectedBuyerFilter}
                           onChange={(e) => setSelectedBuyerFilter(e.target.value)}
                           className="text-xs font-black px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                         >
-                          <option value="All">Semua Pembeli</option>
+                          <option value="All">{t.buyerFilterAll}</option>
                           {Array.from(new Set(shipments.map(s => JSON.stringify({ id: s.buyerId, name: s.buyerName, company: s.buyerCompany }))))
                             .map((str: string) => {
                               const b = JSON.parse(str);
@@ -2294,32 +2263,32 @@ export default function App() {
                   {/* Summary Stats Row */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-left text-white shadow-3xs">
-                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Total Nilai Kontrak (FOB)</p>
+                      <p className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.statsTotalValue}</p>
                       <p className="text-lg sm:text-xl font-black mt-1 font-mono text-emerald-400">
                         ${filteredShipments.reduce((sum, s) => sum + s.totalValue, 0).toLocaleString('en-US')} USD
                       </p>
-                      <div className="text-[9px] text-slate-400 font-bold mt-1.5">Nilai transaksi ekspor terdaftar</div>
+                      <div className="text-[12px] text-slate-400 font-bold mt-1.5">{t.statsTotalValueDesc}</div>
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
-                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Draf / Negosiasi</p>
+                      <p className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.statsDrafts}</p>
                       <p className="text-lg sm:text-xl font-black mt-1 text-amber-600 font-mono">
                         {filteredShipments.filter(s => s.currentStep === 'Draft').length} Kontrak
                       </p>
-                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Proses penyusunan Sales Contract</div>
+                      <div className="text-[12px] text-slate-500 font-semibold mt-1.5">{t.statsDraftsDesc}</div>
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
-                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Pengapalan Aktif</p>
+                      <p className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.statsActive}</p>
                       <p className="text-lg sm:text-xl font-black mt-1 text-blue-600 font-mono">
                         {filteredShipments.filter(s => s.currentStep === 'Shipping').length} Kargo
                       </p>
-                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Pelayaran, karantina & logistik</div>
+                      <div className="text-[12px] text-slate-500 font-semibold mt-1.5">{t.statsActiveDesc}</div>
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
-                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Transaksi Selesai</p>
+                      <p className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.statsCompleted}</p>
                       <p className="text-lg sm:text-xl font-black mt-1 text-emerald-600 font-mono">
                         {filteredShipments.filter(s => s.currentStep === 'Completed').length} Kontrak
                       </p>
-                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Kargo diterima di port tujuan</div>
+                      <div className="text-[12px] text-slate-500 font-semibold mt-1.5">{t.statsCompletedDesc}</div>
                     </div>
                   </div>
 
@@ -2330,9 +2299,9 @@ export default function App() {
                         <Layers className="w-8 h-8" />
                       </div>
                       <div>
-                        <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Tidak Ada Transaksi</h3>
-                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                          Tidak ditemukan kontrak dagang atau kargo logistik yang diminta oleh buyer. Silakan ganti filter atau buat draf transaksi baru.
+                        <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">{t.emptyStateTitle}</h3>
+                        <p className="text-[12px] text-slate-400 leading-relaxed mt-1">
+                          {t.emptyStateDesc}
                         </p>
                       </div>
                     </div>
@@ -2361,12 +2330,12 @@ export default function App() {
                                   <Package className="w-4 h-4 text-indigo-600" />
                                 </div>
                                 <div>
-                                  <span className="text-[10px] font-black font-mono text-indigo-750 tracking-wider block">{s.id.toUpperCase()}</span>
-                                  <span className="text-[9px] font-bold text-slate-400 font-mono">{s.contractNumber}</span>
+                                  <span className="text-[12px] font-black font-mono text-indigo-750 tracking-wider block">{s.id.toUpperCase()}</span>
+                                  <span className="text-[12px] font-bold text-slate-400 font-mono">{s.contractNumber}</span>
                                 </div>
                               </div>
                               
-                              <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                              <span className={`px-2 py-0.5 rounded-lg text-[12px] font-black uppercase tracking-wider border ${
                                 isCompleted
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : isDraft
@@ -2384,16 +2353,16 @@ export default function App() {
                                   {s.productName}
                                 </h4>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">HS {s.hsCode}</span>
-                                  <span className="text-[10px] font-bold text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded font-mono">{s.quantity} {s.unit.split(' ')[0]}</span>
+                                  <span className="text-[12px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">HS {s.hsCode}</span>
+                                  <span className="text-[12px] font-bold text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded font-mono">{s.quantity} {s.unit.split(' ')[0]}</span>
                                 </div>
                               </div>
 
                               {/* Route Info */}
                               <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 flex items-center justify-between text-center">
                                 <div className="text-left space-y-0.5 max-w-[45%]">
-                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN ASAL</span>
-                                  <span className="text-[10px] font-black text-slate-700 line-clamp-1">{s.portOfLoading.split('(')[0]}</span>
+                                  <span className="text-[12px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN ASAL</span>
+                                  <span className="text-[12px] font-black text-slate-700 line-clamp-1">{s.portOfLoading.split('(')[0]}</span>
                                 </div>
                                 <div className="flex flex-col items-center justify-center flex-1 px-1">
                                   <Truck className="w-3.5 h-3.5 text-indigo-400" />
@@ -2402,28 +2371,28 @@ export default function App() {
                                   </div>
                                 </div>
                                 <div className="text-right space-y-0.5 max-w-[45%]">
-                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN TUJUAN</span>
-                                  <span className="text-[10px] font-black text-slate-700 line-clamp-1">{s.portOfDischarge.split('(')[0]}</span>
+                                  <span className="text-[12px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN TUJUAN</span>
+                                  <span className="text-[12px] font-black text-slate-700 line-clamp-1">{s.portOfDischarge.split('(')[0]}</span>
                                 </div>
                               </div>
 
                               {/* Buyer & Trader details */}
-                              <div className="grid grid-cols-2 gap-3 pt-1 text-[10px] border-t border-slate-100">
+                              <div className="grid grid-cols-2 gap-3 pt-1 text-[12px] border-t border-slate-100">
                                 <div className="space-y-0.5">
-                                  <span className="text-[8.5px] text-slate-400 font-bold block">Pembeli (Buyer):</span>
+                                  <span className="text-[12px] text-slate-400 font-bold block">Pembeli (Buyer):</span>
                                   <p className="font-extrabold text-slate-700 truncate" title={s.buyerCompany}>{s.buyerCompany}</p>
-                                  <p className="text-[9px] text-slate-500 font-medium truncate">{s.buyerName}</p>
+                                  <p className="text-[12px] text-slate-500 font-medium truncate">{s.buyerName}</p>
                                 </div>
                                 <div className="space-y-0.5 border-l border-slate-150 pl-3">
-                                  <span className="text-[8.5px] text-slate-400 font-bold block">Eksportir (Trader):</span>
+                                  <span className="text-[12px] text-slate-400 font-bold block">Eksportir (Trader):</span>
                                   <p className="font-extrabold text-slate-700 truncate" title="PT Multi Raksa Madani">PT Multi Raksa Madani</p>
-                                  <p className="text-[9px] text-slate-500 font-medium truncate">{displayTraderName}</p>
+                                  <p className="text-[12px] text-slate-500 font-medium truncate">{displayTraderName}</p>
                                 </div>
                               </div>
 
                               {/* Progress Line */}
                               <div className="space-y-1 pt-1">
-                                <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                <div className="flex justify-between items-center text-[12px] font-bold text-slate-400 uppercase tracking-wider">
                                   <span>Progress Alur Transaksi</span>
                                   <span className="font-mono text-indigo-600 font-black">{progressPercent}%</span>
                                 </div>
@@ -2437,7 +2406,7 @@ export default function App() {
                             </div>
                             {/* Card Footer */}
                             <div className="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
-                              <div className="text-[11px] font-black text-indigo-700 font-mono">
+                              <div className="text-[12px] font-black text-indigo-700 font-mono">
                                 FOB: ${s.totalValue.toLocaleString('en-US')} USD
                               </div>
                               <div className="flex items-center gap-2">
@@ -2445,7 +2414,7 @@ export default function App() {
                                   <button
                                     onClick={() => setShipmentToDeleteId(s.id)}
                                     className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all border border-red-100 cursor-pointer"
-                                    title="Hapus Transaksi"
+                                    title="{t.deleteTransaction}"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -2457,7 +2426,7 @@ export default function App() {
                                     setTargetStepIndex(undefined);
                                     setTargetSubStepIndex(undefined);
                                   }}
-                                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all flex items-center gap-1 shadow-3xs cursor-pointer border border-transparent"
+                                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[12px] font-black transition-all flex items-center gap-1 shadow-3xs cursor-pointer border border-transparent"
                                 >
                                   <Globe className="w-3.5 h-3.5 text-indigo-300" />
                                   <span>Lacak Logistik (3 Langkah)</span>
@@ -2478,9 +2447,9 @@ export default function App() {
                     <Award className="w-5 h-5 text-emerald-800" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Jurnal Permintaan Sampel</h3>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">{t.sampleJournalTitle}</h3>
                     <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                      Daftar permintaan sampel yang masuk dari calon buyer Anda.
+                      {t.sampleJournalDesc}
                     </p>
                   </div>
                 </div>
@@ -2491,9 +2460,9 @@ export default function App() {
                       <Award className="w-8 h-8" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Belum Ada Permintaan</h3>
-                      <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                        Saat ini belum ada permintaan sampel produk rill yang diajukan oleh calon buyer.
+                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">{t.emptySampleTitle}</h3>
+                      <p className="text-[12px] text-slate-400 leading-relaxed mt-1">
+                        {t.emptySampleDesc}
                       </p>
                     </div>
                   </div>
@@ -2513,10 +2482,10 @@ export default function App() {
                           <div className="space-y-3.5">
                             <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-3">
                               <div>
-                                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider font-mono">KODE: {req.id}</span>
+                                <span className="text-[12px] font-black uppercase text-slate-400 tracking-wider font-mono">KODE: {req.id}</span>
                                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-0.5">{req.productName}</h4>
                               </div>
-                              <span className={`px-2 py-0.5 text-[9.5px] font-bold uppercase rounded-md border shrink-0 ${
+                              <span className={`px-2 py-0.5 text-[12px] font-bold uppercase rounded-md border shrink-0 ${
                                 isPending 
                                   ? 'text-amber-700 bg-amber-50 border-amber-200'
                                   : isShipped
@@ -2529,19 +2498,19 @@ export default function App() {
 
                             <div className="grid grid-cols-2 gap-3.5 text-xs text-left">
                               <div>
-                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Calon Buyer:</span>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Calon Buyer:</span>
                                 <span className="font-extrabold text-slate-800 block mt-0.5">{req.buyerName}</span>
-                                <span className="text-[10px] text-slate-500 font-semibold block">{req.buyerCompany}</span>
+                                <span className="text-[12px] text-slate-500 font-semibold block">{req.buyerCompany}</span>
                               </div>
 
                               <div>
-                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Jumlah Sampel:</span>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Jumlah Sampel:</span>
                                 <span className="font-extrabold text-indigo-600 block mt-0.5">{req.quantity}</span>
                               </div>
 
                               <div className="col-span-2">
-                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Alamat Pengiriman:</span>
-                                <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[10.5px] mt-0.5">
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Alamat Pengiriman:</span>
+                                <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[12px] mt-0.5">
                                   {req.shippingAddress}
                                 </span>
                               </div>
@@ -2613,8 +2582,8 @@ export default function App() {
                   <Lock className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm uppercase tracking-wider">Ganti Sandi Akun</h3>
-                  <p className="text-[10px] text-slate-500">Perbarui kata sandi login untuk peran: {currentUser?.role}</p>
+                  <h3 className="font-extrabold text-sm uppercase tracking-wider">{t.changePasswordTitle}</h3>
+                  <p className="text-[12px] text-slate-500">{t.updatePasswordForRole} {currentUser?.role}</p>
                 </div>
               </div>
               <button 
@@ -2643,7 +2612,7 @@ export default function App() {
 
               {/* Current Password Field */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase text-slate-600">Sandi Saat Ini</label>
+                <label className="block text-[12px] font-black uppercase text-slate-600">{t.currentPassword}</label>
                 <div className="relative">
                   <input
                     type={showCurrentPassword ? "text" : "password"}
@@ -2664,7 +2633,7 @@ export default function App() {
 
               {/* New Password Field */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase text-slate-600">Sandi Baru</label>
+                <label className="block text-[12px] font-black uppercase text-slate-600">{t.newPassword}</label>
                 <div className="relative">
                   <input
                     type={showNewPassword ? "text" : "password"}
@@ -2685,7 +2654,7 @@ export default function App() {
 
               {/* Confirm New Password Field */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase text-slate-600">Konfirmasi Sandi Baru</label>
+                <label className="block text-[12px] font-black uppercase text-slate-600">{t.confirmNewPassword}</label>
                 <div className="relative">
                   <input
                     type={showConfirmNewPassword ? "text" : "password"}
@@ -2736,8 +2705,8 @@ export default function App() {
                   <User className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm uppercase tracking-wider">Edit Profil & Kata Sandi</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold">Perbarui data profil & sandi login Anda ({currentUser.role})</p>
+                  <h3 className="font-extrabold text-sm uppercase tracking-wider">{t.editProfilePasswordTitle}</h3>
+                  <p className="text-[12px] text-slate-500 font-semibold">{t.updateProfileData} ({currentUser.role})</p>
                 </div>
               </div>
               <button 
@@ -2766,7 +2735,7 @@ export default function App() {
 
               {/* Avatar Selector */}
               <div className="space-y-1.5">
-                <label className="block text-[11px] font-black uppercase text-slate-500">Pilih Foto Profil</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Pilih Foto Profil</label>
                 <div className="flex items-center gap-3">
                   <img 
                     src={profileAvatar} 
@@ -2800,7 +2769,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Name Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Nama Lengkap</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Nama Lengkap</label>
                   <input
                     type="text"
                     value={profileName}
@@ -2813,7 +2782,7 @@ export default function App() {
 
                 {/* Email Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Alamat Surel / Email</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Alamat Surel / Email</label>
                   <input
                     type="email"
                     value={profileEmail}
@@ -2828,7 +2797,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Company Name Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Nama Perusahaan</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Nama Perusahaan</label>
                   <input
                     type="text"
                     value={profileCompany}
@@ -2841,7 +2810,7 @@ export default function App() {
 
                 {/* Country Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Negara Asal (Country)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Negara Asal (Country)</label>
                   <input
                     type="text"
                     value={profileCountry}
@@ -2855,7 +2824,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Phone Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Nomor Telepon</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Nomor Telepon</label>
                   <input
                     type="tel"
                     value={profilePhone}
@@ -2867,7 +2836,7 @@ export default function App() {
 
                 {/* Preferred Port of Discharge */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Pelabuhan Bongkar Utama (Destinasi)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Pelabuhan Bongkar Utama (Destinasi)</label>
                   <input
                     type="text"
                     value={profilePortOfDischarge}
@@ -2881,7 +2850,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Preferred Port of Loading */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Pelabuhan Muat Utama (Asal)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">Pelabuhan Muat Utama (Asal)</label>
                   <input
                     type="text"
                     value={profilePortOfLoading}
@@ -2894,7 +2863,7 @@ export default function App() {
 
               {/* Address Field */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase text-slate-500">Alamat Perusahaan</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Alamat Perusahaan</label>
                 <textarea
                   value={profileAddress}
                   onChange={(e) => setProfileAddress(e.target.value)}
@@ -2907,22 +2876,22 @@ export default function App() {
               {/* Divider for Password Section */}
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-2">Ganti Kata Sandi (Opsional)</span>
+                <span className="flex-shrink mx-4 text-[12px] font-black text-slate-400 uppercase tracking-widest bg-white px-2">{t.changePasswordOptionalTitle}</span>
                 <div className="flex-grow border-t border-slate-200"></div>
               </div>
 
               {/* Current Password Field */}
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Kata Sandi Saat Ini</label>
-                  <span className="text-[9px] text-slate-400 font-semibold italic">Isi jika Anda ingin mengubah sandi</span>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">{t.currentPassword}</label>
+                  <span className="text-[12px] text-slate-400 font-semibold italic">Isi jika Anda ingin mengubah sandi</span>
                 </div>
                 <div className="relative">
                   <input
                     type={showProfileCurrentPassword ? "text" : "password"}
                     value={profileCurrentPassword}
                     onChange={(e) => setProfileCurrentPassword(e.target.value)}
-                    placeholder="Sandi saat ini untuk autentikasi"
+                    placeholder={t.currentAuthPasswordPlaceholder}
                     className="w-full text-xs p-2.5 pr-10 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-mono"
                   />
                   <button
@@ -2938,7 +2907,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-4">
                 {/* New Password Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Kata Sandi Baru</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">{t.newPassword}</label>
                   <div className="relative">
                     <input
                       type={showProfileNewPassword ? "text" : "password"}
@@ -2959,7 +2928,7 @@ export default function App() {
 
                 {/* Confirm Password Field */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-500">Konfirmasi Sandi Baru</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-500">{t.confirmNewPassword}</label>
                   <div className="relative">
                     <input
                       type={showProfileConfirmPassword ? "text" : "password"}
@@ -3005,6 +2974,7 @@ export default function App() {
         isOpen={isLoginOpen}
         onClose={handleCloseLoginModal}
         currentUser={currentUser}
+        t={t}
         onSelectUser={handleSelectUser}
         initialMode={loginModalMode}
       />
@@ -3019,16 +2989,16 @@ export default function App() {
               </div>
               <div>
                 <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">
-                  {currentUser?.role === 'Buyer' ? 'Batalkan / Hapus Order' : 'Hapus Transaksi'}
+                  {currentUser?.role === 'Buyer' ? t.cancelDeleteOrder : t.deleteTransaction}
                 </h3>
-                <p className="text-[10px] text-red-500 font-extrabold uppercase">
+                <p className="text-[12px] text-red-500 font-extrabold uppercase">
                   {currentUser?.role === 'Buyer' ? 'Otorisasi Importir (Buyer)' : 'Otorisasi Superadmin'}
                 </p>
               </div>
             </div>
             
             <p className="text-xs text-slate-600 leading-relaxed">
-              Apakah Anda yakin ingin menghapus transaksi kontainer dengan nomor kontrak{" "}
+              {t.confirmDeleteTransaction}{" "}
               <strong className="font-mono text-indigo-600">
                 {shipments.find(s => s.id === shipmentToDeleteId)?.contractNumber}
               </strong>{" "}
@@ -3056,16 +3026,17 @@ export default function App() {
                         id: `alt-delete-${Date.now()}`,
                         shipmentId: shipmentToDeleteId,
                         contractNumber: shipmentToDelete.contractNumber,
-                        title: isBuyer ? 'Order Dibatalkan Oleh Buyer' : 'Transaksi Dihapus Secara Permanen',
+                        title: isBuyer ? t.orderCanceledByBuyer : t.transactionDeletedPermanently,
                         message: isBuyer
-                          ? `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dibatalkan & dihapus secara permanen dari portal oleh pihak Importir (Buyer).`
-                          : `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dihapus secara permanen dari pabean oleh Superadmin.`,
+                          ? `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai ${shipmentToDelete.totalValue.toLocaleString("id-ID")} USD ${t.transactionCanceledMsg}`
+                          : `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai ${shipmentToDelete.totalValue.toLocaleString("id-ID")} USD ${t.transactionDeletedMsg}`,
                         type: 'warning',
                         timestamp: new Date().toISOString(),
                         readBy: []
                       };
                       setAlerts(prev => [newAlert, ...prev]);
                     }
+                    deleteShipmentFromFirestore(shipmentToDeleteId);
                     setShipmentToDeleteId(null);
                   }
                 }}
@@ -3088,16 +3059,16 @@ export default function App() {
               </div>
               <div>
                 <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">
-                  Hapus Permintaan Sampel
+                  {t.deleteSampleRequest}
                 </h3>
-                <p className="text-[10px] text-red-500 font-extrabold uppercase">
+                <p className="text-[12px] text-red-500 font-extrabold uppercase">
                   Otorisasi Superadmin
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Apakah Anda yakin ingin menghapus permintaan sampel{" "}
+              {t.confirmDeleteSample}{" "}
               <strong className="font-mono text-indigo-600">
                 {sampleRequests.find(s => s.id === sampleRequestToDeleteId)?.productName}
               </strong>{" "}
@@ -3115,6 +3086,7 @@ export default function App() {
                 onClick={() => {
                   if (sampleRequestToDeleteId) {
                     setSampleRequests(prev => prev.filter(s => s.id !== sampleRequestToDeleteId));
+                    deleteSampleRequestFromFirestore(sampleRequestToDeleteId);
                     setSampleRequestToDeleteId(null);
                   }
                 }}
@@ -3138,8 +3110,8 @@ export default function App() {
                   <FileSignature className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black uppercase tracking-wider">Mulai Kontrak Penjualan Baru</h3>
-                  <p className="text-[10px] text-emerald-600 font-sans font-bold">TAHAP AWAL (DRAFT) - SALES CONTRACT INSTANSI EKSPOR</p>
+                  <h3 className="text-base font-black uppercase tracking-wider">{t.newSalesContractTitle}</h3>
+                  <p className="text-[12px] text-emerald-600 font-sans font-bold">{t.newSalesContractSubtitle}</p>
                 </div>
               </div>
               <button 
@@ -3153,13 +3125,13 @@ export default function App() {
             {/* Modal Form Content */}
             <div className="p-6 overflow-y-auto space-y-4 text-left font-sans">
               <p className="text-xs text-slate-500">
-                Langkah pertama dalam rantai perdagangan internasional adalah penandatanganan <strong>Sales Contract (Kontrak Penjualan)</strong> antara Eksportir Indonesia (Trader/Supplier) dan Importir Luar Negeri (Buyer). Gunakan formulir di bawah ini untuk menginisiasi contoh transaksi baru dari nol:
+                {t.newSalesContractDesc}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Product Select */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Pilih Komoditas Ekspor</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">{t.selectExportCommodity}</label>
                   <select
                     value={newContractForm.productId}
                     onChange={(e) => handleProductChange(e.target.value)}
@@ -3173,7 +3145,7 @@ export default function App() {
 
                 {/* HS Code Display */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Sistem Harmonisasi (HS Code)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">{t.hsCodeLabel}</label>
                   <input
                     type="text"
                     disabled
@@ -3184,7 +3156,7 @@ export default function App() {
 
                 {/* Quantity */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Volume Cargo Ekspor ({newContractForm.unit})</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">{t.exportCargoVolume(newContractForm.unit)}</label>
                   <input
                     type="number"
                     min="1"
@@ -3197,7 +3169,7 @@ export default function App() {
 
                 {/* Total Value */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600 font-bold">Perkiraan Nilai Kontrak (FOB USD)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600 font-bold">Perkiraan Nilai Kontrak (FOB USD)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-bold">$</span>
                     <input
@@ -3211,7 +3183,7 @@ export default function App() {
 
                 {/* Buyer Company */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Perusahaan Importir (Buyer)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">Perusahaan Importir (Buyer)</label>
                   <input
                     type="text"
                     value={newContractForm.buyerCompany}
@@ -3223,7 +3195,7 @@ export default function App() {
 
                 {/* Buyer Contact */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Nama Kontak Importir</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">Nama Kontak Importir</label>
                   <input
                     type="text"
                     value={newContractForm.buyerName}
@@ -3235,7 +3207,7 @@ export default function App() {
 
                 {/* Port of Loading */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Pelabuhan Muat (Indonesia)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">Pelabuhan Muat (Indonesia)</label>
                   <input
                     type="text"
                     value={newContractForm.portOfLoading}
@@ -3246,7 +3218,7 @@ export default function App() {
 
                 {/* Port of Discharge */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Pelabuhan Bongkar (Tujuan)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">Pelabuhan Bongkar (Tujuan)</label>
                   <input
                     type="text"
                     value={newContractForm.portOfDischarge}
@@ -3257,7 +3229,7 @@ export default function App() {
 
                 {/* Vessel Name Optional */}
                 <div className="space-y-1 md:col-span-2">
-                  <label className="block text-[11px] font-black uppercase text-slate-600">Nama Kapal Kargo Terjadwal (Vessel Booking)</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-600">Nama Kapal Kargo Terjadwal (Vessel Booking)</label>
                   <input
                     type="text"
                     value={newContractForm.vesselName}
@@ -3268,7 +3240,7 @@ export default function App() {
               </div>
 
               {/* Supplier Info Info note */}
-              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-2 text-indigo-950 text-[11px]">
+              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-2 text-indigo-950 text-[12px]">
                 <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">Informasi Rantai Pasok:</span> Komoditas pilihan Anda akan disuplai secara langsung oleh <strong>{newContractForm.supplierCompany}</strong> sebagai mitra produsen tani terdaftar di portal ExportFlow.
@@ -3303,6 +3275,7 @@ export default function App() {
         isOpen={isLoginOpen}
         onClose={handleCloseLoginModal}
         currentUser={currentUser}
+        t={t}
         onSelectUser={handleSelectUser}
         initialMode={loginModalMode}
       />
@@ -3333,7 +3306,7 @@ export default function App() {
         <p className="text-xs font-medium text-gray-500">
           {t.footerLine1}
         </p>
-        <p className="text-[10px] text-gray-400">
+        <p className="text-[12px] text-gray-400">
           {t.footerLine2}
         </p>
       </footer>

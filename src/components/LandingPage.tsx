@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { UserProfile, ExportProduct, ExportShipment } from '../types';
 import { deleteProductFromFirestore, saveProductToFirestore } from '../lib/firebaseService';
+import { translations } from '../translations';
 
 
 const landingTranslations: Record<string, Record<string, string>> = {
@@ -102,7 +103,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "Total Estimated FOB Price",
     fobTermsDesc: "Free On Board (Tanjung Priok, Jakarta)",
     guestAlertText: "You are logged in as a Guest. Submitting a Letter of Intent (LOI) requires a registered Buyer account.",
-    roleAlertText: "Your current role is not allowed to send LOI. Please re-login as a 'Buyer'.",
+    roleAlertText: "Your current role ({role}) is not allowed to send LOI. Please re-login as a 'Buyer'.",
     loginBtn: "Login",
     registerBtn: "Register",
     fobPriceLimitText: "Consistent with FOB price guidelines",
@@ -163,7 +164,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "总预估 FOB 价格",
     fobTermsDesc: "船上交货（丹绒不碌港，雅加达）",
     guestAlertText: "您当前以访客身份登录。提交意向书 (LOI) 需要注册的买方 (Buyer) 账户。",
-    roleAlertText: "您当前的角色不允许发送 LOI。请重新登录为 'Buyer'。",
+    roleAlertText: "您当前的角色 ({role}) 不允许发送 LOI。请重新登录为 'Buyer'。",
     loginBtn: "登录",
     registerBtn: "注册",
     fobPriceLimitText: "符合 FOB 价格参考限制",
@@ -224,7 +225,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "إجمالي سعر FOB المقدر",
     fobTermsDesc: "تسليم على ظهر السفينة (تانجونغ بريوك، جاكرتا)",
     guestAlertText: "لقد قمت بالدخول كضيف. يتطلب تقديم خطاب النوايا (LOI) حساب مشتري (Buyer) مسجل.",
-    roleAlertText: "دورك الحالي لا يسمح بإرسال LOI. يرجى إعادة تسجيل الدخول كـ 'Buyer'.",
+    roleAlertText: "دورك الحالي ({role}) لا يسمح بإرسال LOI. يرجى إعادة تسجيل الدخول كـ 'Buyer'.",
     loginBtn: "تسجيل الدخول",
     registerBtn: "تسجيل",
     fobPriceLimitText: "متوافق مع إرشادات سعر FOB المرجعي",
@@ -285,7 +286,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "ราคา FOB ประมาณการทั้งหมด",
     fobTermsDesc: "ส่งมอบ ณ ท่าเรือต้นทาง (Tanjung Priok, จาการ์ตา)",
     guestAlertText: "คุณเข้าสู่ระบบในฐานะแขก การส่งหนังสือแสดงเจตจำนง (LOI) ต้องใช้บัญชีผู้ซื้อ (Buyer) ที่ลงทะเบียนแล้ว",
-    roleAlertText: "บทบาทปัจจุบันของคุณไม่ได้รับการอนุญาตให้ส่ง LOI กรุณาเข้าสู่ระบบใหม่ในฐานะ 'Buyer'",
+    roleAlertText: "บทบาทปัจจุบันของคุณ ({role}) ไม่ได้รับการอนุญาตให้ส่ง LOI กรุณาเข้าสู่ระบบใหม่ในฐานะ 'Buyer'",
     loginBtn: "เข้าสู่ระบบ",
     registerBtn: "ลงทะเบียน",
     fobPriceLimitText: "สอดคล้องกับแนวทางราคาอ้างอิง FOB",
@@ -346,7 +347,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "Итоговая оценочная стоимость FOB",
     fobTermsDesc: "Франко-борт (Танджунг Приок, Джакарта)",
     guestAlertText: "Вы вошли как гость. Для подачи Письма о намерениях (LOI) требуется зарегистрированный аккаунт покупателя (Buyer).",
-    roleAlertText: "Ваша текущая роль не позволяет отправлять LOI. Пожалуйста, войдите снова как 'Buyer'.",
+    roleAlertText: "Ваша текущая роль ({role}) не позволяет отправлять LOI. Пожалуйста, войдите снова как 'Buyer'.",
     loginBtn: "Войти",
     registerBtn: "Регистрация",
     fobPriceLimitText: "Соответствует справочным ограничениям цены FOB",
@@ -407,7 +408,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     totalEstFobPrice: "推定FOB総額",
     fobTermsDesc: "本船渡し（タンジュン・プリオク、ジャカルタ）",
     guestAlertText: "ゲストとしてログインしています。意向表明書（LOI）を送信するには、登録されたバイヤー（Buyer）アカウントが必要です。",
-    roleAlertText: "現在の役割ではLOIの送信が許可されていません。 'Buyer'として再ログインしてください。",
+    roleAlertText: "現在の役割 ({role}) ではLOIの送信が許可されていません。 'Buyer'として再ログインしてください。",
     loginBtn: "ログイン",
     registerBtn: "登録",
     fobPriceLimitText: "FOB価格制限基準に準拠しています",
@@ -570,8 +571,18 @@ export default function LandingPage({
   negoStepId = 1,
   onAddSampleRequest
 }: LandingPageProps) {
+  // Helper for translating product fields
+  const getT = (prod: any, field: string) => {
+    if (currentLanguage === 'en' && prod?.translations?.en?.[field]) {
+      return prod.translations.en[field];
+    }
+    return prod?.[field];
+  };
+
   // Choose translations for active language
-  const t = landingTranslations[currentLanguage] || landingTranslations.id;
+  const localT = landingTranslations[currentLanguage] || landingTranslations.id;
+  const globalT = translations[currentLanguage] || translations.id;
+  const t = { ...globalT, ...localT };
 
   const [targetProduct, setTargetProduct] = useState<string>('prod-1');
   const [orderVolume, setOrderVolume] = useState<number>(20); // default 20 metric tons
@@ -682,6 +693,7 @@ export default function LandingPage({
   const [editingProduct, setEditingProduct] = useState<ExportProduct | 'new' | null>(null);
   const [productToDeleteId, setProductToDeleteId] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
     category: '',
@@ -739,8 +751,40 @@ export default function LandingPage({
     deleteProductFromFirestore(productId).catch(err => console.error("Failed to delete from Firestore:", err));
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    let translated = {};
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: JSON.stringify({
+            name: productForm.name,
+            specification: productForm.specification,
+            category: productForm.category,
+            origin: productForm.origin,
+            unit: productForm.unit
+          }), 
+          targetLanguage: 'English' 
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Assuming Gemini returns a JSON string, we parse it
+        try {
+           const cleanedText = data.result.replace(/```json/g, '').replace(/```/g, '');
+           translated = JSON.parse(cleanedText);
+        } catch(e) {
+           console.log("Failed to parse translation result", e);
+        }
+      }
+    } catch(err) {
+      console.error("Translation error:", err);
+    }
+    
+    setIsSubmitting(false);
     if (editingProduct === 'new') {
       const newProd: ExportProduct = {
         id: 'prod-' + Date.now(),
@@ -755,15 +799,13 @@ export default function LandingPage({
         image: productForm.image || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
         supplierName: 'Koperasi Mitra AgriFlow',
         attachmentUrl: productForm.attachmentUrl || undefined,
-        attachmentName: productForm.attachmentName || undefined,
-      };
+        attachmentName: productForm.attachmentName || undefined, translations: { en: translated }};
       saveProductToFirestore(newProd).catch(err => console.error(err));
       onUpdateProducts([...products, newProd]);
       // set as default target
       setTargetProduct(newProd.id);
     } else if (editingProduct && editingProduct !== 'new') {
-      const updatedItem = {
-        ...editingProduct,
+      const updatedItem = { ...editingProduct, 
         name: productForm.name,
         category: productForm.category,
         hsCode: productForm.hsCode,
@@ -775,8 +817,7 @@ export default function LandingPage({
         image: productForm.image,
         supplierName: editingProduct.supplierName || 'Koperasi Mitra AgriFlow',
         attachmentUrl: productForm.attachmentUrl || undefined,
-        attachmentName: productForm.attachmentName || undefined,
-      };
+        attachmentName: productForm.attachmentName || undefined, translations: { en: Object.keys(translated).length > 0 ? translated : editingProduct.translations?.en } };
       saveProductToFirestore(updatedItem).catch(err => console.error(err));
       const updated = products.map(p => {
         if (p.id === editingProduct.id) {
@@ -796,7 +837,7 @@ export default function LandingPage({
     const minVol = minVolMatch ? parseInt(minVolMatch[0]) : 10;
     
     acc[p.id] = {
-      name: p.name,
+      name: getT(p, 'name'),
       pricePerTon: cleanPrice,
       containerCapacity20ft: p.id === 'prod-1' ? 20 : p.id === 'prod-2' ? 18 : p.id === 'prod-3' ? 15 : p.id === 'prod-4' ? 21 : 16,
       hsCode: p.hsCode,
@@ -842,7 +883,7 @@ export default function LandingPage({
               <span className="text-sm font-black text-white tracking-wider uppercase">
                 {t.companyProfileTitle} — PT Multi Raksa Madani
               </span>
-              <span className="px-2.5 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+              <span className="px-2.5 py-0.5 rounded text-[12px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
                 {t.verified}
               </span>
             </div>
@@ -883,13 +924,13 @@ export default function LandingPage({
               <div className="flex gap-4">
                 {companyProfile.ceisa && (
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">CEISA</span>
+                    <span className="text-[12px] font-bold text-slate-500 uppercase">CEISA</span>
                     <p className="text-slate-200 font-semibold">{companyProfile.ceisa}</p>
                   </div>
                 )}
                 {companyProfile.insw && (
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">INSW</span>
+                    <span className="text-[12px] font-bold text-slate-500 uppercase">INSW</span>
                     <p className="text-slate-200 font-semibold">{companyProfile.insw}</p>
                   </div>
                 )}
@@ -901,7 +942,7 @@ export default function LandingPage({
               <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
                 {t.officeAddress}
               </span>
-              <p className="text-slate-300 font-medium leading-relaxed text-[11px] sm:text-xs">
+              <p className="text-slate-300 font-medium leading-relaxed text-[12px] sm:text-xs">
                 {companyProfile.address}
               </p>
             </div>
@@ -911,7 +952,7 @@ export default function LandingPage({
               <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
                 {t.contactService}
               </span>
-              <div className="text-slate-300 font-medium leading-relaxed space-y-0.5 text-[11px] sm:text-xs">
+              <div className="text-slate-300 font-medium leading-relaxed space-y-0.5 text-[12px] sm:text-xs">
                 <div>
                   Telepon: <span className="text-white font-bold">{companyProfile.telephone}</span>
                 </div>
@@ -940,13 +981,13 @@ export default function LandingPage({
               {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
                 <button
                   onClick={handleAddProductClick}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow transition-all cursor-pointer uppercase tracking-wider"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow transition-all cursor-pointer uppercase tracking-wider"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{t.addCommodity}</span>
                 </button>
               )}
-              <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
+              <span className="bg-emerald-50 text-emerald-700 text-[12px] font-bold px-2.5 py-1 rounded-full border border-emerald-100 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 {t.customsClearedTag}
               </span>
@@ -958,9 +999,9 @@ export default function LandingPage({
               <div key={p.id} className="bg-white rounded-2xl border border-gray-200 shadow-3xs overflow-hidden flex flex-col justify-between hover:shadow-md transition-all relative group">
                 <div>
                   <div className="relative h-44 w-full bg-slate-100">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute top-3 left-3 bg-slate-900/80 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-3xs animate-pulse">
-                      {p.category.toUpperCase() === 'PERTANIAN / HASIL BUMI' ? t.categoryAgri : p.category}
+                    <img src={p.image} alt={String(getT(p, 'name'))} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute top-3 left-3 bg-slate-900/80 text-white text-[12px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-3xs animate-pulse">
+                      {String(getT(p, 'category')).toUpperCase() === 'PERTANIAN / HASIL BUMI' ? t.categoryAgri : p.category}
                     </div>
 
                     {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
@@ -984,15 +1025,15 @@ export default function LandingPage({
                   </div>
                   <div className="p-5 text-left space-y-3">
                     <div className="space-y-1">
-                      <h3 className="text-sm font-black text-slate-900 hover:text-indigo-600 transition-colors leading-snug">{p.name}</h3>
-                      <p className="text-[10px] text-gray-400 font-extrabold flex items-center gap-1">
+                      <h3 className="text-sm font-black text-slate-900 hover:text-indigo-600 transition-colors leading-snug">{getT(p, 'name')}</h3>
+                      <p className="text-[12px] text-gray-400 font-extrabold flex items-center gap-1">
                         <span className="px-1.5 py-0.5 bg-gray-100 rounded">HS {p.hsCode}</span>
                         <span>&bull;</span>
-                        <span>{t.originLabel}: {p.origin}</span>
+                        <span>{t.originLabel}: {getT(p, 'origin')}</span>
                       </p>
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium h-16 overflow-y-auto">
-                      {p.specification}
+                      {getT(p, 'specification')}
                     </p>
                     {(() => {
                       const hasAttachment = p.attachmentUrl || p.id === 'prod-1' || p.id === 'prod-2' || p.id === 'prod-3';
@@ -1010,14 +1051,14 @@ export default function LandingPage({
                         <div className="flex items-center justify-between p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-950 mt-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
-                            <span className="text-[10px] font-bold truncate text-slate-700" title={attachmentName}>
+                            <span className="text-[12px] font-bold truncate text-slate-700" title={attachmentName}>
                               {attachmentName}
                             </span>
                           </div>
                           <a
                             href={attachmentUrl}
                             download={attachmentName}
-                            className="text-[9px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg transition-colors uppercase tracking-wider shrink-0 cursor-pointer text-center"
+                            className="text-[12px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg transition-colors uppercase tracking-wider shrink-0 cursor-pointer text-center"
                           >
                             Unduh
                           </a>
@@ -1026,12 +1067,12 @@ export default function LandingPage({
                     })()}
                     <div className="pt-2 flex justify-between items-center border-t border-slate-100">
                       <div>
-                        <span className="text-[9px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.fobPriceTentative}</span>
-                        <span className="text-sm font-black text-indigo-600 font-mono">${p.price} <span className="text-[10px] text-gray-500 font-bold">/ {p.unit.split(' ')[0]}</span></span>
+                        <span className="text-[12px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.fobPriceTentative}</span>
+                        <span className="text-sm font-black text-indigo-600 font-mono">${p.price} <span className="text-[12px] text-gray-500 font-bold">/ {getT(p, 'unit').split(' ')[0]}</span></span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.minOrder}</span>
-                        <span className="text-[10px] font-black text-slate-800">{p.minOrder}</span>
+                        <span className="text-[12px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.minOrder}</span>
+                        <span className="text-[12px] font-black text-slate-800">{p.minOrder}</span>
                       </div>
                     </div>
                   </div>
@@ -1046,7 +1087,7 @@ export default function LandingPage({
                       }
                       setIsCalcOpen(true);
                     }}
-                    className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
+                    className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
                     <span>{t.calculatorTitle}</span>
                   </button>
@@ -1055,7 +1096,7 @@ export default function LandingPage({
                       setSelectedLogisticsProduct(p);
                       setIsLogisticsModalOpen(true);
                     }}
-                    className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
+                    className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
                     <span>{t.logisticsCert}</span>
                   </button>
@@ -1064,7 +1105,7 @@ export default function LandingPage({
                       setSelectedSampleProduct(p);
                       setIsSampleModalOpen(true);
                     }}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
                     <span>{t.requestSample}</span>
                   </button>
@@ -1100,7 +1141,7 @@ export default function LandingPage({
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg font-black tracking-tight text-slate-900 leading-none mb-1">{t.calculatorTitle}</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">{t.calculatorSub}</p>
+                    <p className="text-[12px] text-slate-500 font-bold uppercase tracking-wider leading-none">{t.calculatorSub}</p>
                   </div>
                 </div>
                 <button
@@ -1121,29 +1162,29 @@ export default function LandingPage({
                         {activeProduct.rawProduct?.image && (
                           <img
                             src={activeProduct.rawProduct.image}
-                            alt={activeProduct.name}
+                            alt={getT(activeProduct.rawProduct, 'name')}
                             className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0"
                             referrerPolicy="no-referrer"
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <span className="text-[9px] font-black uppercase text-indigo-600 tracking-wider block mb-1">{t.cargoSourcing}</span>
-                          <h4 className="text-sm font-extrabold text-slate-900 leading-snug break-words">{activeProduct.name}</h4>
-                          <span className="text-[10px] text-slate-500 font-mono font-semibold block mt-1">{t.originLabel || 'Asal'}: {activeProduct.rawProduct?.origin || 'Indonesia'}</span>
+                          <span className="text-[12px] font-black uppercase text-indigo-600 tracking-wider block mb-1">{t.cargoSourcing}</span>
+                          <h4 className="text-sm font-extrabold text-slate-900 leading-snug break-words">{getT(activeProduct.rawProduct, 'name')}</h4>
+                          <span className="text-[12px] text-slate-500 font-mono font-semibold block mt-1">{t.originLabel || 'Asal'}: {activeProduct.rawProduct?.origin || 'Indonesia'}</span>
                         </div>
                       </div>
                       
                       <div className="border-t border-slate-200 pt-3 space-y-3">
                         {activeProduct.rawProduct?.specification && (
                           <div className="text-left">
-                            <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.mainSpecification}</span>
-                            <p className="text-[11px] text-slate-600 leading-relaxed font-medium line-clamp-3">
+                            <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.mainSpecification}</span>
+                            <p className="text-[12px] text-slate-600 leading-relaxed font-medium line-clamp-3">
                               {activeProduct.rawProduct.specification}
                             </p>
                           </div>
                         )}
                         <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200">
-                          <span className="text-slate-500 font-bold uppercase text-[9px] tracking-wider">{t.fobPriceRef}</span>
+                          <span className="text-slate-500 font-bold uppercase text-[12px] tracking-wider">{t.fobPriceRef}</span>
                           <span className="font-mono font-black text-indigo-600">${activeProduct.pricePerTon.toLocaleString('id-ID')} USD / MT</span>
                         </div>
                       </div>
@@ -1151,7 +1192,7 @@ export default function LandingPage({
 
                     <div>
                       <div className="flex justify-between items-center mb-2 gap-2 text-left">
-                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">{t.determineVolume}</label>
+                        <label className="text-[12px] font-black uppercase text-slate-500 tracking-wider block">{t.determineVolume}</label>
                         <div className="flex items-center gap-1.5">
                           <input
                             type="number"
@@ -1170,7 +1211,7 @@ export default function LandingPage({
                             }}
                             className="w-20 py-1 px-2 text-center font-mono font-black text-xs text-indigo-600 bg-indigo-50 rounded border border-indigo-200 focus:outline-none focus:border-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <span className="text-[11px] font-bold text-slate-500">MT</span>
+                          <span className="text-[12px] font-bold text-slate-500">MT</span>
                         </div>
                       </div>
                       <input
@@ -1182,7 +1223,7 @@ export default function LandingPage({
                         onChange={(e) => setOrderVolume(Number(e.target.value))}
                         className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                       />
-                      <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                      <div className="flex justify-between text-[12px] text-slate-500 font-mono mt-1">
                         <span>{t.minVolLabel || 'Min'}: {activeProduct.minVol} MT</span>
                         <span>{t.maxVolLabel || 'Max'}: {activeProduct.maxVol} MT</span>
                       </div>
@@ -1193,19 +1234,19 @@ export default function LandingPage({
                 <div className="lg:col-span-7 bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col justify-between space-y-6 text-left">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="border-b border-slate-200 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.hsCodeStandard}</span>
+                      <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.hsCodeStandard}</span>
                       <span className="text-sm font-mono font-bold text-indigo-600">{activeProduct.hsCode}</span>
                     </div>
                     <div className="border-b border-slate-200 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.oceanContainerType}</span>
+                      <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.oceanContainerType}</span>
                       <span className="text-sm font-bold text-slate-800">FCL Container (20ft Dry Van)</span>
                     </div>
                     <div className="border-b border-slate-200 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.estLeadTime}</span>
+                      <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.estLeadTime}</span>
                       <span className="text-sm font-bold text-slate-800">~{activeProduct.leadTimeDays} {t.hoursWorking || 'Hari Kerja'}</span>
                     </div>
                     <div className="border-b border-slate-200 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.containersNeeded}</span>
+                      <span className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.containersNeeded}</span>
                       <span className="text-sm font-mono font-bold text-indigo-600">{fclCount} × {t.fclContainers || 'Wadah Kontainer 20ft'}</span>
                     </div>
                   </div>
@@ -1213,36 +1254,36 @@ export default function LandingPage({
                   <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
                     <div className="flex justify-between items-center text-left">
                       <div>
-                        <span className="text-[9px] font-black uppercase text-amber-600 tracking-wider block">{t.totalEstFobPrice}</span>
+                        <span className="text-[12px] font-black uppercase text-amber-600 tracking-wider block">{t.totalEstFobPrice}</span>
                         <span className="text-xs text-slate-500 font-medium">{t.fobTermsDesc}</span>
                       </div>
                       <span className="text-2xl font-black text-slate-900 font-mono">${totalCost.toLocaleString('id-ID')} USD</span>
                     </div>
 
                     {/* Edukasi Tanggung Jawab Ongkir (FOB) */}
-                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-[10px] leading-relaxed text-slate-600">
-                      <div className="flex items-center gap-1.5 text-indigo-600 font-extrabold uppercase text-[9px] tracking-wider">
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-[12px] leading-relaxed text-slate-600">
+                      <div className="flex items-center gap-1.5 text-indigo-600 font-extrabold uppercase text-[12px] tracking-wider">
                         <Info className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>💡 BIAYA KIRIM & TANGGUNG JAWAB LOGISTIK (FOB)</span>
+                        <span>{t.shippingLogisticsFobTitle}</span>
                       </div>
                       <p className="text-slate-700">
-                        Harga ini berbasis <strong className="text-slate-900">FOB (Free On Board) Pelabuhan Asal Indonesia</strong>. Berikut pembagian biayanya:
+                        {t.fobBasePriceInfo}
                       </p>
                       <ul className="space-y-1.5 pl-1">
                         <li className="flex items-start gap-1.5">
-                          <span className="text-amber-600 font-bold shrink-0">1. Ongkos Kapal Laut & Asuransi:</span>
-                          <span className="text-slate-600">Ditanggung sepenuhnya oleh <strong className="text-amber-600">BUYER</strong>. Buyer bebas menunjuk Freight Forwarder sendiri untuk penjemputan kontainer di pelabuhan muat kami.</span>
+                          <span className="text-amber-600 font-bold shrink-0">{t.seaFreightInsuranceTitle}</span>
+                          <span className="text-slate-600">{t.seaFreightInsuranceDesc}</span>
                         </li>
                         <li className="flex items-start gap-1.5">
-                          <span className="text-emerald-600 font-bold shrink-0">2. Biaya Lokal Pelabuhan Asal:</span>
-                          <span className="text-slate-600">Trucking dari gudang tani, stuffing ke kontainer, penumpukan THC pelabuhan muat, & Bea Cukai ekspor ditanggung oleh <strong className="text-emerald-700">PT Multi Raksa Madani (Eksportir)</strong>.</span>
+                          <span className="text-emerald-600 font-bold shrink-0">{t.localOriginPortCostsTitle}</span>
+                          <span className="text-slate-600">{t.localOriginPortCostsDesc}</span>
                         </li>
                       </ul>
                     </div>
                     
                     {/* Pembatasan Autentikasi Peran Buyer */}
                     {currentUser?.role !== 'Buyer' && (
-                      <div className="p-3 bg-amber-50 border border-amber-200 text-left rounded-lg text-[10.5px] text-amber-700 leading-relaxed font-semibold flex items-start gap-2">
+                      <div className="p-3 bg-amber-50 border border-amber-200 text-left rounded-lg text-[12px] text-amber-700 leading-relaxed font-semibold flex items-start gap-2">
                         <Info className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="space-y-2 flex-1">
                           <p>
@@ -1256,7 +1297,7 @@ export default function LandingPage({
                               onClick={() => {
                                 onOpenProfile('login', true);
                               }}
-                              className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[10px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                              className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[12px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                             >
                               <Lock className="w-3.5 h-3.5 text-white" />
                               <span>{t.loginBtn}</span>
@@ -1265,7 +1306,7 @@ export default function LandingPage({
                               onClick={() => {
                                 onOpenProfile('register', true);
                               }}
-                              className="px-4 py-1.5 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[10px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                              className="px-4 py-1.5 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[12px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                             >
                               <UserPlus className="w-3.5 h-3.5 text-amber-650" />
                               <span>{t.registerBtn || "Daftar"}</span>
@@ -1275,7 +1316,7 @@ export default function LandingPage({
                       </div>
                     )}
                     
-                    <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-slate-500">
+                    <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[12px] text-slate-500">
                       <span className="italic flex items-center gap-1">
                         <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         {t.fobPriceLimitText}: ${activeProduct.pricePerTon}/MT
@@ -1290,7 +1331,7 @@ export default function LandingPage({
                           }
                         }}
                         disabled={currentUser?.role !== 'Buyer'}
-                        className={`px-3.5 py-1.5 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow ${
+                        className={`px-3.5 py-1.5 font-bold rounded-lg text-[12px] uppercase tracking-wider transition-all flex items-center gap-1 shadow ${
                           currentUser?.role === 'Buyer'
                             ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
                             : "bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
@@ -1332,7 +1373,7 @@ export default function LandingPage({
                   </div>
                   <div>
                     <h3 className="text-base font-black uppercase tracking-tight">Permintaan Sampel Produk</h3>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Commodity Sample Request Gateway</p>
+                    <p className="text-[12px] text-slate-500 font-bold uppercase tracking-wider">Commodity Sample Request Gateway</p>
                   </div>
                 </div>
                 <button
@@ -1367,31 +1408,31 @@ export default function LandingPage({
                       />
                     )}
                     <div>
-                      <span className="text-[8px] font-black uppercase text-emerald-600 tracking-wider block mb-0.5">KOMODITAS</span>
+                      <span className="text-[12px] font-black uppercase text-emerald-600 tracking-wider block mb-0.5">KOMODITAS</span>
                       <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{selectedSampleProduct.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; {t.originLabel}: {selectedSampleProduct.origin}</p>
+                      <p className="text-[12px] text-slate-500 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; {t.originLabel}: {selectedSampleProduct.origin}</p>
                     </div>
                   </div>
 
                   {/* Quantity & Courier info */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jumlah Sampel</label>
+                      <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider">{t.sampleQtyLabel}</label>
                       <select
                         value={sampleQty}
                         onChange={(e) => setSampleQty(e.target.value)}
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
                       >
-                        <option value="500 gram">500 Gram</option>
-                        <option value="1 kg">1 Kilogram (Standar)</option>
-                        <option value="2 kg">2 Kilogram</option>
-                        <option value="5 kg">5 Kilogram (Besar)</option>
-                        <option value="Swatch/Kit">Kit Contoh Bahan / Swatch</option>
+                        <option value="500 gram">{t.sampleQty500g}</option>
+                        <option value="1 kg">{t.sampleQty1kg}</option>
+                        <option value="2 kg">{t.sampleQty2kg}</option>
+                        <option value="5 kg">{t.sampleQty5kg}</option>
+                        <option value="Swatch/Kit">{t.sampleQtySwatch}</option>
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kurir Logistik</label>
+                      <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider">{t.logisticCourierLabel}</label>
                       <select
                         value={sampleCourier}
                         onChange={(e) => setSampleCourier(e.target.value)}
@@ -1406,13 +1447,13 @@ export default function LandingPage({
 
                   {/* No Akun Kurir (Optional) */}
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                      <span>No. Akun Kurir (Freight Collect)</span>
-                      <span className="text-[8px] text-slate-400 font-normal lowercase italic">Opsional</span>
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                      <span>{t.courierAccountNoLabel}</span>
+                      <span className="text-[12px] text-slate-400 font-normal lowercase italic">{t.optionalLabel}</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: DHL-987654321"
+                      placeholder={t.courierAccountPlaceholder}
                       value={sampleCourierAcc}
                       onChange={(e) => setSampleCourierAcc(e.target.value)}
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 font-mono"
@@ -1421,20 +1462,20 @@ export default function LandingPage({
 
                   {/* Alamat Pengiriman */}
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alamat Lengkap Tujuan</label>
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider">{t.fullDestinationAddressLabel}</label>
                     <textarea
                       required
                       rows={2.5}
-                      placeholder="Tuliskan nama jalan, kota, negara bagian, kode pos, dan negara pembeli secara lengkap..."
+                      placeholder={t.destinationAddressPlaceholder}
                       value={sampleAddress}
                       onChange={(e) => setSampleAddress(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 resize-none font-medium text-[11px]"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 resize-none font-medium text-[12px]"
                     />
                   </div>
 
                   {/* Penanggung Ongkir */}
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penanggung Ongkos Kirim</label>
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider">{t.shippingFeePayerLabel}</label>
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         type="button"
@@ -1445,8 +1486,8 @@ export default function LandingPage({
                             : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
                       >
-                        <span className="text-[10px] font-bold block">1. Ditanggung BUYER</span>
-                        <span className={`text-[8.5px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'buyer' ? 'text-emerald-600' : 'text-slate-400'}`}>Standard perdagangan ekspor (via No. Akun / Transfer)</span>
+                        <span className="text-[12px] font-bold block">{t.payerBuyerTitle}</span>
+                        <span className={`text-[12px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'buyer' ? 'text-emerald-600' : 'text-slate-400'}`}>{t.payerBuyerDesc}</span>
                       </button>
 
                       <button
@@ -1458,20 +1499,20 @@ export default function LandingPage({
                             : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
                       >
-                        <span className="text-[10px] font-bold block">2. Ditanggung SELLER</span>
-                        <span className={`text-[8.5px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'seller' ? 'text-emerald-600' : 'text-slate-400'}`}>Khusus pembeli loyal atau negosiasi strategis disetujui</span>
+                        <span className="text-[12px] font-bold block">{t.payerSellerTitle}</span>
+                        <span className={`text-[12px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'seller' ? 'text-emerald-600' : 'text-slate-400'}`}>{t.payerSellerDesc}</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Edukasi Aturan Sampel */}
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-[10px] text-slate-600 leading-relaxed font-medium">
-                    <p className="font-bold text-amber-600 flex items-center gap-1 text-[9px] uppercase tracking-wider">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-[12px] text-slate-600 leading-relaxed font-medium">
+                    <p className="font-bold text-amber-600 flex items-center gap-1 text-[12px] uppercase tracking-wider">
                       <Info className="w-3.5 h-3.5 animate-pulse" />
-                      <span>Aturan Ongkir Sampel Internasional</span>
+                      <span>{t.internationalSampleRulesTitle}</span>
                     </p>
                     <p>
-                      Sesuai konvensi dagang internasional, komoditas sampel disediakan <strong className="text-slate-900">GRATIS (Tanpa Biaya)</strong> oleh PT Multi Raksa Madani selaku eksportir. Namun, biaya kirim udara (airfreight courier) ditanggung sepenuhnya oleh pihak <strong className="text-slate-900">BUYER</strong>, kecuali disetujui kebijakan khusus VIP.
+                      {t.sampleFreePolicyInfo}
                     </p>
                   </div>
 
@@ -1482,14 +1523,14 @@ export default function LandingPage({
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs rounded-xl transition-all tracking-wider shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
                     >
                       <Award className="w-4 h-4 text-emerald-100" />
-                      <span>Ajukan Permintaan Sampel Resmi</span>
+                      <span>{t.submitOfficialSampleRequestBtn}</span>
                     </button>
                   ) : (
                     <div className="p-3.5 bg-amber-50 border border-amber-200 text-center rounded-xl space-y-2.5 mt-2">
-                      <p className="text-[10.5px] text-amber-700 leading-normal font-semibold">
+                      <p className="text-[12px] text-amber-700 leading-normal font-semibold">
                         {!currentUser 
-                          ? 'Anda perlu Masuk (Login) ke akun Buyer Anda terlebih dahulu untuk mengirim permintaan sampel produk secara resmi ke sistem kami.'
-                          : `Peran Anda saat ini (${currentUser.role}) tidak diizinkan meminta sampel kargo. Hanya akun ber-peran BUYER yang diizinkan mengajukan sampel.`
+                          ? t.loginToRequestSampleText
+                          : t.roleNotAllowedRequestSampleText.replace('{role}', currentUser.role)
                         }
                       </p>
                       <div className="flex justify-center gap-2">
@@ -1499,10 +1540,10 @@ export default function LandingPage({
                             setIsSampleModalOpen(false);
                             onOpenProfile('login', false);
                           }}
-                          className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[12px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
                           <Lock className="w-4 h-4 text-white" />
-                          <span>Login Buyer</span>
+                          <span>{t.loginBuyerBtn}</span>
                         </button>
                         <button
                           type="button"
@@ -1510,10 +1551,10 @@ export default function LandingPage({
                             setIsSampleModalOpen(false);
                             onOpenProfile('register', false);
                           }}
-                          className="px-5 py-2 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          className="px-5 py-2 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[12px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
                           <UserPlus className="w-4 h-4 text-amber-600" />
-                          <span>Daftar Akun</span>
+                          <span>{t.registerAccountBtn}</span>
                         </button>
                       </div>
                     </div>
@@ -1593,18 +1634,18 @@ export default function LandingPage({
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3.5 mb-5">
                   <div>
                     <h3 className="text-base font-black uppercase tracking-tight text-slate-900">{selectedLogisticsProduct.name}</h3>
-                    <p className="text-[10px] text-teal-600 font-extrabold uppercase tracking-widest mt-0.5">
-                      {isEditingLogistics ? 'Edit Profil Logistik & Kepatuhan' : 'Profil Logistik & Kepatuhan Ekspor'}
+                    <p className="text-[12px] text-teal-600 font-extrabold uppercase tracking-widest mt-0.5">
+                      {isEditingLogistics ? t.editLogisticsProfileTitle : t.logisticsProfileTitle}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     {!isEditingLogistics && currentUser?.role === 'Superadmin' && (
                       <button
                         onClick={startEditing}
-                        className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black rounded-xl border border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
+                        className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-black rounded-xl border border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
                       >
                         <Edit className="w-3.5 h-3.5 text-teal-600" />
-                        <span>Edit Data</span>
+                        <span>{t.editDataBtn}</span>
                       </button>
                     )}
                     <button
@@ -1625,7 +1666,7 @@ export default function LandingPage({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* ASAL WILAYAH */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Asal Wilayah</label>
+                        <label className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.originRegionLabel}</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
@@ -1633,14 +1674,14 @@ export default function LandingPage({
                             value={editOriginRegion}
                             onChange={(e) => setEditOriginRegion(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
-                            placeholder="Asal Wilayah"
+                            placeholder={t.originRegionLabel}
                           />
                         </div>
                       </div>
 
                       {/* KEMASAN EKSPOR */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Kemasan Ekspor</label>
+                        <label className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.exportPackagingLabel}</label>
                         <div className="relative">
                           <Package className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
@@ -1648,14 +1689,14 @@ export default function LandingPage({
                             value={editExportPackaging}
                             onChange={(e) => setEditExportPackaging(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
-                            placeholder="Kemasan Ekspor"
+                            placeholder={t.exportPackagingLabel}
                           />
                         </div>
                       </div>
 
                       {/* LEAD TIME PRODUKSI */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Lead Time Produksi</label>
+                        <label className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.productionLeadTimeLabel}</label>
                         <div className="relative">
                           <Clock className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
@@ -1663,7 +1704,7 @@ export default function LandingPage({
                             value={editLeadTime}
                             onChange={(e) => setEditLeadTime(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
-                            placeholder="Lead Time Produksi"
+                            placeholder={t.productionLeadTimeLabel}
                           />
                         </div>
                       </div>
@@ -1671,21 +1712,21 @@ export default function LandingPage({
 
                     {/* MOQ Notice Box Edit */}
                     <div className="space-y-1">
-                      <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Minimum Order Quantity (MOQ)</label>
+                      <label className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.moqLabel}</label>
                       <div className="relative">
                         <Info className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                         <textarea
                           value={editMoqDetails}
                           onChange={(e) => setEditMoqDetails(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600 h-16 resize-none"
-                          placeholder="Detail MOQ"
+                          placeholder={t.moqDetailsPlaceholder}
                         />
                       </div>
                     </div>
 
                     {/* Certifications Section Edit */}
                     <div className="space-y-2">
-                      <span className="text-[10px] text-teal-600 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
+                      <span className="text-[12px] text-teal-600 font-black uppercase tracking-widest block">{t.complianceCertsLabel}</span>
                       
                       {/* List existing certifications with remove buttons */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1716,7 +1757,7 @@ export default function LandingPage({
                       <div className="flex gap-2 pt-1.5">
                         <input
                           type="text"
-                          placeholder="Nama sertifikat baru... (tekan enter atau klik tambah)"
+                          placeholder={t.newCertPlaceholder || "Nama sertifikat baru..."}
                           value={newCertText}
                           onChange={(e) => setNewCertText(e.target.value)}
                           onKeyDown={(e) => {
@@ -1739,9 +1780,7 @@ export default function LandingPage({
                             }
                           }}
                           className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer font-sans uppercase tracking-wider"
-                        >
-                          Tambah
-                        </button>
+                        >{t.addBtn}</button>
                       </div>
                     </div>
 
@@ -1751,16 +1790,14 @@ export default function LandingPage({
                         type="button"
                         onClick={handleCancel}
                         className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                      >
-                        Batal
-                      </button>
+                      >{t.cancelBtn}</button>
                       <button
                         type="button"
                         onClick={handleSave}
                         className="py-2.5 px-5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
                       >
                         <Save className="w-3.5 h-3.5 text-teal-100" />
-                        <span>Simpan Perubahan</span>
+                        <span>{t.saveChangesBtn}</span>
                       </button>
                     </div>
                   </div>
@@ -1771,7 +1808,7 @@ export default function LandingPage({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* ASAL WILAYAH */}
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Asal Wilayah</span>
+                        <span className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.originRegionLabel}</span>
                         <div className="flex items-start gap-2">
                           <MapPin className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                           <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.originRegion}</span>
@@ -1780,7 +1817,7 @@ export default function LandingPage({
 
                       {/* KEMASAN EKSPOR */}
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Kemasan Ekspor</span>
+                        <span className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.exportPackagingLabel}</span>
                         <div className="flex items-start gap-2">
                           <Package className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                           <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.exportPackaging}</span>
@@ -1789,7 +1826,7 @@ export default function LandingPage({
 
                       {/* LEAD TIME PRODUKSI */}
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Lead Time Produksi</span>
+                        <span className="text-[12px] text-slate-500 font-bold uppercase tracking-wider block">{t.productionLeadTimeLabel}</span>
                         <div className="flex items-start gap-2">
                           <Clock className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                           <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.leadTime}</span>
@@ -1803,7 +1840,7 @@ export default function LandingPage({
                     <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3 text-xs text-amber-800">
                       <Info className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-black uppercase tracking-wider block text-[10px] text-amber-600 mb-0.5">Minimum Order Quantity (MOQ)</span>
+                        <span className="font-black uppercase tracking-wider block text-[12px] text-amber-600 mb-0.5">{t.moqLabel}</span>
                         <p className="font-semibold leading-relaxed text-amber-800">
                           {logisticsData.moqDetails}
                         </p>
@@ -1812,7 +1849,7 @@ export default function LandingPage({
 
                     {/* Certifications Section */}
                     <div className="space-y-2.5">
-                      <span className="text-[10px] text-teal-600 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
+                      <span className="text-[12px] text-teal-600 font-black uppercase tracking-widest block">{t.complianceCertsLabel}</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {logisticsData.certifications.map((cert, index) => (
                           <div
@@ -1866,7 +1903,7 @@ export default function LandingPage({
 
               <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Izin Resmi (NIB/SIUP)</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Izin Resmi (NIB/SIUP)</label>
                   <input
                     type="text"
                     required
@@ -1877,7 +1914,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan Tambahan Izin</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Catatan Tambahan Izin</label>
                   <input
                     type="text"
                     required
@@ -1889,7 +1926,7 @@ export default function LandingPage({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">NPWP (Tax ID)</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">NPWP (Tax ID)</label>
                     <input
                       type="text"
                       value={tempProfile.npwp || ''}
@@ -1898,7 +1935,7 @@ export default function LandingPage({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">CEISA Status</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">CEISA Status</label>
                     <input
                       type="text"
                       value={tempProfile.ceisa || ''}
@@ -1907,7 +1944,7 @@ export default function LandingPage({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">INSW Status</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">INSW Status</label>
                     <input
                       type="text"
                       value={tempProfile.insw || ''}
@@ -1918,7 +1955,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Kantor</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Alamat Kantor</label>
                   <textarea
                     required
                     rows={2}
@@ -1929,7 +1966,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor Telepon</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Nomor Telepon</label>
                   <input
                     type="text"
                     required
@@ -1940,7 +1977,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor WhatsApp</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Nomor WhatsApp</label>
                   <input
                     type="text"
                     value={tempProfile.whatsapp || ''}
@@ -1950,7 +1987,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Kontak</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Email Kontak</label>
                   <input
                     type="email"
                     required
@@ -1962,7 +1999,7 @@ export default function LandingPage({
 
                 <div className="grid grid-cols-2 gap-3 border-t border-slate-800/80 pt-3">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pelabuhan Asal</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Pelabuhan Asal</label>
                     <input
                       type="text"
                       required
@@ -1973,7 +2010,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Legalitas Eksportir</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Legalitas Eksportir</label>
                     <input
                       type="text"
                       required
@@ -1984,7 +2021,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kepatuhan Mutu</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Kepatuhan Mutu</label>
                     <input
                       type="text"
                       required
@@ -1995,7 +2032,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jaminan Keuangan</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Jaminan Keuangan</label>
                     <input
                       type="text"
                       required
@@ -2007,7 +2044,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-2.5 border-t border-slate-800 pt-3">
-                  <span className="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Gambar Banner Hero</span>
+                  <span className="block text-[12px] font-bold text-indigo-400 uppercase tracking-widest">Gambar Banner Hero</span>
                   
                   {/* Banner Image Preview */}
                   <div className="relative h-20 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
@@ -2022,12 +2059,12 @@ export default function LandingPage({
                           }}
                         />
                         <div className="absolute inset-0 bg-slate-950/40" />
-                        <span className="relative z-10 text-[9px] font-black uppercase bg-black/75 px-2.5 py-1 rounded border border-white/10 tracking-widest text-slate-100">Pratinjau Banner Aktif</span>
+                        <span className="relative z-10 text-[12px] font-black uppercase bg-black/75 px-2.5 py-1 rounded border border-white/10 tracking-widest text-slate-100">Pratinjau Banner Aktif</span>
                       </>
                     ) : (
                       <div className="text-center p-2 text-slate-500">
                         <Image className="w-5 h-5 mx-auto mb-1 text-slate-600" />
-                        <span className="text-[10px] font-bold">Belum Ada Banner Kustom (Menggunakan Default)</span>
+                        <span className="text-[12px] font-bold">Belum Ada Banner Kustom (Menggunakan Default)</span>
                       </div>
                     )}
                   </div>
@@ -2054,13 +2091,13 @@ export default function LandingPage({
                         className="absolute inset-0 opacity-0 cursor-pointer z-10"
                       />
                       <Upload className="w-4 h-4 mx-auto mb-1 text-indigo-400 group-hover:scale-110 transition-transform" />
-                      <span className="block text-[10px] font-bold text-slate-300">Pilih Berkas Gambar</span>
-                      <span className="block text-[9px] text-slate-500 mt-0.5">PNG, JPG (Maks. 2MB)</span>
+                      <span className="block text-[12px] font-bold text-slate-300">Pilih Berkas Gambar</span>
+                      <span className="block text-[12px] text-slate-500 mt-0.5">PNG, JPG (Maks. 2MB)</span>
                     </div>
 
                     {/* Presets Grid */}
                     <div className="border border-slate-800 rounded-xl p-2 bg-slate-950/30">
-                      <span className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Preset Cepat Premium</span>
+                      <span className="block text-[12px] font-black text-slate-500 uppercase tracking-wider mb-1">Preset Cepat Premium</span>
                       <div className="grid grid-cols-3 gap-1">
                         <button
                           type="button"
@@ -2070,7 +2107,7 @@ export default function LandingPage({
                         >
                           <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Kargo</span>
+                            <span className="text-[12px] font-black text-white uppercase text-center leading-none tracking-widest">Kargo</span>
                           </div>
                         </button>
                         <button
@@ -2081,7 +2118,7 @@ export default function LandingPage({
                         >
                           <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Rempah</span>
+                            <span className="text-[12px] font-black text-white uppercase text-center leading-none tracking-widest">Rempah</span>
                           </div>
                         </button>
                         <button
@@ -2092,7 +2129,7 @@ export default function LandingPage({
                         >
                           <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=150" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                            <span className="text-[7.5px] font-black text-white uppercase text-center leading-none tracking-widest">Gudang</span>
+                            <span className="text-[12px] font-black text-white uppercase text-center leading-none tracking-widest">Gudang</span>
                           </div>
                         </button>
                       </div>
@@ -2101,13 +2138,13 @@ export default function LandingPage({
 
                   {/* Manual URL Input */}
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Atau Tempel Tautan URL Gambar</label>
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider">Atau Tempel Tautan URL Gambar</label>
                     <input
                       type="url"
                       value={tempProfile.bannerImage || ''}
                       onChange={(e) => setTempProfile({ ...tempProfile, bannerImage: e.target.value })}
                       placeholder="https://images.unsplash.com/... atau tautan gambar lainnya"
-                      className="w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-mono text-[9px]"
+                      className="w-full p-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-mono text-[12px]"
                     />
                   </div>
                 </div>
@@ -2117,9 +2154,7 @@ export default function LandingPage({
                     type="button"
                     onClick={() => setIsProfileModalOpen(false)}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
-                  >
-                    Batal
-                  </button>
+                  >{t.cancelBtn}</button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg transition-colors cursor-pointer uppercase tracking-wider flex items-center gap-1.5"
@@ -2170,7 +2205,7 @@ export default function LandingPage({
               <form onSubmit={handleSaveProduct} className="space-y-4 text-xs overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Komoditas</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Nama Komoditas</label>
                     <input
                       type="text"
                       required
@@ -2182,7 +2217,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kategori</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Kategori</label>
                     <input
                       type="text"
                       required
@@ -2196,7 +2231,7 @@ export default function LandingPage({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">HS Code</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">HS Code</label>
                     <input
                       type="text"
                       required
@@ -2208,7 +2243,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Harga FOB (USD)</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Harga FOB (USD)</label>
                     <input
                       type="text"
                       required
@@ -2220,7 +2255,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Satuan</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Satuan</label>
                     <input
                       type="text"
                       required
@@ -2233,7 +2268,7 @@ export default function LandingPage({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1 md:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Asal / Origin</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Asal / Origin</label>
                     <input
                       type="text"
                       required
@@ -2245,7 +2280,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Min Order</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Min Order</label>
                     <input
                       type="text"
                       required
@@ -2258,7 +2293,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Pilih Preset / Upload Gambar)</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Pilih Preset / Upload Gambar)</label>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Presets and URL inputs */}
@@ -2333,14 +2368,14 @@ export default function LandingPage({
                           />
                           <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity rounded-lg text-slate-200 gap-1">
                             <Upload className="w-4 h-4 text-indigo-400" />
-                            <span className="text-[9px] font-bold uppercase">Ganti File Gambar</span>
+                            <span className="text-[12px] font-bold uppercase">Ganti File Gambar</span>
                           </div>
                         </div>
                       ) : (
                         <div className="py-2">
                           <Upload className="w-6 h-6 text-slate-500 group-hover:text-indigo-400 mx-auto mb-1 transition-colors" />
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200">Lepaskan file / Klik di sini</p>
-                          <p className="text-[8px] text-slate-500 font-semibold mt-0.5">Mendukung file JPG, PNG, WEBP</p>
+                          <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200">Lepaskan file / Klik di sini</p>
+                          <p className="text-[12px] text-slate-500 font-semibold mt-0.5">Mendukung file JPG, PNG, WEBP</p>
                         </div>
                       )}
                     </div>
@@ -2348,7 +2383,7 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Spesifikasi Detail</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Spesifikasi Detail</label>
                   <textarea
                     required
                     rows={3}
@@ -2361,10 +2396,10 @@ export default function LandingPage({
 
                 <div className="space-y-2 border-t border-slate-200 pt-4">
                   <div className="flex justify-between items-center">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">
                       Dokumen Spesifikasi Katalog (Maks 3MB)
                     </label>
-                    <span className="text-[9px] text-slate-500 font-bold uppercase">Format: PDF, DOCX, XLSX, Gambar (Opsional)</span>
+                    <span className="text-[12px] text-slate-500 font-bold uppercase">Format: PDF, DOCX, XLSX, Gambar (Opsional)</span>
                   </div>
 
                   {productForm.attachmentUrl ? (
@@ -2375,7 +2410,7 @@ export default function LandingPage({
                           <p className="text-xs font-bold text-slate-800 truncate">
                             {productForm.attachmentName || 'Dokumen_Katalog.pdf'}
                           </p>
-                          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Siap diunduh buyer</p>
+                          <p className="text-[12px] text-emerald-600 font-bold uppercase tracking-wider">Siap diunduh buyer</p>
                         </div>
                       </div>
                       <button
@@ -2446,13 +2481,13 @@ export default function LandingPage({
                         }}
                       />
                       <Upload className={`w-5 h-5 mb-1 ${fileError ? 'text-red-400' : 'text-slate-400'}`} />
-                      <p className="text-[10px] text-slate-500 font-bold uppercase">Tarik & Lepas file dokumen di sini atau klik</p>
-                      <p className="text-[8px] text-slate-400 mt-0.5">Ukuran file maksimal: 3 Megabyte (3MB)</p>
+                      <p className="text-[12px] text-slate-500 font-bold uppercase">Tarik & Lepas file dokumen di sini atau klik</p>
+                      <p className="text-[12px] text-slate-400 mt-0.5">Ukuran file maksimal: 3 Megabyte (3MB)</p>
                     </div>
                   )}
 
                   {fileError && (
-                    <p className="text-[10px] text-red-600 font-black text-left">
+                    <p className="text-[12px] text-red-600 font-black text-left">
                       ⚠️ {fileError}
                     </p>
                   )}
@@ -2463,15 +2498,13 @@ export default function LandingPage({
                     type="button"
                     onClick={() => setEditingProduct(null)}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
-                  >
-                    Batal
-                  </button>
+                  >{t.cancelBtn}</button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-lg transition-colors cursor-pointer uppercase tracking-wider flex items-center gap-1.5"
                   >
                     <Save className="w-3.5 h-3.5" />
-                    Simpan Komoditas
+                    {isSubmitting ? "Menyimpan Simpan Komoditas Menerjemahkan..." : "Simpan Komoditas"}
                   </button>
                 </div>
               </form>
@@ -2490,7 +2523,7 @@ export default function LandingPage({
               </div>
               <div>
                 <h3 className="text-sm font-black uppercase tracking-tight">Hapus Komoditas</h3>
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-red-400">Tindakan Permanen</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-widest text-red-400">Tindakan Permanen</p>
               </div>
             </div>
             

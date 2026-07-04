@@ -1154,16 +1154,16 @@ export default function InteractiveInfographic({
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-250 px-2.5 py-0.5 rounded-full shadow-3xs">
-                  <span className="text-[9.5px] text-indigo-600 font-extrabold uppercase font-sans">Progres:</span>
+                  <span className="text-[12px] text-indigo-600 font-extrabold uppercase font-sans">Progres:</span>
                   <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden shrink-0">
                     <div 
                       className="bg-indigo-600 h-full rounded-full transition-all duration-500" 
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <span className="text-[10.5px] font-mono font-black text-indigo-700">{progressPercent}%</span>
+                  <span className="text-[12px] font-mono font-black text-indigo-700">{progressPercent}%</span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">ALUR TRANS-NASIONAL UTUH</span>
+                <span className="text-[12px] text-slate-400 font-mono">ALUR TRANS-NASIONAL UTUH</span>
               </div>
             </div>
 
@@ -1184,10 +1184,10 @@ export default function InteractiveInfographic({
                       {shipment.productName}
                     </h4>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      <span className="text-[11px] font-mono font-black px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-150 text-indigo-700 inline-block">
+                      <span className="text-[12px] font-mono font-black px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-150 text-indigo-700 inline-block">
                         {shipment.contractNumber}
                       </span>
-                      <span className="text-[11px] font-mono font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-150 uppercase animate-pulse inline-block">
+                      <span className="text-[12px] font-mono font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-150 uppercase animate-pulse inline-block">
                         {shipment.currentStep}
                       </span>
                     </div>
@@ -1195,22 +1195,22 @@ export default function InteractiveInfographic({
 
                   <div className="space-y-2 border-t border-slate-100 pt-2.5 text-xs">
                     <div className="flex justify-between items-center text-slate-600">
-                      <span className="font-semibold text-[11px] sm:text-xs">Volume Kargo:</span>
-                      <span className="font-mono font-black text-slate-850 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">{shipment.quantity} {shipment.unit}</span>
+                      <span className="font-semibold text-[12px] sm:text-xs">Volume Kargo:</span>
+                      <span className="font-mono font-black text-slate-850 bg-slate-100 px-1.5 py-0.5 rounded text-[12px] sm:text-xs">{shipment.quantity} {shipment.unit}</span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600">
-                      <span className="font-semibold text-[11px] sm:text-xs">Total Nilai:</span>
-                      <span className="font-mono font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">
+                      <span className="font-semibold text-[12px] sm:text-xs">Total Nilai:</span>
+                      <span className="font-mono font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[12px] sm:text-xs">
                         ${shipment.totalValue.toLocaleString('id-ID')} {shipment.currency}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600">
-                      <span className="font-semibold text-[11px] sm:text-xs">Incoterms:</span>
-                      <span className="font-extrabold text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded text-[11px] sm:text-xs">{shipment.incoterms || 'FOB'}</span>
+                      <span className="font-semibold text-[12px] sm:text-xs">Incoterms:</span>
+                      <span className="font-extrabold text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded text-[12px] sm:text-xs">{shipment.incoterms || 'FOB'}</span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600">
-                      <span className="font-semibold text-[11px] sm:text-xs">Rute Ekspor:</span>
-                      <span className="font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded max-w-[150px] truncate text-[11px] sm:text-xs" title={`${shipment.portOfLoading} → ${shipment.portOfDischarge}`}>
+                      <span className="font-semibold text-[12px] sm:text-xs">Rute Ekspor:</span>
+                      <span className="font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded max-w-[150px] truncate text-[12px] sm:text-xs" title={`${shipment.portOfLoading} → ${shipment.portOfDischarge}`}>
                         {shipment.portOfLoading.split(' ').pop()} → {shipment.portOfDischarge.split(' ').pop()}
                       </span>
                     </div>
@@ -1297,7 +1297,7 @@ export default function InteractiveInfographic({
                           )}
 
                           {/* Initials indicator badge */}
-                          <span className={`absolute -bottom-1 -right-1 text-[7.5px] font-sans font-bold leading-none uppercase tracking-wider px-1 py-0.5 rounded-full border border-white shadow-3xs text-white z-20 ${
+                          <span className={`absolute -bottom-1 -right-1 text-[12px] font-sans font-bold leading-none uppercase tracking-wider px-1 py-0.5 rounded-full border border-white shadow-3xs text-white z-20 ${
                             isLocked 
                               ? 'bg-slate-300'
                               : isBuyerRestricted
@@ -1336,7 +1336,7 @@ export default function InteractiveInfographic({
 
                         {/* Sub-label for completion status */}
                         <div className="flex items-center gap-1 mt-1">
-                          <span className={`text-[11px] sm:text-xs font-bold tracking-tight font-sans flex items-center gap-0.5 ${
+                          <span className={`text-[12px] sm:text-xs font-bold tracking-tight font-sans flex items-center gap-0.5 ${
                             isBuyerRestricted
                               ? 'text-amber-600 font-bold'
                               : isPassed
@@ -1501,7 +1501,7 @@ export default function InteractiveInfographic({
                                               : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                         }`}
                                       >
-                                        <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider font-mono">
+                                        <div className="text-[12px] sm:text-xs font-black uppercase tracking-wider font-mono">
                                           {idx + 1}. {stepInfo.label}
                                         </div>
                                       </button>
@@ -1518,7 +1518,7 @@ export default function InteractiveInfographic({
                                       Bertindak Sebagai: <strong className="text-indigo-600 font-bold">{subDetails.role}</strong>
                                     </p>
                                   </div>
-                                  <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                                  <span className={`text-[12px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
                                     isCurrentSubDone 
                                       ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                                       : isPreviousStepsDone 
@@ -1540,7 +1540,7 @@ export default function InteractiveInfographic({
                                       <Paperclip className="w-4 h-4 text-indigo-500" />
                                       <span>Dokumen Lampiran ({uploadedSubStepFiles[activeLogisticsSubStep]?.length || 0})</span>
                                     </div>
-                                    <span className="text-[11px] sm:text-xs text-slate-500 font-mono">Maks: 1 Berkas / 2MB</span>
+                                    <span className="text-[12px] sm:text-xs text-slate-500 font-mono">Maks: 1 Berkas / 2MB</span>
                                   </div>
 
                                   {/* Error message if file is too large */}
@@ -1566,7 +1566,7 @@ export default function InteractiveInfographic({
                                             <FileText className="w-4.5 h-4.5 text-slate-500 group-hover:text-indigo-600 shrink-0" />
                                             <div className="truncate">
                                               <p className="font-bold text-slate-900 group-hover:underline truncate">{file.name}</p>
-                                              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">{file.size} • Diunggah {file.date}</p>
+                                              <p className="text-[12px] sm:text-xs text-slate-500 mt-0.5">{file.size} • Diunggah {file.date}</p>
                                             </div>
                                           </button>
                                           <div className="flex items-center gap-1.5">
@@ -1637,7 +1637,7 @@ export default function InteractiveInfographic({
                                         <p className="text-xs sm:text-sm font-black text-slate-800">
                                           Tarik & letakkan berkas di sini, atau <span className="text-indigo-600 hover:underline">cari berkas</span>
                                         </p>
-                                        <p className="text-[11px] sm:text-xs text-slate-500">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
+                                        <p className="text-[12px] sm:text-xs text-slate-500">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
                                       </div>
                                     </div>
                                   )}
@@ -1727,14 +1727,14 @@ export default function InteractiveInfographic({
             const meta = getDocMeta(inspectedStepIndex);
             return (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-3">
-                <span className="text-[10px] font-black text-slate-550 uppercase tracking-widest block border-b border-slate-200 pb-1.5">
-                  Isian Pengenal Berkas: {meta.title} {isStepCompleted && <span className="ml-2 text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-normal">Diarsipkan</span>}
+                <span className="text-[12px] font-black text-slate-550 uppercase tracking-widest block border-b border-slate-200 pb-1.5">
+                  Isian Pengenal Berkas: {meta.title} {isStepCompleted && <span className="ml-2 text-[12px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-normal">Diarsipkan</span>}
                 </span>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {meta.inputs.map(inp => (
                     <div key={inp.key} className="space-y-1">
-                      <label className="text-[10.5px] font-bold text-slate-705 text-slate-700 block tracking-tight">
+                      <label className="text-[12px] font-bold text-slate-705 text-slate-700 block tracking-tight">
                         {inp.label}
                       </label>
                       <input
@@ -1751,7 +1751,7 @@ export default function InteractiveInfographic({
                   ))}
                 </div>
 
-                <div className="pt-2 flex items-center justify-between text-[11px] text-gray-400">
+                <div className="pt-2 flex items-center justify-between text-[12px] text-gray-400">
                   <span>{isStepCompleted ? "*Berkas resmi ini telah diterbitkan dan tidak dapat diubah." : "*Data tersimpan secara lokal ke memori browser Anda."}</span>
                   {!isStepCompleted ? (
                     <button
@@ -1792,14 +1792,14 @@ export default function InteractiveInfographic({
           {/* HIGH-FIDELITY PRINT PAPER SHEETS EMBEDDED PREVIEW CONTAINER */}
           <div className="border border-slate-205 rounded-xl overflow-hidden shadow-2xs relative">
             
-            <div className="bg-amber-50 text-amber-900 text-[10px] font-bold px-4 py-2 border-b border-amber-100 flex items-center gap-1.5">
+            <div className="bg-amber-50 text-amber-900 text-[12px] font-bold px-4 py-2 border-b border-amber-100 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
               <span>LOG HARIAN SIMULATOR EKSPOR: LEMBAR DRAF TIDAK DAPAT DISALAHGUNAKAN • DRAF ELEKTRONIK</span>
             </div>
 
             <div className="bg-slate-100 p-4 sm:p-8 flex justify-center overflow-x-auto">
               <div 
-                className="bg-white border border-slate-300 relative text-slate-900 shadow-md font-sans p-6 sm:p-12 text-[11px] leading-relaxed select-text"
+                className="bg-white border border-slate-300 relative text-slate-900 shadow-md font-sans p-6 sm:p-12 text-[12px] leading-relaxed select-text"
                 style={{ 
                   width: '100%', 
                   maxWidth: '700px', 
@@ -1823,10 +1823,10 @@ export default function InteractiveInfographic({
                     <h4 className="text-[15px] font-serif font-black tracking-widest uppercase text-slate-900 leading-snug">
                       {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).name}
                     </h4>
-                    <p className="text-[8.5px] font-mono tracking-wider text-slate-400 font-bold">
+                    <p className="text-[12px] font-mono tracking-wider text-slate-400 font-bold">
                       {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).address}
                     </p>
-                    <p className="text-[8.5px] font-mono tracking-widest text-indigo-700 font-black uppercase">
+                    <p className="text-[12px] font-mono tracking-widest text-indigo-700 font-black uppercase">
                       {getLetterheadData(inspectedStepIndex, activeLogisticsSubStep).subtitle}
                     </p>
                   </div>
@@ -1835,23 +1835,23 @@ export default function InteractiveInfographic({
                     <span className="font-serif font-black text-xs underline uppercase block text-slate-900 tracking-wide">
                       {getDocMeta(inspectedStepIndex).title}
                     </span>
-                    <span className="text-[8.5px] font-mono text-slate-400 block uppercase font-bold tracking-widest">
+                    <span className="text-[12px] font-mono text-slate-400 block uppercase font-bold tracking-widest">
                       KODE TUNTAS VALIDASI EKSPOR: {shipment.trackingNumber || 'GEXP-COF-110295'}/ONLINE-E-DOC/{Date.now().toString().slice(-4)}
                     </span>
                   </div>
 
-                  <p className="text-[10px] leading-relaxed text-slate-700 font-serif">
+                  <p className="text-[12px] leading-relaxed text-slate-700 font-serif">
                     Berdasarkan Ketentuan &amp; Regulasi Ekspor-Impor Kementerian Perdagangan RI beserta Otoritas Kepabeanan Internasional, dengan ini diterbitkan dokumen resmi ekspor yang sah untuk siklus perdagangan luar negeri sebagai berikut:
                   </p>
 
                   <div className="border border-slate-300 rounded overflow-hidden animate-fade-in" key={inspectedStepIndex}>
-                    <table className="w-full text-left text-[10.5px] border-collapse font-sans bg-slate-50/20">
+                    <table className="w-full text-left text-[12px] border-collapse font-sans bg-slate-50/20">
                       <thead>
                         <tr className="border-b border-slate-300 bg-slate-50">
-                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[45%]">
+                          <th className="py-2 px-3 font-mono text-[12px] font-black uppercase text-slate-500 tracking-wider w-[45%]">
                             Parameter Legalitas Dokumen
                           </th>
-                          <th className="py-2 px-3 font-mono text-[8.5px] font-black uppercase text-slate-500 tracking-wider w-[55%]">
+                          <th className="py-2 px-3 font-mono text-[12px] font-black uppercase text-slate-500 tracking-wider w-[55%]">
                             Isian Terdaftar
                           </th>
                         </tr>
@@ -1861,7 +1861,7 @@ export default function InteractiveInfographic({
                           const val = docFields[inp.key] || '-';
                           return (
                             <tr key={inp.key} className="border-b border-slate-200">
-                              <td className="py-2 px-3 text-[9.5px] font-mono text-slate-400 font-bold uppercase shrink-0">
+                              <td className="py-2 px-3 text-[12px] font-mono text-slate-400 font-bold uppercase shrink-0">
                                 {inp.label}
                               </td>
                               <td className="py-2 px-3 font-mono text-slate-800 font-black">
@@ -1874,7 +1874,7 @@ export default function InteractiveInfographic({
                     </table>
                   </div>
 
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[9px] leading-relaxed font-serif text-slate-600">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[12px] leading-relaxed font-serif text-slate-600">
                     <strong>PERNYATAAN AKREDITASI MULTI-PIHAK:</strong><br />
                     Dokumen ini dibuat dan divalidasi langsung dalam sistem interkoneksi logistik ekspor <strong>PT Multi Raksa Madani</strong> berbasis enkripsi pengesahan digital terdistribusi. Seluruh data di atas terekam dalam log pabean nasional berstempel waktu nyata demi menjaga transparansi alur suplai ekspor Republik Indonesia berganda.
                   </div>
@@ -1882,22 +1882,22 @@ export default function InteractiveInfographic({
                   <div className="border-t border-dashed border-slate-250 pt-5 grid grid-cols-2 gap-6 items-end mt-8">
                     
                     <div className="space-y-1.5 font-sans">
-                      <div className="border border-slate-300 p-1.5 inline-block text-[7.5px] font-mono text-slate-400 leading-tight">
+                      <div className="border border-slate-300 p-1.5 inline-block text-[12px] font-mono text-slate-400 leading-tight">
                         METODE DETEKSI VERIFIKASI: ENKRIPSI AES-256 SECURED<br />
                         [VALIDASI DIGITAL SERTIFIKAT TUNTAS]
                       </div>
-                      <p className="text-[7.5px] text-slate-400 leading-normal font-sans">
+                      <p className="text-[12px] text-slate-400 leading-normal font-sans">
                         Seluruh isian di atas draf legalitas sah yang diterbitkan secara elektronik demi kepentingan kepatuhan ekspor dari wilayah hukum Republik Indonesia.
                       </p>
                     </div>
 
                     <div className="text-center space-y-3 flex flex-col items-center shrink-0">
-                      <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider font-mono">
+                      <span className="text-[12px] font-black uppercase text-slate-400 tracking-wider font-mono">
                         Lembar Tanda Tangan &amp; Cap Resmi:
                       </span>
                       
                       <div className="relative flex items-center justify-center">
-                        <div className="border border-double border-blue-500/75 rounded-full px-4 py-1.5 font-mono text-[7px] font-black text-blue-500/75 tracking-widest uppercase rotate-2 bg-white/70 relative z-10">
+                        <div className="border border-double border-blue-500/75 rounded-full px-4 py-1.5 font-mono text-[12px] font-black text-blue-500/75 tracking-widest uppercase rotate-2 bg-white/70 relative z-10">
                           VERIFIED SUBMITTED
                         </div>
                         <div className="absolute inset-0 flex items-center justify-center opacity-10 select-none scale-125 z-0">
@@ -1906,10 +1906,10 @@ export default function InteractiveInfographic({
                       </div>
 
                       <div className="space-y-0.5">
-                        <p className="text-[9.5px] font-serif font-black text-slate-900 underline">
+                        <p className="text-[12px] font-serif font-black text-slate-900 underline">
                           {currentUser?.name || 'Dwi Rokhdialisa'}
                         </p>
-                        <p className="text-[7px] font-mono text-slate-400 uppercase font-black">
+                        <p className="text-[12px] font-mono text-slate-400 uppercase font-black">
                           Authorized Signer for {currentUser?.role || 'Trader'}
                         </p>
                       </div>
@@ -1930,7 +1930,7 @@ export default function InteractiveInfographic({
             <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-slate-900 mb-0.5">💡 Tips Cetak &amp; Simpan Dokumen Negara</p>
-              <p className="text-slate-500 leading-relaxed text-[11px]">
+              <p className="text-slate-500 leading-relaxed text-[12px]">
                 Gunakan tombol &quot;Unduh &amp; Cetak Resmi&quot; untuk menggenerate dokumen fisik asli. Berkas akan terunduh sebagai file HTML berformat media cetak standar. Setelah Anda membuka file tersebut, peramban Anda akan secara otomatis memicu dialog cetak halaman (Print to PDF) bersusun rapi letterhead pabean Indonesia!
               </p>
             </div>
@@ -1947,28 +1947,28 @@ export default function InteractiveInfographic({
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2 text-slate-800 text-xs">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
+                    <span className="text-[12px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
                       Aktor Penanggung Jawab
                     </span>
                     <span className="font-extrabold text-slate-800 text-xs">
                       {activeInspectedStep.actor === 'Superadmin' ? 'Bea Cukai' : activeInspectedStep.actor}
                     </span>
                   </div>
-                  <span className="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded">
+                  <span className="text-[12px] font-black bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded">
                     {activeInspectedStep.actor === 'Superadmin' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
                   </span>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
+                    <span className="text-[12px] font-mono uppercase tracking-wider text-slate-500 font-bold block">
                       Sesi Pengguna Aktif Anda
                     </span>
                     <span className="font-extrabold text-slate-800 text-xs">
                       {currentUser?.name || 'Belum Login'}
                     </span>
                   </div>
-                  <span className={`text-[9px] font-black px-2 py-0.5 rounded border capitalize ${
+                  <span className={`text-[12px] font-black px-2 py-0.5 rounded border capitalize ${
                     isAuthorizedToClickCurrentInspected
                       ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
                       : 'bg-rose-50 text-rose-600 border-rose-200'
@@ -1978,13 +1978,13 @@ export default function InteractiveInfographic({
                 </div>
 
                 {isEmergencyTakeover && (
-                  <p className="text-[10px] text-amber-600 font-semibold italic mt-2">
+                  <p className="text-[12px] text-amber-600 font-semibold italic mt-2">
                     ✓ Mode Darurat: Peran Superadmin diizinkan mengambil alih &amp; menandatangani tugas Trader.
                   </p>
                 )}
 
                 {!isAuthorizedToClickCurrentInspected && (
-                  <p className="text-[10px] text-rose-600 italic mt-2 leading-relaxed">
+                  <p className="text-[12px] text-rose-600 italic mt-2 leading-relaxed">
                     {inspectedStepIndex === 1 && !isLogisticsSimulationFullyCompleted
                       ? '⚠️ Lengkapi ke-4 sub-tahap simulasi logistik terpadu di panel kiri (sampai status L/C cair) terlebih dahulu sebelum menandatangani penyelesaian fase ini secara resmi.'
                       : `Sesi Anda saat ini (${currentUser?.role || 'Akses Umum/Tamu'}) tidak memiliki hak menandatangani tahap ini (${activeInspectedStep.actor}). Silakan beralih ke peran yang sesuai dengan menekan tombol Login di sudut atas.`}
@@ -2004,7 +2004,7 @@ export default function InteractiveInfographic({
                       <p className="text-xs text-slate-900 font-black uppercase tracking-wider">
                         🎉 Transaksi Sukses!
                       </p>
-                      <p className="text-[10px] text-emerald-700 leading-normal">
+                      <p className="text-[12px] text-emerald-700 leading-normal">
                         Seluruh kargo tuntas diserahkan &amp; dana dicairkan sempurna.
                       </p>
                     </div>
@@ -2013,7 +2013,7 @@ export default function InteractiveInfographic({
                         setCompletedLogisticsSubSteps([]);
                         onUpdateStep(shipment.id, 'Draft', 'Simulasi diulang kembali dari awal draf (Sales Contract) oleh pengguna.');
                       }}
-                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[12px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Mulai Ulang Simulasi (Reset)
@@ -2028,7 +2028,7 @@ export default function InteractiveInfographic({
                       <CheckCircle className="w-4 h-4 text-emerald-600" />
                       Tahap Sudah Selesai Dilaksanakan
                     </button>
-                    <p className="text-[10px] text-slate-500 leading-normal">
+                    <p className="text-[12px] text-slate-500 leading-normal">
                       Langkah ini telah ditandatangani secara digital oleh aktor penanggung jawab. Data terkunci.
                     </p>
                   </div>
@@ -2041,7 +2041,7 @@ export default function InteractiveInfographic({
                       <Lock className="w-4 h-4 text-slate-400" />
                       Tahap Belum Aktif
                     </button>
-                    <p className="text-[10px] text-slate-500 leading-normal">
+                    <p className="text-[12px] text-slate-500 leading-normal">
                       Selesaikan langkah-langkah sebelumnya terlebih dahulu agar tahap ini dapat diaktifkan.
                     </p>
                   </div>
@@ -2074,10 +2074,10 @@ export default function InteractiveInfographic({
               {/* Title Header */}
               <div className="bg-indigo-950 px-6 py-4 border-b border-indigo-900/60 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="p-1 px-1.5 bg-indigo-500 text-white font-mono text-[9px] font-black uppercase rounded">
+                  <span className="p-1 px-1.5 bg-indigo-500 text-white font-mono text-[12px] font-black uppercase rounded">
                     {getStepGuide(inspectedStepIndex)?.badge || 'ASISTEN'}
                   </span>
-                  <span className="text-[11px] font-semibold text-indigo-200">
+                  <span className="text-[12px] font-semibold text-indigo-200">
                     Aksi dan Panduan
                   </span>
                 </div>
@@ -2088,7 +2088,7 @@ export default function InteractiveInfographic({
               <div className="grid grid-cols-2 border-b border-slate-800">
                 <button
                   onClick={() => setOnPageTab('actions')}
-                  className={`py-3 text-[11px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
+                  className={`py-3 text-[12px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
                     onPageTab === 'actions'
                       ? 'border-indigo-400 bg-slate-800/50 text-white font-extrabold'
                       : 'border-transparent text-slate-400 hover:text-slate-200 bg-transparent'
@@ -2099,7 +2099,7 @@ export default function InteractiveInfographic({
                 </button>
                 <button
                   onClick={() => setOnPageTab('details')}
-                  className={`py-3 text-[11px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
+                  className={`py-3 text-[12px] font-bold leading-normal tracking-wide transition-all border-b-2 flex items-center justify-center gap-1 cursor-pointer focus:outline-none ${
                     onPageTab === 'details'
                       ? 'border-indigo-400 bg-slate-800/50 text-white font-extrabold'
                       : 'border-transparent text-slate-400 hover:text-slate-200 bg-transparent'
@@ -2123,7 +2123,7 @@ export default function InteractiveInfographic({
                         <h4 className="text-white font-black text-sm tracking-tight leading-snug">
                           {guide?.title}
                         </h4>
-                        <p className="text-[10px] text-slate-400 font-mono tracking-wider font-extrabold mt-1">
+                        <p className="text-[12px] text-slate-400 font-mono tracking-wider font-extrabold mt-1">
                           {guide?.subtitle || 'Alur Kerja Resmi Indonesia'}
                         </p>
                       </div>
@@ -2136,7 +2136,7 @@ export default function InteractiveInfographic({
                       <div className="border border-indigo-500/20 bg-indigo-950/40 rounded-xl p-4 space-y-2">
                         <div className="flex items-center gap-2 text-indigo-400">
                           <Lightbulb className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">
+                          <span className="text-[12px] font-black uppercase tracking-wider">
                             Analogi Sederhana (Orang Awam):
                           </span>
                         </div>
@@ -2146,7 +2146,7 @@ export default function InteractiveInfographic({
                       </div>
 
                       <div className="space-y-1.5 pt-1.5">
-                        <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block">
+                        <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">
                           Tujuan Operasional &amp; Kepabeanan:
                         </span>
                         <p className="text-xs text-slate-300 leading-relaxed">
@@ -2156,12 +2156,12 @@ export default function InteractiveInfographic({
 
                       {guide?.actors && (
                         <div className="space-y-1.5 pt-1.5">
-                          <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block">
+                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">
                             Pihak / Aktor yang Terlibat:
                           </span>
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             {guide.actors.map((actor, idx) => (
-                              <span key={idx} className="text-[10.5px] font-semibold bg-slate-800 text-indigo-300 border border-slate-750 px-2 py-1 rounded-md flex items-center gap-1.5">
+                              <span key={idx} className="text-[12px] font-semibold bg-slate-800 text-indigo-300 border border-slate-750 px-2 py-1 rounded-md flex items-center gap-1.5">
                                 <UserCheck className="w-3.5 h-3.5 text-indigo-400" />
                                 {actor}
                               </span>
@@ -2172,7 +2172,7 @@ export default function InteractiveInfographic({
 
                       {guide?.docs && (
                         <div className="space-y-2 pt-2 border-t border-slate-800/60">
-                          <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block">
+                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">
                             Berkas/Dokumen yang Diterbitkan:
                           </span>
                           <div className="space-y-2.5">
@@ -2183,7 +2183,7 @@ export default function InteractiveInfographic({
                                 </div>
                                 <div className="font-sans leading-tight">
                                   <p className="text-xs font-black text-slate-100">{doc.name}</p>
-                                  <p className="text-[10.5px] text-slate-400 mt-0.5">{doc.desc}</p>
+                                  <p className="text-[12px] text-slate-400 mt-0.5">{doc.desc}</p>
                                 </div>
                               </div>
                             ))}
@@ -2202,7 +2202,7 @@ export default function InteractiveInfographic({
                     <div className="bg-slate-800/40 p-4 rounded-xl border border-slate-800 space-y-3">
                       <div className="flex items-center gap-2">
                         <UserCheck className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">
+                        <span className="text-[12px] font-black text-emerald-400 uppercase tracking-wider">
                           Persyaratan Tanda Tangan &amp; Otoritas
                         </span>
                       </div>
@@ -2213,14 +2213,14 @@ export default function InteractiveInfographic({
                         </p>
                         <div className="bg-slate-900 border border-slate-800 p-2.5 rounded flex items-center justify-between">
                           <div>
-                            <span className="text-[8.5px] font-mono uppercase tracking-wider text-slate-400 font-bold block">
+                            <span className="text-[12px] font-mono uppercase tracking-wider text-slate-400 font-bold block">
                               Pihak Penanggung Jawab
                             </span>
                             <span className="font-bold text-white text-xs">
                               {activeInspectedStep.actor === 'Superadmin' ? 'Bea Cukai' : activeInspectedStep.actor}
                             </span>
                           </div>
-                          <span className="text-[9.5px] font-black bg-blue-900/40 text-blue-300 border border-blue-800 px-2 py-1 rounded">
+                          <span className="text-[12px] font-black bg-blue-900/40 text-blue-300 border border-blue-800 px-2 py-1 rounded">
                             {activeInspectedStep.actor === 'Superadmin' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
                           </span>
                         </div>
@@ -2228,14 +2228,14 @@ export default function InteractiveInfographic({
                         <div className="bg-slate-900 border border-slate-800 p-2.5 rounded space-y-2">
                           <div className="flex items-center justify-between">
                             <div>
-                              <span className="text-[8.5px] font-mono uppercase tracking-wider text-slate-400 font-bold block">
+                              <span className="text-[12px] font-mono uppercase tracking-wider text-slate-400 font-bold block">
                                 Sesi Pengguna Aktif Anda
                               </span>
                               <span className="font-bold text-white text-xs">
                                 {currentUser?.name || 'Belum Login'}
                               </span>
                             </div>
-                            <span className={`text-[9px] font-black px-2 py-1 rounded border capitalize ${
+                            <span className={`text-[12px] font-black px-2 py-1 rounded border capitalize ${
                               isAuthorizedToClickCurrentInspected
                                 ? 'bg-emerald-900/40 text-emerald-300 border-emerald-800'
                                 : 'bg-rose-900/40 text-rose-300 border-rose-800'
@@ -2246,7 +2246,7 @@ export default function InteractiveInfographic({
 
                            {isEmergencyTakeover && (
                             <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
-                              <p className="text-[10px] text-amber-300 font-semibold italic">
+                              <p className="text-[12px] text-amber-300 font-semibold italic">
                                 ✓ Mode Darurat: Peran Superadmin diizinkan mengambil alih &amp; menandatangani tugas Trader.
                               </p>
                             </div>
@@ -2254,7 +2254,7 @@ export default function InteractiveInfographic({
 
                            {!isAuthorizedToClickCurrentInspected && (
                             <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
-                              <p className="text-[10px] text-rose-300 italic">
+                              <p className="text-[12px] text-rose-300 italic">
                                 {inspectedStepIndex === 1 && !isLogisticsSimulationFullyCompleted
                                   ? '⚠️ Lengkapi ke-4 sub-tahap simulasi logistik terpadu di panel kiri (sampai status L/C cair) terlebih dahulu sebelum menandatangani penyelesaian fase ini secara resmi.'
                                   : `Sesi Anda saat ini (${currentUser?.role || 'Akses Umum/Tamu'}) tidak memiliki hak menandatangani tahap ini (${activeInspectedStep.actor}). Silakan beralih ke peran yang sesuai dengan menekan tombol Login di sudut atas.`}
@@ -2277,7 +2277,7 @@ export default function InteractiveInfographic({
                             <p className="text-xs text-emerald-900 font-black uppercase tracking-wider">
                               🎉 Transaksi Sukses!
                             </p>
-                            <p className="text-[11px] text-emerald-700 leading-relaxed">
+                            <p className="text-[12px] text-emerald-700 leading-relaxed">
                               Dana Letter of Credit (L/C) berhasil dicairkan penuh ke rekening Eksportir. Seluruh riwayat transaksi &amp; berkas dokumen resmi telah diarsipkan dengan aman.
                             </p>
                           </div>
@@ -2301,7 +2301,7 @@ export default function InteractiveInfographic({
                             <Lock className="w-4 h-4 text-amber-600" />
                             Alur Logistik Ekspor Terkunci
                           </button>
-                          <p className="text-[10px] text-slate-500 text-center leading-normal">
+                          <p className="text-[12px] text-slate-500 text-center leading-normal">
                             Selesaikan <strong>Fase I: Negosiasi Komersial &amp; Kontrak Bilateral</strong> terlebih dahulu pada dasbor halaman utama untuk membuka dan memulai alur eksekusi logistik ini.
                           </p>
                         </div>
@@ -2314,7 +2314,7 @@ export default function InteractiveInfographic({
                             <CheckCircle className="w-4 h-4 text-emerald-600" />
                             Tahap ini Sudah Selesai Dilaksanakan
                           </button>
-                          <p className="text-[10px] text-slate-500 text-center leading-normal">
+                          <p className="text-[12px] text-slate-500 text-center leading-normal">
                             Langkah ini telah berhasil divalidasi dan ditandatangani secara digital oleh aktor penanggung jawab. Data riwayat terkunci.
                           </p>
                         </div>
@@ -2327,7 +2327,7 @@ export default function InteractiveInfographic({
                             <AlertCircle className="w-4 h-4 text-slate-500" />
                             Tahap Belum Aktif
                           </button>
-                          <p className="text-[10px] text-slate-500 text-center leading-normal">
+                          <p className="text-[12px] text-slate-500 text-center leading-normal">
                             Selesaikan langkah-langkah sebelumnya terlebih dahulu agar tahap ini dapat diaktifkan dan diproses.
                           </p>
                         </div>
@@ -2354,7 +2354,7 @@ export default function InteractiveInfographic({
 
               </div>
 
-              <div className="bg-indigo-50 border-t border-indigo-100 px-6 py-3 flex items-center justify-between text-[11px] text-indigo-700 font-medium">
+              <div className="bg-indigo-50 border-t border-indigo-100 px-6 py-3 flex items-center justify-between text-[12px] text-indigo-700 font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                   <span>Kepatuhan Internasional Republik Indonesia</span>
@@ -2394,7 +2394,7 @@ export default function InteractiveInfographic({
                 </div>
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-amber-800 font-sans">Akses Dibatasi</h3>
-                  <p className="text-[9px] text-amber-600 font-bold uppercase tracking-wider mt-0.5 font-sans">Peran Saat Ini: Buyer (Pembeli)</p>
+                  <p className="text-[12px] text-amber-600 font-bold uppercase tracking-wider mt-0.5 font-sans">Peran Saat Ini: Buyer (Pembeli)</p>
                 </div>
               </div>
               <div className="p-5 space-y-4">
@@ -2404,7 +2404,7 @@ export default function InteractiveInfographic({
                 
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex items-start gap-2.5">
                   <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                  <div className="text-[10.5px] text-slate-500 leading-normal font-sans">
+                  <div className="text-[12px] text-slate-500 leading-normal font-sans">
                     Fase logistik ini diproses secara internal oleh <strong>Trader</strong>, <strong>Supplier</strong>, dan <strong>Forwarder</strong> untuk pengurusan sertifikasi karantina, PEB, dan pemuatan kapal.
                   </div>
                 </div>
@@ -2412,7 +2412,7 @@ export default function InteractiveInfographic({
               <div className="bg-slate-50 px-5 py-4 border-t border-slate-100 flex justify-end">
                 <button
                   onClick={() => setAccessDeniedMessage(null)}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[10.5px] font-black rounded-lg transition-all shadow-sm cursor-pointer uppercase tracking-wider font-sans"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[12px] font-black rounded-lg transition-all shadow-sm cursor-pointer uppercase tracking-wider font-sans"
                 >
                   Saya Mengerti
                 </button>

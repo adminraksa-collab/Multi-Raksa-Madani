@@ -430,7 +430,7 @@ export default function AccountManagement({
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-lg text-indigo-300 font-extrabold text-[10px] tracking-wider uppercase">
+            <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-lg text-indigo-300 font-extrabold text-[12px] tracking-wider uppercase">
               {t.superadminPanel}
             </span>
             <span className="flex h-2 w-2 relative">
@@ -450,7 +450,7 @@ export default function AccountManagement({
           <Shield className="w-5 h-5 text-indigo-300 shrink-0" />
           <div className="text-left text-xs">
             <p className="font-extrabold text-white leading-none">{t.validationActive}</p>
-            <p className="text-[10px] text-slate-300 leading-tight mt-0.5">{currentUser?.name}</p>
+            <p className="text-[12px] text-slate-300 leading-tight mt-0.5">{currentUser?.name}</p>
           </div>
         </div>
       </div>
@@ -463,9 +463,9 @@ export default function AccountManagement({
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">{t.pendingApproval}</p>
+            <p className="text-[12px] font-black text-amber-500 uppercase tracking-wider">{t.pendingApproval}</p>
             <p className="text-2xl font-black text-amber-900 leading-none mt-1">{pendingUsers}</p>
-            <p className="text-[10px] text-amber-700 font-semibold mt-1">{t.waitingAuthorize}</p>
+            <p className="text-[12px] text-amber-700 font-semibold mt-1">{t.waitingAuthorize}</p>
           </div>
         </div>
 
@@ -475,9 +475,9 @@ export default function AccountManagement({
             <Users className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">{t.traderApproved}</p>
+            <p className="text-[12px] font-black text-blue-600 uppercase tracking-wider">{t.traderApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedTraders}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.licensedExporter}</p>
+            <p className="text-[12px] text-slate-500 font-medium mt-1">{t.licensedExporter}</p>
           </div>
         </div>
 
@@ -487,9 +487,9 @@ export default function AccountManagement({
             <Truck className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider">{t.forwarderApproved}</p>
+            <p className="text-[12px] font-black text-amber-700 uppercase tracking-wider">{t.forwarderApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedForwarders}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.logisticsPartner}</p>
+            <p className="text-[12px] text-slate-500 font-medium mt-1">{t.logisticsPartner}</p>
           </div>
         </div>
 
@@ -499,9 +499,9 @@ export default function AccountManagement({
             <UserCheck className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">{t.supplierApproved}</p>
+            <p className="text-[12px] font-black text-emerald-700 uppercase tracking-wider">{t.supplierApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedSuppliers}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.coopProducer}</p>
+            <p className="text-[12px] text-slate-500 font-medium mt-1">{t.coopProducer}</p>
           </div>
         </div>
       </div>
@@ -516,7 +516,7 @@ export default function AccountManagement({
             <Plus className={`w-5 h-5 text-indigo-600 transition-transform ${showAddForm ? 'rotate-45' : ''}`} />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700">{t.formTitle}</span>
           </div>
-          <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg">
+          <span className="text-[12px] text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg">
             {showAddForm ? t.closeForm : t.openForm}
           </span>
         </button>
@@ -535,7 +535,7 @@ export default function AccountManagement({
                     <UserCheck className="w-4 h-4 text-indigo-500" />
                     <span>{t.formHeader}</span>
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 font-medium">{t.formSubtitle}</p>
+                  <p className="text-[12px] text-slate-500 mt-1 font-medium">{t.formSubtitle}</p>
                 </div>
 
                 {/* Form Alerts */}
@@ -554,7 +554,7 @@ export default function AccountManagement({
 
                 {/* Field 1: Nama */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
                   <input
                     type="text"
                     required
@@ -567,7 +567,7 @@ export default function AccountManagement({
 
                 {/* Field 2: Email */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
                   <input
                     type="email"
                     required
@@ -580,7 +580,7 @@ export default function AccountManagement({
 
                 {/* Field 3: Password */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.passwordLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.passwordLabel}</label>
                   <input
                     type="text"
                     required
@@ -593,7 +593,7 @@ export default function AccountManagement({
 
                 {/* Field 4: Peran */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
                   <select
                     value={newUserRole}
                     onChange={(e) => setNewUserRole(e.target.value as UserRole)}
@@ -609,7 +609,7 @@ export default function AccountManagement({
 
                 {/* Field 5: Perusahaan */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
                   <input
                     type="text"
                     required
@@ -622,7 +622,7 @@ export default function AccountManagement({
 
                 {/* Field 5b: Nomor Telepon / WA */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
                   <input
                     type="tel"
                     required
@@ -688,7 +688,7 @@ export default function AccountManagement({
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Role Filter */}
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-semibold">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">{t.roleFilterLabel}</span>
+            <span className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.roleFilterLabel}</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
@@ -705,7 +705,7 @@ export default function AccountManagement({
 
           {/* Status Filter */}
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-semibold">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">{t.statusFilterLabel}</span>
+            <span className="text-[12px] uppercase font-black tracking-wider text-slate-400">{t.statusFilterLabel}</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -727,7 +727,7 @@ export default function AccountManagement({
             <span>{t.tableTitle(filteredUsers.length)}</span>
           </h3>
           {pendingUsers > 0 && (
-            <span className="text-[10px] bg-red-100 text-red-900 font-black px-2.5 py-1 rounded-full animate-pulse">
+            <span className="text-[12px] bg-red-100 text-red-900 font-black px-2.5 py-1 rounded-full animate-pulse">
               {t.waitingValidation(pendingUsers)}
             </span>
           )}
@@ -740,7 +740,7 @@ export default function AccountManagement({
               <p className="text-xs font-bold">{t.noResults}</p>
               <button 
                 onClick={() => { setSearchTerm(''); setRoleFilter('ALL'); setStatusFilter('ALL'); }}
-                className="mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-slate-100 text-indigo-750 text-[10px] font-extrabold rounded-lg border border-indigo-200 cursor-pointer"
+                className="mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-slate-100 text-indigo-750 text-[12px] font-extrabold rounded-lg border border-indigo-200 cursor-pointer"
               >
                 {t.resetFilters}
               </button>
@@ -748,7 +748,7 @@ export default function AccountManagement({
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-400 uppercase tracking-wider font-extrabold text-[9px]">
+                <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-400 uppercase tracking-wider font-extrabold text-[12px]">
                   <th className="p-4 w-[220px]">{t.thProfile}</th>
                   <th className="p-4 w-[240px]">{t.thEmail}</th>
                   <th className="p-4 w-[130px]">{t.thRole}</th>
@@ -789,12 +789,12 @@ export default function AccountManagement({
                               <p className="font-extrabold text-slate-900 text-xs truncate flex items-center gap-1.5">
                                 <span>{user.name}</span>
                                 {isCurrentUser && (
-                                  <span className="bg-indigo-650 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">{t.me}</span>
+                                  <span className="bg-indigo-650 text-white text-[12px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">{t.me}</span>
                                 )}
                               </p>
-                              <p className="text-[9px] text-slate-400 font-semibold truncate">{(isIndo ? 'Kab/Kota: ' : 'City/Regency: ') + (user.country || 'Indonesia')}</p>
+                              <p className="text-[12px] text-slate-400 font-semibold truncate">{(isIndo ? 'Kab/Kota: ' : 'City/Regency: ') + (user.country || 'Indonesia')}</p>
                               {user.phone && (
-                                <p className="text-[9px] text-emerald-600 font-bold truncate flex items-center gap-1 mt-0.5" title="WhatsApp / Telepon">
+                                <p className="text-[12px] text-emerald-600 font-bold truncate flex items-center gap-1 mt-0.5" title="WhatsApp / Telepon">
                                   <Phone className="w-3 h-3 shrink-0 text-emerald-500" />
                                   <span>{user.phone}</span>
                                 </p>
@@ -812,7 +812,7 @@ export default function AccountManagement({
                             </div>
                             
                             {/* Password Viewer */}
-                            <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+                            <div className="text-[12px] font-bold text-slate-500 flex items-center gap-1.5">
                               <Key className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-800">
                                 {isPassVisible ? (
@@ -838,7 +838,7 @@ export default function AccountManagement({
 
                         {/* Role BADGE */}
                         <td className="p-4">
-                          <span className={`px-2 py-1 rounded-lg text-[9px] font-extrabold uppercase border tracking-wider leading-none shrink-0 ${getRoleBadgeStyle(user.role)}`}>
+                          <span className={`px-2 py-1 rounded-lg text-[12px] font-extrabold uppercase border tracking-wider leading-none shrink-0 ${getRoleBadgeStyle(user.role)}`}>
                             {user.role}
                           </span>
                         </td>
@@ -855,18 +855,18 @@ export default function AccountManagement({
                         <td className="p-4 text-center">
                           {canBeApproved ? (
                             isApproved ? (
-                              <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-black uppercase">
+                              <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[12px] font-black uppercase">
                                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                                 <span>{t.approvedBadge}</span>
                               </div>
                             ) : (
-                              <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-red-50 text-red-800 border border-red-200 rounded-full text-[10px] font-black uppercase animate-pulse">
+                              <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-red-50 text-red-800 border border-red-200 rounded-full text-[12px] font-black uppercase animate-pulse">
                                 <AlertCircle className="w-3.5 h-3.5 text-red-500" />
                                 <span>{t.pendingBadge}</span>
                               </div>
                             )
                           ) : (
-                            <span className="text-[10px] font-bold text-slate-400 uppercase italic">
+                            <span className="text-[12px] font-bold text-slate-400 uppercase italic">
                               {t.fullAccess}
                             </span>
                           )}
@@ -888,7 +888,7 @@ export default function AccountManagement({
                             {canBeApproved && (
                               <button
                                 onClick={() => onToggleApprove(user.id, !isApproved)}
-                                className={`px-2 py-1 text-[9px] font-black rounded-lg uppercase tracking-wider transition-all cursor-pointer flex items-center gap-0.5 ${
+                                className={`px-2 py-1 text-[12px] font-black rounded-lg uppercase tracking-wider transition-all cursor-pointer flex items-center gap-0.5 ${
                                   isApproved
                                     ? 'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-transparent'
                                     : 'bg-emerald-600 text-white hover:bg-emerald-700 border border-transparent shadow-sm'
@@ -913,7 +913,7 @@ export default function AccountManagement({
                                 <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-500" />
                               </button>
                             ) : (
-                              <div className="px-2 text-[9px] text-slate-400 font-bold uppercase italic select-none">
+                              <div className="px-2 text-[12px] text-slate-400 font-bold uppercase italic select-none">
                                 {t.locked}
                               </div>
                             )}
@@ -968,7 +968,7 @@ export default function AccountManagement({
               <form onSubmit={handleSaveEditSubmit} className="space-y-4">
                 {/* Name */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
                   <input
                     type="text"
                     required
@@ -980,7 +980,7 @@ export default function AccountManagement({
 
                 {/* Email (User) */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
                   <input
                     type="type"
                     required
@@ -992,7 +992,7 @@ export default function AccountManagement({
 
                 {/* Password Management */}
                 <div className="space-y-1 bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100/40">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-700 tracking-wider flex items-center gap-1">
+                  <label className="text-[12px] font-extrabold uppercase text-slate-700 tracking-wider flex items-center gap-1">
                     <Key className="w-3.5 h-3.5" />
                     <span>{t.passwordLabel}</span>
                   </label>
@@ -1004,12 +1004,12 @@ export default function AccountManagement({
                     className="w-full text-xs font-mono font-bold px-3 py-2 rounded-xl border border-indigo-200 bg-white text-indigo-900 focus:outline-indigo-600"
                     placeholder={t.modalPassPlaceholder}
                   />
-                  <p className="text-[9px] text-slate-500 mt-1 font-semibold">{t.modalPassDesc}</p>
+                  <p className="text-[12px] text-slate-500 mt-1 font-semibold">{t.modalPassDesc}</p>
                 </div>
 
                 {/* Role */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
                   <select
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value as UserRole)}
@@ -1025,7 +1025,7 @@ export default function AccountManagement({
 
                 {/* Company */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
                   <input
                     type="text"
                     required
@@ -1037,7 +1037,7 @@ export default function AccountManagement({
 
                 {/* Nomor Telepon / WA */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
+                  <label className="text-[12px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
                   <input
                     type="tel"
                     required
@@ -1091,7 +1091,7 @@ export default function AccountManagement({
       <div className="bg-indigo-50 border border-indigo-150 rounded-2xl p-4 flex gap-3 text-left">
         <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5 animate-pulse" />
         <div className="text-xs space-y-1 text-indigo-950">
-          <p className="font-extrabold uppercase tracking-wide text-indigo-900 text-[10px]">{t.bannerTitle}</p>
+          <p className="font-extrabold uppercase tracking-wide text-indigo-900 text-[12px]">{t.bannerTitle}</p>
           <p className="font-semibold leading-relaxed">
             {t.bannerDesc}
           </p>

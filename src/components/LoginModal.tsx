@@ -8,7 +8,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { TranslationKeys } from '../translations';
+
 interface LoginModalProps {
+  t: TranslationKeys;
   isOpen: boolean;
   onClose: () => void;
   onSelectUser: (user: UserProfile | null) => void;
@@ -34,7 +37,7 @@ const demoCredentials = [
   }
 ];
 
-export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser, initialMode }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser, initialMode, t }: LoginModalProps) {
   if (!isOpen) return null;
 
   // Tab mode
@@ -381,7 +384,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                 </div>
                 <div>
                   <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight">
-                    {mode === 'login' ? 'Masuk ke Sistem' : 'Daftar Akun Baru'}
+                    {mode === 'login' ? t.loginToSystem : t.registerNewAccount}
                   </h3>
                 </div>
               </div>
@@ -424,9 +427,9 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                 <form onSubmit={handleFormSubmit} className="space-y-4 pt-1">
                   {/* Email Selector */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                    <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                       <Mail className="w-3.5 h-3.5" />
-                      <span>User/Email</span>
+                      <span>{t.userEmailLabel}</span>
                     </label>
                     <input
                       type="text"
@@ -435,7 +438,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         setEmail(e.target.value);
                         setErrorMsg('');
                       }}
-                      placeholder="Masukkan username atau email..."
+                      placeholder={t.userEmailPlaceholder}
                       className="w-full text-sm font-semibold p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                       required
                     />
@@ -444,9 +447,9 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   {/* Password Input */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Key className="w-3.5 h-3.5" />
-                        <span>Kata Sandi (Password)</span>
+                        <span>{t.passwordLabel}</span>
                       </label>
                     </div>
                     <div className="relative">
@@ -457,7 +460,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                           setPassword(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="Masukkan kata sandi peran..."
+                        placeholder={t.passwordPlaceholder}
                         className="w-full text-sm font-mono p-3 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                         required
                       />
@@ -490,7 +493,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     type="submit"
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
                   >
-                    <span>Verifikasi & Masuk Ruang Kerja</span>
+                    <span>{t.verifyLoginBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -499,11 +502,11 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   {/* Full Name */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <UserCheck className="w-3.5 h-3.5" />
-                        <span>Nama Lengkap *</span>
+                        <span>{t.fullNameLabel}</span>
                       </label>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase">Maks 50</span>
+                      <span className="text-[12px] text-slate-400 font-bold uppercase">{t.max50Chars}</span>
                     </div>
                     <input
                       type="text"
@@ -522,11 +525,11 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   {/* Email */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Mail className="w-3.5 h-3.5" />
                         <span>Surel (Email) *</span>
                       </label>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase">Maks 100</span>
+                      <span className="text-[12px] text-slate-400 font-bold uppercase">Maks 100</span>
                     </div>
                     <input
                       type="email"
@@ -546,7 +549,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                           <Key className="w-3.5 h-3.5" />
                           <span>Sandi *</span>
                         </label>
@@ -577,7 +580,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
 
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                           <Shield className="w-3.5 h-3.5 text-slate-400" />
                           <span>Konfirmasi *</span>
                         </label>
@@ -609,7 +612,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   {/* Company & Role */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Building className="w-3.5 h-3.5" />
                         <span>Instansi *</span>
                       </label>
@@ -628,7 +631,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Briefcase className="w-3.5 h-3.5" />
                         <span>Peran Ekosistem</span>
                       </label>
@@ -651,7 +654,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
 
                   {/* Nomor Telepon */}
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                    <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                       <Phone className="w-3.5 h-3.5" />
                       <span>Nomor Telepon / WhatsApp *</span>
                     </label>

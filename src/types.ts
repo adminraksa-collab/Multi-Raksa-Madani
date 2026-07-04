@@ -140,6 +140,7 @@ export interface ExportProduct {
   minOrder: string;
   attachmentUrl?: string;
   attachmentName?: string;
+  translations?: { en?: { name?: string; specification?: string; category?: string; origin?: string; minOrder?: string; unit?: string } };
 }
 
 export interface RealTimeAlert {

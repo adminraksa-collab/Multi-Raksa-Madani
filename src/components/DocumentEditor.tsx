@@ -138,7 +138,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
           <FileCode className="w-5 h-5 text-blue-400" />
           <div>
             <h3 className="font-bold text-base">Formulir Pembuatan Dokumen Ekspor Resmi</h3>
-            <p className="text-[11px] text-gray-400">Hubungkan dokumen langsung ke nomor sirkulasi pengiriman aktif</p>
+            <p className="text-[12px] text-gray-400">Hubungkan dokumen langsung ke nomor sirkulasi pengiriman aktif</p>
           </div>
         </div>
         <button
@@ -228,7 +228,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
         {/* Shipping details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-600">Vessel / Carrier :</label>
+            <label className="text-[12px] font-bold text-gray-600">Vessel / Carrier :</label>
             <input
               type="text"
               value={vessel}
@@ -239,7 +239,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-600">Pelabuhan Muat (Load) :</label>
+            <label className="text-[12px] font-bold text-gray-600">Pelabuhan Muat (Load) :</label>
             <input
               type="text"
               value={portLoading}
@@ -250,7 +250,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-600">Pelabuhan Bongkar (Discharge) :</label>
+            <label className="text-[12px] font-bold text-gray-600">Pelabuhan Bongkar (Discharge) :</label>
             <input
               type="text"
               value={portDischarge}
@@ -261,7 +261,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-600">Marks & Numbers :</label>
+            <label className="text-[12px] font-bold text-gray-600">Marks & Numbers :</label>
             <input
               type="text"
               value={shippingMark}
@@ -315,7 +315,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
             {items.map((item, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-gray-50/50 p-3 rounded-lg border border-gray-200">
                 <div className="flex-1 space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Nama / Keterangan Barang</label>
+                  <label className="text-[12px] uppercase tracking-wider text-gray-400 font-bold">Nama / Keterangan Barang</label>
                   <input
                     type="text"
                     value={item.description}
@@ -327,7 +327,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
                 </div>
 
                 <div className="w-full sm:w-28 space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">HS Code</label>
+                  <label className="text-[12px] uppercase tracking-wider text-gray-400 font-bold">HS Code</label>
                   <input
                     type="text"
                     value={item.hsCode}
@@ -339,7 +339,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
                 </div>
 
                 <div className="w-full sm:w-20 space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Qty</label>
+                  <label className="text-[12px] uppercase tracking-wider text-gray-400 font-bold">Qty</label>
                   <input
                     type="number"
                     value={item.quantity}
@@ -351,7 +351,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
                 </div>
 
                 <div className="w-full sm:w-16 space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Satuan</label>
+                  <label className="text-[12px] uppercase tracking-wider text-gray-400 font-bold">Satuan</label>
                   <input
                     type="text"
                     value={item.unit}
@@ -363,7 +363,7 @@ export default function DocumentEditor({ shipments, currentUser, onSaveDocument,
                 </div>
 
                 <div className="w-full sm:w-28 space-y-1">
-                  <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Harga Satuan (USD)</label>
+                  <label className="text-[12px] uppercase tracking-wider text-gray-400 font-bold">Harga Satuan (USD)</label>
                   <input
                     type="number"
                     value={item.unitPrice}

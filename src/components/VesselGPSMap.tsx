@@ -170,7 +170,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
             {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
           <div>
-            <span className="text-[9px] font-black uppercase text-indigo-400 tracking-widest block font-mono bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900/30 w-fit">
+            <span className="text-[12px] font-black uppercase text-indigo-400 tracking-widest block font-mono bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900/30 w-fit">
               &bull; TELEMETRI SATELIT GPS AKTIF (REAL-TIME)
             </span>
             <h3 className="text-sm font-black font-sans text-slate-100 flex items-center gap-1.5 mt-1">
@@ -181,7 +181,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
         </div>
         
         {/* Signal Status Pill */}
-        <div className="flex items-center gap-1.5 bg-slate-900/90 border border-emerald-950 px-2.5 py-1 rounded-full text-[10px]">
+        <div className="flex items-center gap-1.5 bg-slate-900/90 border border-emerald-950 px-2.5 py-1 rounded-full text-[12px]">
           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full absolute"></span>
           <span className="text-emerald-400 font-mono font-bold">IoT SECURE: L-BAND LINK</span>
@@ -197,33 +197,33 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="bg-indigo-950/20 rounded-xl border border-indigo-950/60 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono text-[11px] text-indigo-200 relative z-10 overflow-hidden"
+            className="bg-indigo-950/20 rounded-xl border border-indigo-950/60 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono text-[12px] text-indigo-200 relative z-10 overflow-hidden"
           >
             <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-slate-400 uppercase text-[9.5px] font-black">Posisi:</span>
+                <span className="text-slate-400 uppercase text-[12px] font-black">Posisi:</span>
                 <span className="text-slate-100 font-bold">{lat}° S, {lng}° E</span>
               </div>
               <div className="hidden sm:block text-indigo-900/50">|</div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 uppercase text-[9.5px] font-black">Kecepatan:</span>
+                <span className="text-slate-400 uppercase text-[12px] font-black">Kecepatan:</span>
                 <span className="text-orange-400 font-bold">{vesselSpeed.toFixed(1)} Knot</span>
               </div>
               <div className="hidden sm:block text-indigo-900/50">|</div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 uppercase text-[9.5px] font-black">Suhu Container:</span>
+                <span className="text-slate-400 uppercase text-[12px] font-black">Suhu Container:</span>
                 <span className="text-emerald-400 font-bold">{cargoTemp}°C</span>
               </div>
               <div className="hidden sm:block text-indigo-900/50">|</div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 uppercase text-[9.5px] font-black">Haluan:</span>
+                <span className="text-slate-400 uppercase text-[12px] font-black">Haluan:</span>
                 <span className="text-slate-100 font-bold">{vesselHeading}</span>
               </div>
             </div>
             
             <div className="flex items-center gap-3 bg-slate-900/80 px-3 py-2 rounded-lg border border-indigo-950/60 grow md:grow-0 justify-between md:justify-start">
-              <span className="text-slate-400 uppercase text-[9.5px] font-black">Progres Pelayaran:</span>
+              <span className="text-slate-400 uppercase text-[12px] font-black">Progres Pelayaran:</span>
               <div className="w-24 bg-slate-950 h-2 rounded-full overflow-hidden border border-indigo-950/60 relative">
                 <div className="h-full bg-emerald-500" style={{ width: `${progress * 100}%` }} />
               </div>
@@ -307,7 +307,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
                       <text 
                         y="-9" 
                         textAnchor="middle" 
-                        className="font-mono text-[7.5px] fill-slate-400 font-extrabold tracking-tight pointer-events-none select-none"
+                        className="font-mono text-[12px] fill-slate-400 font-extrabold tracking-tight pointer-events-none select-none"
                       >
                         {pt.name}
                       </text>
@@ -334,7 +334,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
               </svg>
 
               {/* Current geographic focus caption overlay */}
-              <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-indigo-900/60 rounded px-2.5 py-1 text-[9px] font-mono select-none">
+              <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-indigo-900/60 rounded px-2.5 py-1 text-[12px] font-mono select-none">
                 <span className="text-slate-400">Kapal Pengangkut: </span>
                 <span className="text-indigo-300 font-black">{shipment.productName} ({shipment.quantity} {shipment.unit})</span>
               </div>
@@ -344,7 +344,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
                 <button
                   onClick={toggleAutoplay}
                   title={isPlaying ? 'Pause Transit Simulation' : 'Start Auto Sail'}
-                  className="p-1 px-2.5 rounded bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-800 text-[9px] font-black uppercase text-indigo-200 transition-colors flex items-center gap-1 active:scale-95 shadow-3xs"
+                  className="p-1 px-2.5 rounded bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-800 text-[12px] font-black uppercase text-indigo-200 transition-colors flex items-center gap-1 active:scale-95 shadow-3xs"
                 >
                   {isPlaying ? (
                     <>
@@ -373,7 +373,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
             <div className="bg-slate-900 rounded-xl border border-indigo-950 p-4 font-mono text-xs text-indigo-200/90 space-y-3.5 flex flex-col justify-between">
               
               <div className="space-y-3">
-                <div className="flex justify-between items-center text-[10px] text-indigo-400 border-b border-indigo-950 pb-1.5">
+                <div className="flex justify-between items-center text-[12px] text-indigo-400 border-b border-indigo-950 pb-1.5">
                   <span>SATELLITE DOWNLINK</span>
                   <span className="text-emerald-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block"></span>
@@ -384,17 +384,17 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
                 {/* Position coordinate metrics */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-slate-950/80 p-2 rounded border border-indigo-950">
-                    <span className="text-[8px] text-indigo-400 block tracking-wider uppercase">LINTANG (LAT)</span>
-                    <span className="text-[11px] font-black text-slate-200 block mt-0.5">{lat}°</span>
+                    <span className="text-[12px] text-indigo-400 block tracking-wider uppercase">LINTANG (LAT)</span>
+                    <span className="text-[12px] font-black text-slate-200 block mt-0.5">{lat}°</span>
                   </div>
                   <div className="bg-slate-950/80 p-2 rounded border border-indigo-950">
-                    <span className="text-[8px] text-indigo-400 block tracking-wider uppercase">BUJUR (LNG)</span>
-                    <span className="text-[11px] font-black text-slate-200 block mt-0.5">{lng}°</span>
+                    <span className="text-[12px] text-indigo-400 block tracking-wider uppercase">BUJUR (LNG)</span>
+                    <span className="text-[12px] font-black text-slate-200 block mt-0.5">{lng}°</span>
                   </div>
                 </div>
 
                 {/* Micro Telemetry table */}
-                <div className="space-y-2 text-[10px]">
+                <div className="space-y-2 text-[12px]">
                   
                   <div className="flex justify-between border-b border-slate-800/40 pb-1">
                     <span className="text-slate-400">Haluan Kapal (Heading) :</span>
@@ -438,23 +438,23 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
 
               {/* Quick-simulate buttons */}
               <div className="space-y-1.5 pt-3 border-t border-indigo-950">
-                <span className="text-[8px] text-indigo-400 font-bold uppercase tracking-wider block">LOMPAT RUTE SIMULASI</span>
+                <span className="text-[12px] text-indigo-400 font-bold uppercase tracking-wider block">LOMPAT RUTE SIMULASI</span>
                 <div className="grid grid-cols-3 gap-1">
                   <button 
                     onClick={() => handleStep(0.0)}
-                    className={`p-1 rounded text-[8px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress < 0.2 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
+                    className={`p-1 rounded text-[12px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress < 0.2 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
                   >
                     Jakarta (0%)
                   </button>
                   <button 
                     onClick={() => handleStep(0.5)}
-                    className={`p-1 rounded text-[8px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress >= 0.4 && progress < 0.7 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
+                    className={`p-1 rounded text-[12px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress >= 0.4 && progress < 0.7 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
                   >
                     Tengah (50%)
                   </button>
                   <button 
                     onClick={() => handleStep(1.0)}
-                    className={`p-1 rounded text-[8px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress > 0.8 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
+                    className={`p-1 rounded text-[12px] font-bold uppercase border hover:-translate-y-0.2 transition-all transition-transform active:scale-95 ${progress > 0.8 ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-indigo-300 border-indigo-900/40'}`}
                   >
                     Tujuan (100%)
                   </button>

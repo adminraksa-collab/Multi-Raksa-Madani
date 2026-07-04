@@ -178,7 +178,7 @@ export default function NegotiationDashboard({
           </head>
           <body class="bg-white text-slate-900">
             <div class="max-w-2xl mx-auto p-4 bg-white">
-              <div class="text-[11px] leading-relaxed">
+              <div class="text-[12px] leading-relaxed">
                 ${docClone.outerHTML}
               </div>
             </div>
@@ -549,7 +549,7 @@ export default function NegotiationDashboard({
           </head>
           <body class="bg-white text-slate-900">
             <div class="max-w-2xl mx-auto p-4 bg-white">
-              <div class="text-[11px] leading-relaxed">
+              <div class="text-[12px] leading-relaxed">
                 ${docClone.outerHTML}
               </div>
             </div>
@@ -780,23 +780,23 @@ export default function NegotiationDashboard({
           <div className="space-y-4 animate-fadeIn">
             <div className="border-b border-dashed border-slate-300 pb-3">
               <h5 className="font-bold text-slate-900 text-xs">YOSHIHIDE TRADING CO., LTD.</h5>
-              <p className="text-[9px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
-              <p className="text-[9px] text-slate-400">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
+              <p className="text-[12px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
+              <p className="text-[12px] text-slate-400">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
             </div>
-            <div className="text-right text-[9px] text-slate-500">
+            <div className="text-right text-[12px] text-slate-500">
               <p className="font-bold">Doc Ref: YT-LOI/2026/04</p>
               <p>Date: June 15, 2026</p>
             </div>
             <div className="space-y-2">
               <p className="font-bold text-slate-900">TO: PT MULTI RAKSA MADANI</p>
-              <p className="font-bold text-[11px] underline text-indigo-900">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
+              <p className="font-bold text-[12px] underline text-indigo-900">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
               <p className="leading-relaxed text-slate-600">
                 Dear Multi Raksa Madani Exports Team,
               </p>
               <p className="leading-relaxed text-slate-600">
                 We herewith officially express our strong interest to purchase high-quality Indonesian commodities. Based on your repute, we would like to request a detailed specifications list and a price proposal for:
               </p>
-              <div className="p-2 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[9.5px]">
+              <div className="p-2 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[12px]">
                 • Commodity: {selectedProduct.name}<br />
                 • Target Volume: {quantity} MT (Metrik Ton)<br />
                 • Target Incoterms: FOB Jakarta Port<br />
@@ -809,7 +809,7 @@ export default function NegotiationDashboard({
               {/* List attachments in document paper */}
               {loiAttachment.length > 0 && (
                 <div className="p-2.5 bg-white rounded-lg border border-slate-200 mt-3 space-y-1.5 text-left">
-                  <p className="font-bold text-[8.5px] uppercase text-slate-500 tracking-wider flex items-center gap-1">
+                  <p className="font-bold text-[12px] uppercase text-slate-500 tracking-wider flex items-center gap-1">
                     <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
@@ -817,8 +817,8 @@ export default function NegotiationDashboard({
                   </p>
                   <div className="space-y-1">
                     {loiAttachment.map((file, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-slate-700 text-[8.5px] font-bold">
-                        <span className="text-[7.5px] bg-slate-250 text-slate-750 px-1 py-0.2 rounded font-black uppercase font-mono">{file.name.split('.').pop() || 'PDF'}</span>
+                      <div key={i} className="flex items-center gap-1.5 text-slate-700 text-[12px] font-bold">
+                        <span className="text-[12px] bg-slate-250 text-slate-750 px-1 py-0.2 rounded font-black uppercase font-mono">{file.name.split('.').pop() || 'PDF'}</span>
                         <span className="truncate max-w-[180px]">{file.name}</span> 
                         <span className="text-slate-400">({file.size})</span>
                       </div>
@@ -828,16 +828,16 @@ export default function NegotiationDashboard({
               )}
             </div>
             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-              <span className="text-slate-400 text-[8px] italic">Signed digitally by Kenji Yoshihide (Director)</span>
+              <span className="text-slate-400 text-[12px] italic">Signed digitally by Kenji Yoshihide (Director)</span>
               {side === 'trader' ? (
                 <button 
                   onClick={() => updateStepIdAndBubble(2)}
-                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                  className="text-[12px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
                 >
                   Balas Dengan Quotation →
                 </button>
               ) : (
-                <span className="text-indigo-600 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">LOI Terkirim ✓</span>
+                <span className="text-indigo-600 text-[12px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">LOI Terkirim ✓</span>
               )}
             </div>
           </div>
@@ -848,16 +848,16 @@ export default function NegotiationDashboard({
           <div className="space-y-4 animate-fadeIn">
             <div className="border-b border-dashed border-slate-300 pb-3">
               <h5 className="font-bold text-slate-900 text-xs">PT MULTI RAKSA MADANI</h5>
-              <p className="text-[9px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
-              <p className="text-[9px] text-slate-400">Email: export@multiraksamaradani.co.id | Tax ID (NPWP): 01.993.44.22</p>
+              <p className="text-[12px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+              <p className="text-[12px] text-slate-400">Email: export@multiraksamaradani.co.id | Tax ID (NPWP): 01.993.44.22</p>
             </div>
-            <div className="text-right text-[9px] text-slate-500">
+            <div className="text-right text-[12px] text-slate-500">
               <p className="font-bold">Doc Ref: AQ-QTN/2026/102</p>
               <p>Date: June 17, 2026</p>
             </div>
             <div className="space-y-2">
               <p className="font-bold text-slate-900">TO: YOSHIHIDE TRADING CO., LTD. (Tokyo, Japan)</p>
-              <p className="font-bold text-[11px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
+              <p className="font-bold text-[12px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
               <p className="leading-relaxed text-slate-650">
                 Thank you for your LOI interest YT-LOI/2026/04. We are delighted to submit our best factory offering pricing & parameters below:
               </p>
@@ -866,17 +866,17 @@ export default function NegotiationDashboard({
                   <span>ITEM / SPECIFICATION</span>
                   <span>OFFER PRICE</span>
                 </div>
-                <div className="p-2 text-[9px] space-y-1 text-left">
+                <div className="p-2 text-[12px] space-y-1 text-left">
                   <p className="font-bold text-slate-900">{selectedProduct.name}</p>
-                  <p className="text-slate-500 leading-snug text-[8.5px]">Specification: {selectedProduct.specification}</p>
-                  <p className="text-slate-500 font-bold text-[8.5px]">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
+                  <p className="text-slate-500 leading-snug text-[12px]">Specification: {selectedProduct.specification}</p>
+                  <p className="text-slate-500 font-bold text-[12px]">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
                   <div className="pt-1 flex justify-between border-t border-slate-100 font-bold text-indigo-950">
                     <span>Quantity: {quantity} MT</span>
                     <span>USD ${pricePerUnit.toLocaleString('en-US')} / MT</span>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[8px] text-slate-500 text-left">
+              <div className="grid grid-cols-2 gap-2 text-[12px] text-slate-500 text-left">
                 <div>
                   <strong>• Port of Loading:</strong> Tanjung Priok Port, Jakarta<br />
                   <strong>• Delivery Lead time:</strong> 14 Days after Payment
@@ -888,16 +888,16 @@ export default function NegotiationDashboard({
               </div>
             </div>
             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-              <span className="text-slate-400 text-[8px] italic">Issued by: Devisa Dagang Ekspor Indonesia</span>
+              <span className="text-slate-400 text-[12px] italic">Issued by: Devisa Dagang Ekspor Indonesia</span>
               {side === 'buyer' ? (
                 <button 
                   onClick={() => updateStepIdAndBubble(3)}
-                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                  className="text-[12px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
                 >
                   Naikkan Jadi Proforma Invoice →
                 </button>
               ) : (
-                <span className="text-indigo-600 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">Quotation Dikirim ✓</span>
+                <span className="text-indigo-600 text-[12px] font-bold uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded border border-indigo-150">Quotation Dikirim ✓</span>
               )}
             </div>
           </div>
@@ -911,25 +911,25 @@ export default function NegotiationDashboard({
                 <span className="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block animate-pulse"></span>
                 TABEL MONITORING NEGOSIASI & COUNTER-OFFER
               </h5>
-              <p className="text-[9px] text-slate-500">Tawar-menawar klausa dokumen sebelum L/C dibuka secara legal.</p>
+              <p className="text-[12px] text-slate-500">Tawar-menawar klausa dokumen sebelum L/C dibuka secara legal.</p>
             </div>
 
             <div className="space-y-2.5 text-left">
               
               {/* Live negotiation chat 1 */}
               <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
-                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                <div className="flex justify-between items-center text-[12px] font-bold text-indigo-850 mb-1">
                   <span>Sanggahan 1: Penurunan Harga Per Unit</span>
-                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[7px]">Menunggu Keputusan</span>
+                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[12px]">Menunggu Keputusan</span>
                 </div>
-                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                <p className="text-[12px] text-slate-600 leading-relaxed mb-2">
                   &ldquo;Yoshihide Trading Co. meminta diskon khusus. Mereka menawar harga diturunkan ke <strong>USD ${Math.max(10, pricePerUnit - 100).toLocaleString('en-US')} / MT</strong> karena ini merupakan order perdana.&rdquo;
                 </p>
                 <button 
                   onClick={() => {
                     setPricePerUnit(Math.max(10, pricePerUnit - 100));
                   }}
-                  className="bg-amber-600 hover:bg-amber-700 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                  className="bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
                 >
                   ✓ Terima Diskon (Ganti Harga Real-time)
                 </button>
@@ -937,11 +937,11 @@ export default function NegotiationDashboard({
 
               {/* Live negotiation chat 2 */}
               <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
-                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                <div className="flex justify-between items-center text-[12px] font-bold text-indigo-850 mb-1">
                   <span>Sanggahan 2: Syarat Pengiriman (Incoterms)</span>
-                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[7px]">Menunggu Keputusan</span>
+                  <span className="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black uppercase text-[12px]">Menunggu Keputusan</span>
                 </div>
-                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                <p className="text-[12px] text-slate-600 leading-relaxed mb-2">
                   &ldquo;Pembeli lebih memilih penawaran <strong>CIF Tokyo Port</strong> agar mereka tidak perlu repot mencari kapal kontainer sendiri di Tanjung Priok.&rdquo;
                 </p>
                 <button 
@@ -949,7 +949,7 @@ export default function NegotiationDashboard({
                     setIncoterms('CIF Tokyo Port, Japan (Incoterms 2020)');
                     setPortOfDischarge('Port of Tokyo, Japan');
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
                 >
                   ✓ Setujui CIF Tokyo (Ubah Struktur Ongkos)
                 </button>
@@ -957,18 +957,18 @@ export default function NegotiationDashboard({
 
               {/* Live negotiation chat 3 */}
               <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-3xs">
-                <div className="flex justify-between items-center text-[8px] font-bold text-indigo-850 mb-1">
+                <div className="flex justify-between items-center text-[12px] font-bold text-indigo-850 mb-1">
                   <span>Sanggahan 3: Pilihan Metode Pembayaran</span>
-                  <span className="bg-emerald-100 text-emerald-850 px-1.5 py-0.2 rounded font-black font-mono text-[7px]">✓ Direkomendasikan Bank</span>
+                  <span className="bg-emerald-100 text-emerald-850 px-1.5 py-0.2 rounded font-black font-mono text-[12px]">✓ Direkomendasikan Bank</span>
                 </div>
-                <p className="text-[9px] text-slate-600 leading-relaxed mb-2">
+                <p className="text-[12px] text-slate-600 leading-relaxed mb-2">
                   &ldquo;Gunakan sistem prabayar/DP atau L/C term di dalam PI agar devisa terjamin otomatis sebelum proses logistik pengiriman.&rdquo;
                 </p>
                 <button 
                   onClick={() => {
                     setPaymentTerms('100% Sight Letter of Credit (L/C Irrevocable)');
                   }}
-                  className="bg-slate-700 hover:bg-slate-850 text-white text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
+                  className="bg-slate-700 hover:bg-slate-850 text-white text-[12px] font-black uppercase tracking-wide px-2 py-1 rounded transition-colors cursor-pointer active:scale-95"
                 >
                   ✓ Gunakan 100% L/C Irrevocable
                 </button>
@@ -977,16 +977,16 @@ export default function NegotiationDashboard({
             </div>
 
             <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-              <span className="text-[8px] text-slate-400 font-bold">Klausul di atas akan langsung meng-update draf PI ekspor Anda</span>
+              <span className="text-[12px] text-slate-400 font-bold">Klausul di atas akan langsung meng-update draf PI ekspor Anda</span>
               {side === 'trader' ? (
                 <button 
                   onClick={() => updateStepIdAndBubble(5)}
-                  className="text-[9px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
+                  className="text-[12px] font-black uppercase tracking-wider text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer active:scale-95"
                 >
                   Kunci & Ke Meja TTD Bilateral →
                 </button>
               ) : (
-                <span className="text-orange-600 text-[9px] font-bold uppercase tracking-wider bg-orange-50 px-2.5 py-1 rounded border border-orange-150">Dalam Sesi Diskusi 💬</span>
+                <span className="text-orange-600 text-[12px] font-bold uppercase tracking-wider bg-orange-50 px-2.5 py-1 rounded border border-orange-150">Dalam Sesi Diskusi 💬</span>
               )}
             </div>
           </div>
@@ -999,8 +999,8 @@ export default function NegotiationDashboard({
             <div className="flex justify-between items-start border-b border-dashed border-slate-300 pb-3">
               <div>
                 <h5 className="font-bold text-slate-900 text-xs">PROFORMA INVOICE</h5>
-                <p className="text-[9px] text-slate-400 mt-0.5">PT MULTI RAKSA MADANI</p>
-                <p className="text-[9px] text-slate-400">Jakarta, Indonesia</p>
+                <p className="text-[12px] text-slate-400 mt-0.5">PT MULTI RAKSA MADANI</p>
+                <p className="text-[12px] text-slate-400">Jakarta, Indonesia</p>
               </div>
               <div className="text-right col-span-4 ml-auto">
                 <p className="font-bold text-slate-900">No: PFI/EFI-2026/8892</p>
@@ -1009,22 +1009,22 @@ export default function NegotiationDashboard({
             </div>
 
             {/* Parties Block */}
-            <div className="grid grid-cols-2 gap-2 text-[9px] text-left">
+            <div className="grid grid-cols-2 gap-2 text-[12px] text-left">
               <div className={`bg-white p-2 rounded-md border text-left ${side === 'trader' ? 'border-indigo-400 bg-indigo-50/20' : 'border-slate-200'}`}>
-                <span className="font-black uppercase text-[8px] text-indigo-800 block mb-0.5">1. SELLER / SHIPPER</span>
-                <p className="font-bold text-slate-900 text-[9px]">PT MULTI RAKSA MADANI</p>
-                <p className="text-slate-500 mt-0.5 leading-tight text-[8px]">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+                <span className="font-black uppercase text-[12px] text-indigo-800 block mb-0.5">1. SELLER / SHIPPER</span>
+                <p className="font-bold text-slate-900 text-[12px]">PT MULTI RAKSA MADANI</p>
+                <p className="text-slate-500 mt-0.5 leading-tight text-[12px]">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
               </div>
               <div className={`bg-white p-2 rounded-md border text-left ${side === 'buyer' ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200'}`}>
-                <span className="font-black uppercase text-[8px] text-amber-800 block mb-0.5">2. BUYER / IMPORTER</span>
-                <p className="font-bold text-slate-900 text-[9px]">{buyerCompany}</p>
-                <p className="text-slate-500 mt-0.5 leading-tight text-[8px]">{buyerAddress}</p>
+                <span className="font-black uppercase text-[12px] text-amber-800 block mb-0.5">2. BUYER / IMPORTER</span>
+                <p className="font-bold text-slate-900 text-[12px]">{buyerCompany}</p>
+                <p className="text-slate-500 mt-0.5 leading-tight text-[12px]">{buyerAddress}</p>
               </div>
             </div>
 
             {/* Cargo specs table */}
             <div className="bg-white rounded-md border border-slate-200 overflow-hidden text-left">
-              <div className="bg-slate-100 px-2 py-1.5 font-bold grid grid-cols-12 border-b border-slate-200 text-slate-800 text-[8px]">
+              <div className="bg-slate-100 px-2 py-1.5 font-bold grid grid-cols-12 border-b border-slate-200 text-slate-800 text-[12px]">
                 <span className="col-span-6 text-left">COMMODITY & SPECIFICATION</span>
                 <span className="col-span-2 text-right font-bold">QTY</span>
                 <span className="col-span-2 text-right font-bold">PRICE</span>
@@ -1034,21 +1034,21 @@ export default function NegotiationDashboard({
               <div className="p-2 grid grid-cols-12 border-b border-slate-100 items-start text-slate-900 leading-tight">
                 <span className="col-span-6">
                   <strong className="text-slate-955 block">{selectedProduct.name}</strong>
-                  <span className="text-[8px] text-slate-400 block mt-0.5">H.S. CODE: {selectedProduct.hsCode}</span>
-                  <span className="text-[8px] text-slate-400 block">Origin: {selectedProduct.origin}</span>
+                  <span className="text-[12px] text-slate-400 block mt-0.5">H.S. CODE: {selectedProduct.hsCode}</span>
+                  <span className="text-[12px] text-slate-400 block">Origin: {selectedProduct.origin}</span>
                 </span>
                 <span className="col-span-2 text-right font-semibold">{quantity} MT</span>
                 <span className="col-span-2 text-right font-semibold">${pricePerUnit.toLocaleString('en-US')}</span>
                 <span className="col-span-2 text-right font-black text-indigo-900">${totalPrice.toLocaleString('en-US')}</span>
               </div>
               
-              <div className="bg-slate-50 px-2 py-1.5 text-right font-bold text-slate-900 text-[9px]">
+              <div className="bg-slate-50 px-2 py-1.5 text-right font-bold text-slate-900 text-[12px]">
                 TOTAL AMOUNT ({incoterms.split(' ')[0]}): <span className="text-indigo-900 text-xs font-black">${totalPrice.toLocaleString('en-US')}.00 USD</span>
               </div>
             </div>
 
             {/* Commercial Terms & Banking Details */}
-            <div className="bg-white p-2 rounded-md border border-slate-200 space-y-1.5 text-[8.5px] text-left">
+            <div className="bg-white p-2 rounded-md border border-slate-200 space-y-1.5 text-[12px] text-left">
               <h6 className="font-black text-slate-800 uppercase text-indigo-800 tracking-wider">COMMERCIAL & BANKING CLAUSES :</h6>
               
               <div className="grid grid-cols-12 gap-1 border-b border-slate-100 pb-1">
@@ -1066,7 +1066,7 @@ export default function NegotiationDashboard({
                 <span className="col-span-8 text-slate-900">{portOfDischarge}</span>
               </div>
 
-              <div className="grid grid-cols-12 gap-1 text-[8px]">
+              <div className="grid grid-cols-12 gap-1 text-[12px]">
                 <span className="col-span-4 font-bold text-slate-500">BENEFICIARY BANK:</span>
                 <span className="col-span-8 text-slate-750 leading-tight">
                   <strong>BANK NEGARA INDONESIA (BNIDEJAX)</strong><br />
@@ -1088,7 +1088,7 @@ export default function NegotiationDashboard({
                       ? 'border-dashed border-indigo-400 ring-2 ring-indigo-200 ring-offset-1'
                       : 'border-dashed border-slate-200'
                 }`}>
-                  <span className="text-[7.5px] font-black uppercase text-slate-400 block mb-1">APPROVED BY EXPORTER:</span>
+                  <span className="text-[12px] font-black uppercase text-slate-400 block mb-1">APPROVED BY EXPORTER:</span>
                   
                   {isExporterSigned ? (
                     <motion.div 
@@ -1096,13 +1096,13 @@ export default function NegotiationDashboard({
                       animate={{ scale: 1, opacity: 1 }}
                       className="my-auto flex flex-col items-center justify-center text-emerald-600"
                     >
-                      <span className="font-mono text-[8px] tracking-wide font-black border border-emerald-500 px-1 py-0.5 uppercase transform -rotate-6 bg-white/95 text-center shadow-3xs leading-none">
+                      <span className="font-mono text-[12px] tracking-wide font-black border border-emerald-500 px-1 py-0.5 uppercase transform -rotate-6 bg-white/95 text-center shadow-3xs leading-none">
                         APPROVED - RAKSA MADANI
                       </span>
-                      <span className="text-[7px] text-slate-400 mt-1">Eksportir Signed ✓</span>
+                      <span className="text-[12px] text-slate-400 mt-1">Eksportir Signed ✓</span>
                     </motion.div>
                   ) : (
-                    <div className="my-auto text-[8px] text-slate-350 font-bold animate-pulse">
+                    <div className="my-auto text-[12px] text-slate-350 font-bold animate-pulse">
                       {side === 'trader' ? '👉 [KLIK TTD DI BAWAH]' : '[Belum Ditandatangani]'}
                     </div>
                   )}
@@ -1116,7 +1116,7 @@ export default function NegotiationDashboard({
                       ? 'border-dashed border-amber-400 ring-2 ring-amber-200 ring-offset-1'
                       : 'border-dashed border-slate-200'
                 }`}>
-                  <span className="text-[7.5px] font-black uppercase text-slate-400 block mb-1">COUNTERSIGNED BY BUYER:</span>
+                  <span className="text-[12px] font-black uppercase text-slate-400 block mb-1">COUNTERSIGNED BY BUYER:</span>
                   
                   {isBuyerSigned ? (
                     <motion.div 
@@ -1124,13 +1124,13 @@ export default function NegotiationDashboard({
                       animate={{ scale: 1, opacity: 1 }}
                       className="my-auto flex flex-col items-center justify-center text-indigo-600"
                     >
-                      <span className="font-mono text-[8px] tracking-wide font-black border border-indigo-500 px-1 py-0.5 uppercase transform rotate-6 bg-white/95 text-center shadow-3xs leading-none">
+                      <span className="font-mono text-[12px] tracking-wide font-black border border-indigo-500 px-1 py-0.5 uppercase transform rotate-6 bg-white/95 text-center shadow-3xs leading-none">
                         ACCEPTED - YOSHIHIDE CO.
                       </span>
-                      <span className="text-[7px] text-slate-400 mt-1">Buyer Signed ✓</span>
+                      <span className="text-[12px] text-slate-400 mt-1">Buyer Signed ✓</span>
                     </motion.div>
                   ) : (
-                    <div className="my-auto text-[8px] text-slate-350 font-bold animate-pulse">
+                    <div className="my-auto text-[12px] text-slate-350 font-bold animate-pulse">
                       {side === 'buyer' ? '👉 [KLIK TTD DI BAWAH]' : '[Belum Ditandatangani]'}
                     </div>
                   )}
@@ -1156,7 +1156,7 @@ export default function NegotiationDashboard({
           <div className="space-y-2 flex-1">
             <h3 className="font-extrabold text-slate-900 text-sm tracking-tight flex items-center gap-2">
               <span>Bagaimana Cara Eksportir &amp; Importir Bernegosiasi di Sini?</span>
-              <span className="text-[10px] bg-amber-200 text-amber-800 font-black px-2 py-0.5 rounded uppercase">Simulasi Bilateral</span>
+              <span className="text-[12px] bg-amber-200 text-amber-800 font-black px-2 py-0.5 rounded uppercase">Simulasi Bilateral</span>
             </h3>
             <p className="text-slate-600 text-xs leading-relaxed font-sans font-medium">
               Aplikasi ini mensimulasikan perundingan ekspor riil yang bersifat <strong>Bilateral (Dua Arah)</strong>. 
@@ -1166,14 +1166,14 @@ export default function NegotiationDashboard({
             
             <div className="bg-white/80 backdrop-blur-3xs rounded-xl p-4 border border-amber-150 flex flex-col md:flex-row md:items-center justify-between gap-4 mt-3">
               <div className="space-y-1">
-                <span className="text-[9px] uppercase font-black tracking-wider text-slate-450 block">Akun Anda Saat Ini:</span>
+                <span className="text-[12px] uppercase font-black tracking-wider text-slate-450 block">Akun Anda Saat Ini:</span>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs text-indigo-600 font-bold shrink-0">
                     {currentUser?.name?.charAt(0) || 'U'}
                   </div>
                   <div>
                     <span className="font-bold text-slate-900 text-xs block">{currentUser?.name || 'Belum Login'}</span>
-                    <span className="text-[10px] text-slate-500 font-medium block">
+                    <span className="text-[12px] text-slate-500 font-medium block">
                       Peran: <strong className="text-indigo-600">{currentUser?.role || 'Umum'}</strong> • {currentUser?.companyName || 'Instansi Umum'}
                     </span>
                   </div>
@@ -1236,12 +1236,12 @@ export default function NegotiationDashboard({
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200/60">
                       <div>
-                        <span className="text-[10px] uppercase font-black tracking-widest text-indigo-600">
+                        <span className="text-[12px] uppercase font-black tracking-widest text-indigo-600">
                           Tahapan Aktif: {step.badge}
                         </span>
                         <h4 className="text-sm font-black text-slate-900 mt-0.5">{step.title}</h4>
                       </div>
-                      <div className="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2.5 py-1 rounded-full border border-indigo-200">
+                      <div className="bg-indigo-100 text-indigo-800 text-[12px] font-black px-2.5 py-1 rounded-full border border-indigo-200">
                         Inisiator: {step.actor}
                       </div>
                     </div>
@@ -1252,7 +1252,7 @@ export default function NegotiationDashboard({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div className="bg-white p-2.5 rounded-lg border border-slate-200/85">
-                        <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Arah Aliran Berkas :</span>
+                        <span className="text-[12px] font-black uppercase text-slate-400 block tracking-wider">Arah Aliran Berkas :</span>
                         <div className="flex items-center gap-1.5 mt-1 font-semibold text-slate-800">
                           <span className="truncate max-w-[120px]">{step.sender}</span>
                           <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -1261,8 +1261,8 @@ export default function NegotiationDashboard({
                       </div>
 
                       <div className="bg-white p-2.5 rounded-lg border border-slate-200/85">
-                        <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Bobot & Makna Hukum :</span>
-                        <p className="text-[11px] font-semibold text-indigo-950 mt-1 leading-tight">
+                        <span className="text-[12px] font-black uppercase text-slate-400 block tracking-wider">Bobot & Makna Hukum :</span>
+                        <p className="text-[12px] font-semibold text-indigo-950 mt-1 leading-tight">
                           {step.importance}
                         </p>
                       </div>
@@ -1274,15 +1274,15 @@ export default function NegotiationDashboard({
                         {/* Beautiful incoming LOI card */}
                         <div className="bg-indigo-50 border border-indigo-150 rounded-xl p-4 space-y-3 shadow-xs">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
+                            <span className="text-[12px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                               Letter of Intent (LOI) Masuk
                             </span>
-                            <span className="text-[8px] bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[12px] bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
                               Inquiry Aktif
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-700 leading-relaxed font-semibold">
+                          <p className="text-[12px] text-slate-700 leading-relaxed font-semibold">
                             Importir luar negeri <strong>Yoshihide Trading Co., Ltd. (Japan)</strong> telah mengirimkan dokumen permintaan pembelian resmi untuk komoditi Anda.
                           </p>
                           <button
@@ -1297,16 +1297,16 @@ export default function NegotiationDashboard({
 
                         <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
+                            <span className="text-[12px] font-black uppercase text-indigo-950 flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                               Lampiran Dokumen Resmi Pembeli (LOI / Inquiry)
                             </span>
-                            <span className="text-[8px] bg-indigo-50 text-indigo-600 border border-indigo-100 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[12px] bg-indigo-50 text-indigo-600 border border-indigo-100 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
                               Interactive Attachment
                             </span>
                           </div>
                           
-                          <p className="text-[10.5px] text-slate-650 leading-relaxed font-semibold">
+                          <p className="text-[12px] text-slate-650 leading-relaxed font-semibold">
                             Sebagai Buyer, Anda dapat melampirkan file dokumen Letter of Intent resmi (misalkan hasil scan PDF berstempel) langsung di fase awal negosiasi ini untuk ditinjau oleh Trader:
                           </p>
 
@@ -1355,36 +1355,36 @@ export default function NegotiationDashboard({
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                 </svg>
                               </div>
-                              <p className="text-[10.5px] font-bold text-slate-800">Klik / Seret file PDF atau gambar LOI ke sini</p>
-                              <p className="text-[9px] text-slate-400">PDF, Word, JPG, atau PNG (Maks. 10 MB)</p>
+                              <p className="text-[12px] font-bold text-slate-800">Klik / Seret file PDF atau gambar LOI ke sini</p>
+                              <p className="text-[12px] text-slate-400">PDF, Word, JPG, atau PNG (Maks. 10 MB)</p>
                             </label>
                           </div>
 
                           {/* File Listing block */}
                           {loiAttachment.length > 0 && (
                             <div className="space-y-1.5 pt-1">
-                              <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Dokumen Lampiran Aktif ({loiAttachment.length}):</span>
+                              <span className="text-[12px] font-black uppercase text-slate-400 block tracking-wider">Dokumen Lampiran Aktif ({loiAttachment.length}):</span>
                               <div className="space-y-1">
                                 {loiAttachment.map((file, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/40 border border-emerald-100 text-slate-800 text-[10px]">
+                                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/40 border border-emerald-100 text-slate-800 text-[12px]">
                                     <div className="flex items-center gap-1.5 truncate pr-3">
-                                      <div className="px-1.5 py-0.5 bg-emerald-600 text-white rounded text-[8px] font-black uppercase tracking-wider shrink-0">
+                                      <div className="px-1.5 py-0.5 bg-emerald-600 text-white rounded text-[12px] font-black uppercase tracking-wider shrink-0">
                                         {file.name.split('.').pop() || 'PDF'}
                                       </div>
                                       <span className="truncate font-bold text-slate-800" title={file.name}>{file.name}</span>
-                                      <span className="text-[8.5px] text-slate-400 font-bold shrink-0">({file.size})</span>
+                                      <span className="text-[12px] text-slate-400 font-bold shrink-0">({file.size})</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0">
                                       <button
                                         type="button"
                                         onClick={() => setIsLoiModalOpen(true)}
-                                        className="text-indigo-650 hover:text-indigo-800 font-extrabold text-[9.5px] px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
+                                        className="text-indigo-650 hover:text-indigo-800 font-extrabold text-[12px] px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
                                       >
                                         Buka LOI
                                       </button>
                                       <button 
                                         onClick={() => setLoiAttachment(prev => prev.filter((_, i) => i !== idx))}
-                                        className="text-red-500 hover:text-red-700 font-bold text-[9px] px-2 py-0.5 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
+                                        className="text-red-500 hover:text-red-700 font-bold text-[12px] px-2 py-0.5 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
                                       >
                                         Hapus
                                       </button>
@@ -1433,7 +1433,7 @@ export default function NegotiationDashboard({
               <Building2 className="w-4 h-4 text-slate-500" />
               Sesuaikan Parameter Transaksi (Interactive Negotiator)
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1 mb-4">
+            <p className="text-[12px] text-slate-400 mt-1 mb-4">
               Ubah data di bawah ini untuk melihat bagaimana draf <strong>Proforma Invoice (PI)</strong> terisi otomatis serta menghitung nominal perbankan secara akurat.
             </p>
 
@@ -1441,7 +1441,7 @@ export default function NegotiationDashboard({
               
                {/* Product Select */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Pilih Komoditas Ekspor</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Pilih Komoditas Ekspor</label>
                 {shipment ? (
                   <div className="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 select-none">
                     {selectedProduct.name} (Terkunci dari Transaksi)
@@ -1461,7 +1461,7 @@ export default function NegotiationDashboard({
 
               {/* Volume / Quantity input */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Volume Kuantitas ({selectedProduct.unit})</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Volume Kuantitas ({selectedProduct.unit})</label>
                 <div className="flex gap-2">
                   <input
                     disabled={isLocked}
@@ -1470,7 +1470,7 @@ export default function NegotiationDashboard({
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                     className={`w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold ${isLocked ? 'bg-slate-100 border-slate-200 text-slate-450 cursor-not-allowed' : ''}`}
                   />
-                  <span className="p-2 bg-slate-100 border border-slate-250 text-[11px] text-slate-500 font-bold rounded-lg shrink-0">
+                  <span className="p-2 bg-slate-100 border border-slate-250 text-[12px] text-slate-500 font-bold rounded-lg shrink-0">
                     {selectedProduct.unit.split(' ')[0]}
                   </span>
                 </div>
@@ -1478,7 +1478,7 @@ export default function NegotiationDashboard({
 
               {/* Price Per Unit */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Harga Per Unit Proposal (USD / Unit)</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Harga Per Unit Proposal (USD / Unit)</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">USD</span>
                   <input
@@ -1493,7 +1493,7 @@ export default function NegotiationDashboard({
 
               {/* Payment Terms */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pembayaran (Payment Terms)</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Syarat Pembayaran (Payment Terms)</label>
                 <select
                   disabled={isLocked}
                   value={paymentTerms}
@@ -1509,7 +1509,7 @@ export default function NegotiationDashboard({
 
               {/* Incoterms Selector */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pengiriman (Incoterms 2020)</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Syarat Pengiriman (Incoterms 2020)</label>
                 <select
                   disabled={isLocked}
                   value={incoterms}
@@ -1525,7 +1525,7 @@ export default function NegotiationDashboard({
 
               {/* Port of Discharge */}
               <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-slate-500">Pelabuhan Bongkar (Port of Discharge)</label>
+                <label className="block text-[12px] font-black uppercase text-slate-500">Pelabuhan Bongkar (Port of Discharge)</label>
                 <input
                   disabled={isLocked}
                   type="text"
@@ -1546,7 +1546,7 @@ export default function NegotiationDashboard({
               </div>
               <div>
                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">Kalkulator &amp; Panduan Pembayaran Buyer</h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[12px] text-slate-500 mt-0.5">
                   Panduan lengkap cara menghitung rincian pembayaran buyer berdasarkan kuantitas, harga, dan kesepakatan internasional.
                 </p>
               </div>
@@ -1555,19 +1555,19 @@ export default function NegotiationDashboard({
             {/* Live Calculation Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-[9px] uppercase font-bold text-slate-400 block">Total Kargo Ekspor</span>
+                <span className="text-[12px] uppercase font-bold text-slate-400 block">Total Kargo Ekspor</span>
                 <span className="text-xs font-black text-slate-800 block mt-1">{quantity} MT</span>
-                <span className="text-[10px] text-slate-450 block">{selectedProduct.name}</span>
+                <span className="text-[12px] text-slate-450 block">{selectedProduct.name}</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-200">
-                <span className="text-[9px] uppercase font-bold text-slate-400 block">Harga Satuan disepakati</span>
+                <span className="text-[12px] uppercase font-bold text-slate-400 block">Harga Satuan disepakati</span>
                 <span className="text-xs font-black text-slate-800 block mt-1">${pricePerUnit.toLocaleString('en-US')} / MT</span>
-                <span className="text-[10px] text-slate-450 block">Ex Works / FOB Pelabuhan</span>
+                <span className="text-[12px] text-slate-450 block">Ex Works / FOB Pelabuhan</span>
               </div>
               <div className="bg-white p-3 rounded-xl border border-indigo-100 bg-indigo-50/20">
-                <span className="text-[9px] uppercase font-bold text-indigo-500 block">Nilai FOB / EXW Dasar</span>
+                <span className="text-[12px] uppercase font-bold text-indigo-500 block">Nilai FOB / EXW Dasar</span>
                 <span className="text-sm font-black text-indigo-950 block mt-0.5">${totalPrice.toLocaleString('en-US')}.00 USD</span>
-                <span className="text-[9px] text-slate-500 block">~ Rp {(totalPrice * 16200).toLocaleString('id-ID')}</span>
+                <span className="text-[12px] text-slate-500 block">~ Rp {(totalPrice * 16200).toLocaleString('id-ID')}</span>
               </div>
             </div>
 
@@ -1577,10 +1577,10 @@ export default function NegotiationDashboard({
                 <HelpCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Bagaimana Rumus Dasar Perhitungannya?</span>
               </div>
-              <p className="text-[11px] text-slate-650 leading-relaxed">
+              <p className="text-[12px] text-slate-650 leading-relaxed">
                 Total yang harus dibayar buyer dihitung dari kombinasi <strong>Harga Barang Dasar + Ongkos Kirim (tergantung Incoterms)</strong>, yang kemudian diselesaikan melalui metode cicilan <strong>Down Payment &amp; L/C (tergantung Syarat Pembayaran)</strong>.
               </p>
-              <div className="p-3 bg-slate-50 rounded-lg font-mono text-[10px] text-slate-700 space-y-1.5 border border-slate-150">
+              <div className="p-3 bg-slate-50 rounded-lg font-mono text-[12px] text-slate-700 space-y-1.5 border border-slate-150">
                 <div className="text-slate-800 font-bold">1. Rumus Total Nilai Barang:</div>
                 <div className="pl-3 text-indigo-700 text-xs font-semibold">
                   Kuantitas ({quantity} MT) × Harga Satuan (${pricePerUnit.toLocaleString('en-US')} USD) = <span className="font-bold">${totalPrice.toLocaleString('en-US')} USD</span>
@@ -1633,27 +1633,27 @@ export default function NegotiationDashboard({
               return (
                 <div className="bg-indigo-950 text-indigo-50 p-4 rounded-xl border border-indigo-900 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase text-indigo-300 tracking-wider">Simulasi Sesuai Syarat Pembayaran Anda</span>
-                    <span className="px-2 py-0.5 bg-indigo-900 text-indigo-300 rounded text-[9px] font-bold">Live Breakdown</span>
+                    <span className="text-[12px] font-black uppercase text-indigo-300 tracking-wider">Simulasi Sesuai Syarat Pembayaran Anda</span>
+                    <span className="px-2 py-0.5 bg-indigo-900 text-indigo-300 rounded text-[12px] font-bold">Live Breakdown</span>
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div className="bg-white/5 border border-white/10 rounded-lg p-2.5">
-                      <span className="text-[9px] text-indigo-300 block font-bold">{explanation.dpLabel}</span>
+                      <span className="text-[12px] text-indigo-300 block font-bold">{explanation.dpLabel}</span>
                       <span className="text-xs font-black block mt-0.5 text-white">${explanation.dp.toLocaleString('en-US')}.00 USD</span>
-                      <span className="text-[9px] text-indigo-300 font-mono block">~ Rp {(explanation.dp * 16200).toLocaleString('id-ID')}</span>
-                      <span className="text-[8px] text-indigo-400 block mt-1">Dibayar: Kirim Sebelum Mulai</span>
+                      <span className="text-[12px] text-indigo-300 font-mono block">~ Rp {(explanation.dp * 16200).toLocaleString('id-ID')}</span>
+                      <span className="text-[12px] text-indigo-400 block mt-1">Dibayar: Kirim Sebelum Mulai</span>
                     </div>
                     
                     <div className="bg-white/5 border border-white/10 rounded-lg p-2.5">
-                      <span className="text-[9px] text-indigo-300 block font-bold">{explanation.balanceLabel}</span>
+                      <span className="text-[12px] text-indigo-300 block font-bold">{explanation.balanceLabel}</span>
                       <span className="text-xs font-black block mt-0.5 text-white">${explanation.balance.toLocaleString('en-US')}.00 USD</span>
-                      <span className="text-[9px] text-indigo-300 font-mono block">~ Rp {(explanation.balance * 16200).toLocaleString('id-ID')}</span>
-                      <span className="text-[8px] text-indigo-400 block mt-1">Dibayar: Saat Dokumen Kapal Siap / Selesai Muat</span>
+                      <span className="text-[12px] text-indigo-300 font-mono block">~ Rp {(explanation.balance * 16200).toLocaleString('id-ID')}</span>
+                      <span className="text-[12px] text-indigo-400 block mt-1">Dibayar: Saat Dokumen Kapal Siap / Selesai Muat</span>
                     </div>
                   </div>
 
-                  <p className="text-[10px] text-indigo-200 leading-relaxed border-t border-indigo-900 pt-2.5">
+                  <p className="text-[12px] text-indigo-200 leading-relaxed border-t border-indigo-900 pt-2.5">
                     <strong>Catatan Operasional:</strong> {explanation.desc}
                   </p>
                 </div>
@@ -1671,11 +1671,11 @@ export default function NegotiationDashboard({
                 const term = incoterms.toLowerCase();
                 if (term.includes('fob')) {
                   return (
-                    <div className="text-[11px] text-emerald-900 leading-relaxed space-y-2">
+                    <div className="text-[12px] text-emerald-900 leading-relaxed space-y-2">
                       <p>
                         Anda memilih <strong>FOB (Free On Board)</strong>. Artinya, biaya yang harus dibayar buyer kepada Anda selaku eksportir <strong>HANYA sebatas harga barang di atas kapal (${totalPrice.toLocaleString('en-US')} USD)</strong>.
                       </p>
-                      <div className="bg-white p-2.5 rounded-lg border border-emerald-100 text-[10px] text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-white p-2.5 rounded-lg border border-emerald-100 text-[12px] text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="p-1">
                           <span className="font-semibold text-emerald-700 block">Dibayar ke Eksportir (Seller):</span>
                           <span>Harga kargo dasar pelabuhan muat di Indonesia.</span>
@@ -1692,11 +1692,11 @@ export default function NegotiationDashboard({
                   const simulatedInsurance = totalPrice * 0.01;
                   const totalCIFValue = totalPrice + simulatedFreight + simulatedInsurance;
                   return (
-                    <div className="text-[11px] text-emerald-900 leading-relaxed space-y-3">
+                    <div className="text-[12px] text-emerald-900 leading-relaxed space-y-3">
                       <p>
                         Anda memilih <strong>CIF (Cost, Insurance &amp; Freight)</strong>. Pelunasan transaksi ekspor ini sudah mencakup komoditas dasar, premi perlindungan laut, dan biaya angkutan kapal laut kontainer internasional hingga Pelabuhan Bongkar buyer.
                       </p>
-                      <div className="bg-white p-3 rounded-lg border border-emerald-100 text-[10px] text-slate-750 space-y-2 font-mono">
+                      <div className="bg-white p-3 rounded-lg border border-emerald-100 text-[12px] text-slate-750 space-y-2 font-mono">
                         <div className="flex justify-between">
                           <span>1. Nilai Komoditas Dasar:</span>
                           <span className="font-bold text-slate-900">${totalPrice.toLocaleString('en-US')} USD</span>
@@ -1714,7 +1714,7 @@ export default function NegotiationDashboard({
                           <span>${totalCIFValue.toLocaleString('en-US')} USD</span>
                         </div>
                       </div>
-                      <p className="text-[9px] text-slate-450 italic leading-snug">
+                      <p className="text-[12px] text-slate-450 italic leading-snug">
                         *Catatan: Selisih tarif asuransi dan ocean freight resmi dibayarkan oleh Eksportir terlebih dahulu ke cargo agent, karena penawaran berstatus CIF pelabuhan tujuan buyer.
                       </p>
                     </div>
@@ -1723,11 +1723,11 @@ export default function NegotiationDashboard({
                   const simulatedFreight = totalPrice * 0.07;
                   const totalCFRValue = totalPrice + simulatedFreight;
                   return (
-                    <div className="text-[11px] text-emerald-900 leading-relaxed space-y-3">
+                    <div className="text-[12px] text-emerald-900 leading-relaxed space-y-3">
                       <p>
                         Anda memilih <strong>CFR (Cost &amp; Freight)</strong>. Berarti tagihan ekspor yang dibayar buyer mencakup harga pokok barang ekspor beserta ongkos kapal kargo luar negeri ke Pelabuhan Bongkar buyer, namun TANPA premi asuransi (pengimpor menjamin asuransi secara berpisah).
                       </p>
-                      <div className="bg-white p-3 rounded-lg border border-emerald-100 text-[10px] text-slate-750 space-y-2 font-mono">
+                      <div className="bg-white p-3 rounded-lg border border-emerald-100 text-[12px] text-slate-750 space-y-2 font-mono">
                         <div className="flex justify-between">
                           <span>1. Nilai Komoditas Dasar:</span>
                           <span className="font-bold text-slate-900">${totalPrice.toLocaleString('en-US')} USD</span>
@@ -1745,11 +1745,11 @@ export default function NegotiationDashboard({
                   );
                 } else {
                   return (
-                    <div className="text-[11px] text-emerald-900 leading-relaxed space-y-2">
+                    <div className="text-[12px] text-emerald-900 leading-relaxed space-y-2">
                       <p>
                         Anda memilih <strong>EXW (Ex Works)</strong>. Artinya, pembeli asing (buyer) menjemput komoditas kargo Anda langsung di depan pintu gerbang gudang produsen asal di Indonesia.
                       </p>
-                      <p className="text-[10px] text-slate-650 bg-white p-2.5 rounded-lg border border-emerald-100 leading-relaxed">
+                      <p className="text-[12px] text-slate-650 bg-white p-2.5 rounded-lg border border-emerald-100 leading-relaxed">
                         Pengimpor menanggung tiket pengapalan, truk kargo domestik, cukai bea ekspor RI, hingga bea impor negara Yokohama/LA. Jumlah tagihan murni adalah harga dasar barang senilai <strong>${totalPrice.toLocaleString('en-US')} USD</strong>.
                       </p>
                     </div>
@@ -1777,7 +1777,7 @@ export default function NegotiationDashboard({
               </div>
               
               {/* Live Status Stamp */}
-              <div className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-md border ${
+              <div className={`px-2 py-1 text-[12px] font-black uppercase tracking-wider rounded-md border ${
                 currentStepId === 5 && isExporterSigned && isBuyerSigned
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                   : currentStepId === 4
@@ -1833,7 +1833,7 @@ export default function NegotiationDashboard({
                       setScale(1.0);
                       setPosition({ x: 0, y: 0 });
                     }}
-                    className="p-1 px-2.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-black flex items-center justify-center gap-1 transition-colors active:scale-95 text-[11px] cursor-pointer"
+                    className="p-1 px-2.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-black flex items-center justify-center gap-1 transition-colors active:scale-95 text-[12px] cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Reset View</span>
@@ -1847,7 +1847,7 @@ export default function NegotiationDashboard({
                   type="button"
                   title="Cetak Dokumen"
                   onClick={handlePrint}
-                  className="p-1.5 px-3 rounded-lg bg-emerald-600 font-black uppercase text-white hover:bg-emerald-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs cursor-pointer"
+                  className="p-1.5 px-3 rounded-lg bg-emerald-600 font-black uppercase text-white hover:bg-emerald-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[12px] shadow-3xs cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Cetak Dokumen</span>
@@ -1856,7 +1856,7 @@ export default function NegotiationDashboard({
                   type="button"
                   title="Unduh (.HTML)"
                   onClick={handleDownloadHTML}
-                  className="p-1.5 px-3 rounded-lg bg-indigo-600 font-black uppercase text-white hover:bg-indigo-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[10.5px] shadow-3xs cursor-pointer"
+                  className="p-1.5 px-3 rounded-lg bg-indigo-600 font-black uppercase text-white hover:bg-indigo-700 flex items-center justify-center gap-1.5 transition-colors active:scale-95 text-[12px] shadow-3xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Unduh (.HTML)</span>
@@ -1866,7 +1866,7 @@ export default function NegotiationDashboard({
 
             {/* Print/Blocked Popup Warning Banner */}
             {printBlockedError && (
-              <div className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-900 p-3.5 rounded-xl text-[11px] font-medium flex flex-col md:flex-row items-center justify-between gap-3 shadow-sm border border-amber-250 mb-3 animate-fadeIn text-left leading-relaxed">
+              <div className="bg-gradient-to-r from-amber-50 to-amber-100 text-amber-900 p-3.5 rounded-xl text-[12px] font-medium flex flex-col md:flex-row items-center justify-between gap-3 shadow-sm border border-amber-250 mb-3 animate-fadeIn text-left leading-relaxed">
                 <div className="flex items-start gap-2">
                   <span className="text-sm mt-0.5">⚠️</span>
                   <div>
@@ -1879,7 +1879,7 @@ export default function NegotiationDashboard({
                     href={window.location.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all shadow-xs shrink-0 flex items-center gap-1"
+                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-2.5 py-1.5 rounded-lg text-[12px] font-black uppercase transition-all shadow-xs shrink-0 flex items-center gap-1"
                   >
                     <span>Tab Baru ↗️</span>
                   </a>
@@ -1895,7 +1895,7 @@ export default function NegotiationDashboard({
             )}
 
             {/* Instruction Banner */}
-            <div className="text-[10.5px] text-slate-600 pb-2 select-none flex items-center gap-1 bg-amber-50/50 border border-amber-200/60 rounded-lg p-2.5 mb-3.5">
+            <div className="text-[12px] text-slate-600 pb-2 select-none flex items-center gap-1 bg-amber-50/50 border border-amber-200/60 rounded-lg p-2.5 mb-3.5">
               <span>💡 <strong>Sentuh/Klik &amp; Seret</strong> atau gunakan <strong>roda scroll mouse</strong> untuk menggeser (pan) &amp; memperbesar dokumen secara leluasa.</span>
             </div>
 
@@ -1923,7 +1923,7 @@ export default function NegotiationDashboard({
               >
                 <div 
                   id="negotiation-document-paper" 
-                  className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 font-mono text-[10px] text-slate-705 space-y-4 relative overflow-hidden min-h-[500px] shadow-xs text-left"
+                  className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 font-mono text-[12px] text-slate-705 space-y-4 relative overflow-hidden min-h-[500px] shadow-xs text-left"
                 >
                   {/* Subtle Watermark */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.035] select-none">
@@ -1945,7 +1945,7 @@ export default function NegotiationDashboard({
               <FileSignature className="w-4.5 h-4.5 text-indigo-300" />
               <div>
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-100">Hub Tanda Tangan Bilateral</h3>
-                <p className="text-[10px] text-indigo-300">Harus ditandatangani 2 Pihak agar Proforma Invoice Sah!</p>
+                <p className="text-[12px] text-indigo-300">Harus ditandatangani 2 Pihak agar Proforma Invoice Sah!</p>
               </div>
             </div>
 
@@ -1954,14 +1954,14 @@ export default function NegotiationDashboard({
               {/* Exporter Signature Button */}
               <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
                 <div>
-                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 1: Eksportir</span>
+                  <span className="text-[12px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 1: Eksportir</span>
                   <span className="font-bold text-slate-100 block">PT MULTI RAKSA MADANI</span>
-                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Trader / Superadmin</span>
+                  <span className="text-[12px] text-slate-450 block">Wewenang: Trader / Superadmin</span>
                 </div>
                 <button
                   disabled={isLocked || !canSignExporter}
                   onClick={() => !isLocked && canSignExporter && setIsExporterSigned(!isExporterSigned)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-black uppercase shadow-xs transition-all ${
                     isLocked 
                       ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
                       : !canSignExporter
@@ -1990,14 +1990,14 @@ export default function NegotiationDashboard({
               {/* Buyer Signature Button */}
               <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-indigo-950/50">
                 <div>
-                  <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 2: Buyer</span>
+                  <span className="text-[12px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 2: Buyer</span>
                   <span className="font-bold text-slate-100 block">{buyerCompany}</span>
-                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Buyer</span>
+                  <span className="text-[12px] text-slate-450 block">Wewenang: Buyer</span>
                 </div>
                 <button
                   disabled={isLocked || !canSignBuyer}
                   onClick={() => !isLocked && canSignBuyer && setIsBuyerSigned(!isBuyerSigned)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-xs transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-black uppercase shadow-xs transition-all ${
                     isLocked 
                       ? 'bg-emerald-700/50 text-emerald-100 cursor-not-allowed border border-emerald-600/30 flex items-center gap-1'
                       : !canSignBuyer
@@ -2024,8 +2024,8 @@ export default function NegotiationDashboard({
               </div>
 
               {/* Joint Signature Info Box */}
-              <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-900 text-[11px] text-indigo-200 leading-relaxed">
-                <div className="flex gap-2 font-black uppercase text-indigo-300 tracking-wider text-[10px] items-center mb-1">
+              <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-900 text-[12px] text-indigo-200 leading-relaxed">
+                <div className="flex gap-2 font-black uppercase text-indigo-300 tracking-wider text-[12px] items-center mb-1">
                   <BadgeInfo className="w-4 h-4 text-indigo-455 shrink-0" />
                   Bagaimana Bilateral Berdampak?
                 </div>
@@ -2065,7 +2065,7 @@ export default function NegotiationDashboard({
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">Review Letter of Intent (LOI)</h3>
-                  <p className="text-[10px] text-slate-400">Dokumen Permintaan Pembukaan Resmi dari Pembeli</p>
+                  <p className="text-[12px] text-slate-400">Dokumen Permintaan Pembukaan Resmi dari Pembeli</p>
                 </div>
               </div>
 
@@ -2078,7 +2078,7 @@ export default function NegotiationDashboard({
                   <button
                     type="button"
                     onClick={handlePrintLoi}
-                    className="p-1.5 px-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-extrabold uppercase text-[9.5px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    className="p-1.5 px-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-extrabold uppercase text-[12px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
                     Cetak Dokumen
@@ -2086,7 +2086,7 @@ export default function NegotiationDashboard({
                   <button
                     type="button"
                     onClick={handleDownloadLoiHTML}
-                    className="p-1.5 px-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-extrabold uppercase text-[9.5px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                    className="p-1.5 px-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-extrabold uppercase text-[12px] tracking-wider flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Unduh (.HTML)
@@ -2096,26 +2096,26 @@ export default function NegotiationDashboard({
 
               {/* LOI Paper Frame */}
               <div className="p-1 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden mb-5">
-                <div id="loi-document-paper" className="bg-slate-50 p-5 rounded-lg border border-slate-150 font-mono text-[10px] text-slate-705 space-y-4 shadow-inner">
+                <div id="loi-document-paper" className="bg-slate-50 p-5 rounded-lg border border-slate-150 font-mono text-[12px] text-slate-705 space-y-4 shadow-inner">
                   <div className="border-b border-dashed border-slate-300 pb-3 text-left">
                     <h5 className="font-bold text-slate-900 text-xs">YOSHIHIDE TRADING CO., LTD.</h5>
-                    <p className="text-[9px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
-                    <p className="text-[9px] text-slate-400 font-bold mt-0.5">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
+                    <p className="text-[12px] text-slate-400">2-chome-4-1 Shibakoen, Minato City, Tokyo 105-0011, Japan</p>
+                    <p className="text-[12px] text-slate-400 font-bold mt-0.5">Tel: +81-3-5401-XXXX | Email: import@yoshihide.co.jp</p>
                   </div>
-                  <div className="text-right text-[9px] text-slate-500">
+                  <div className="text-right text-[12px] text-slate-500">
                     <p className="font-bold">Doc Ref: YT-LOI/2026/04</p>
                     <p>Date: June 15, 2026</p>
                   </div>
                   <div className="space-y-2 text-left">
                     <p className="font-bold text-slate-900">TO: PT MULTI RAKSA MADANI</p>
-                    <p className="font-bold text-[11px] underline">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
+                    <p className="font-bold text-[12px] underline">SUBJECT: LETTER OF INTENT (LOI) & COMMODITY INQUIRY</p>
                     <p className="leading-relaxed">
                       Dear Multi Raksa Madani Exports Team,
                     </p>
                     <p className="leading-relaxed">
                       We herewith officially express our strong interest to purchase high-quality Indonesian commodities. Based on your repute, we would like to request a detailed specifications list and a price proposal for:
                     </p>
-                    <div className="p-3 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[10px] space-y-1">
+                    <div className="p-3 bg-white rounded border border-slate-205 font-bold text-indigo-950 text-[12px] space-y-1">
                       <div>• Commodity: <span className="text-indigo-600">{selectedProduct.name}</span></div>
                       <div>• Target Volume: <span className="text-indigo-600">{quantity} MT (Metrik Ton)</span></div>
                       <div>• Target Incoterms: <span className="text-indigo-600">FOB Jakarta Port</span></div>
@@ -2125,7 +2125,7 @@ export default function NegotiationDashboard({
                       Kindly send us your Official Quotation Sheet along with laboratory test certifications (COA) and cargo load-time estimates. We look forward to a sustainable mutual trade relationship.
                     </p>
                   </div>
-                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-[8.5px]">
+                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-[12px]">
                     <span className="text-slate-400 italic">Signed digitally by Kenji Yoshihide (Director)</span>
                     <span className="text-emerald-600 font-extrabold uppercase">OFFICIAL DOCUMENT</span>
                   </div>
@@ -2137,7 +2137,7 @@ export default function NegotiationDashboard({
                 <button
                   type="button"
                   onClick={() => setIsLoiModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[12px] tracking-wider rounded-xl transition-all cursor-pointer"
                 >
                   Tutup
                 </button>
@@ -2185,7 +2185,7 @@ export default function NegotiationDashboard({
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">Interactive Negotiator: Penyusunan Tawaran</h3>
-                    <p className="text-[10px] text-slate-500">Sesuaikan rincian parameter komersial dan kalkulasi pembayaran untuk dikirim ke buyer</p>
+                    <p className="text-[12px] text-slate-500">Sesuaikan rincian parameter komersial dan kalkulasi pembayaran untuk dikirim ke buyer</p>
                   </div>
                 </div>
 
@@ -2193,7 +2193,7 @@ export default function NegotiationDashboard({
                   <button
                     type="button"
                     onClick={() => setShowPreviewInModal(!showPreviewInModal)}
-                    className={`px-3 py-1.5 rounded-xl border font-bold text-[10px] tracking-wider uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl border font-bold text-[12px] tracking-wider uppercase transition-all flex items-center gap-1 cursor-pointer ${
                       showPreviewInModal 
                         ? 'bg-indigo-100 text-indigo-700 border-indigo-200' 
                         : 'bg-white text-slate-600 border-slate-250 hover:bg-slate-50'
@@ -2218,7 +2218,7 @@ export default function NegotiationDashboard({
                         <Building2 className="w-4 h-4 text-indigo-600" />
                         Sesuaikan Parameter Transaksi
                       </h4>
-                      <p className="text-[10.5px] text-slate-400 mt-1">
+                      <p className="text-[12px] text-slate-400 mt-1">
                         Ubah data transaksi di bawah ini untuk melihat hasil estimasi perbankan dan memperbarui berkas penawaran.
                       </p>
                     </div>
@@ -2226,7 +2226,7 @@ export default function NegotiationDashboard({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Product Select */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-500">Pilih Komoditas Ekspor</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-500">Pilih Komoditas Ekspor</label>
                         {shipment ? (
                           <div className="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 select-none">
                             {selectedProduct.name} (Terkunci dari Transaksi)
@@ -2253,7 +2253,7 @@ export default function NegotiationDashboard({
 
                       {/* Volume / Quantity */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-500">Volume Kuantitas ({selectedProduct.unit})</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-500">Volume Kuantitas ({selectedProduct.unit})</label>
                         <div className="flex gap-2">
                           <input
                             disabled={isLocked}
@@ -2262,7 +2262,7 @@ export default function NegotiationDashboard({
                             onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                             className="w-full p-2 border border-slate-250 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
                           />
-                          <span className="p-2 bg-slate-100 border border-slate-250 text-[11px] text-slate-505 font-bold rounded-lg shrink-0">
+                          <span className="p-2 bg-slate-100 border border-slate-250 text-[12px] text-slate-505 font-bold rounded-lg shrink-0">
                             {selectedProduct.unit.split(' ')[0]}
                           </span>
                         </div>
@@ -2270,7 +2270,7 @@ export default function NegotiationDashboard({
 
                       {/* Price Per Unit */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-500">Harga Per Unit Proposal (USD / Unit)</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-500">Harga Per Unit Proposal (USD / Unit)</label>
                         <div className="relative">
                           <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">USD</span>
                           <input
@@ -2285,7 +2285,7 @@ export default function NegotiationDashboard({
 
                       {/* Payment Terms */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pembayaran (Payment Terms)</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-500">Syarat Pembayaran (Payment Terms)</label>
                         <select
                           disabled={isLocked}
                           value={paymentTerms}
@@ -2301,7 +2301,7 @@ export default function NegotiationDashboard({
 
                       {/* Incoterms Selector */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-500">Syarat Pengiriman (Incoterms 2020)</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-500">Syarat Pengiriman (Incoterms 2020)</label>
                         <select
                           disabled={isLocked}
                           value={incoterms}
@@ -2317,7 +2317,7 @@ export default function NegotiationDashboard({
 
                       {/* Port of Discharge */}
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-black uppercase text-slate-505">Pelabuhan Bongkar (Port of Discharge)</label>
+                        <label className="block text-[12px] font-black uppercase text-slate-505">Pelabuhan Bongkar (Port of Discharge)</label>
                         <input
                           disabled={isLocked}
                           type="text"
@@ -2337,7 +2337,7 @@ export default function NegotiationDashboard({
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wide">Kalkulator &amp; Panduan Pembayaran Buyer</h4>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-[12px] text-slate-500 mt-0.5">
                           Estimasi rincian keuangan hasil pembagian termin perbankan devisa perdagangan internasional.
                         </p>
                       </div>
@@ -2345,15 +2345,15 @@ export default function NegotiationDashboard({
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="bg-white p-2.5 rounded-xl border border-slate-150">
-                        <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Kargo</span>
+                        <span className="text-[12px] uppercase font-bold text-slate-400 block">Kargo</span>
                         <span className="text-xs font-black text-slate-800 block mt-0.5">{quantity} MT</span>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-slate-150">
-                        <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Harga / Unit</span>
+                        <span className="text-[12px] uppercase font-bold text-slate-400 block">Harga / Unit</span>
                         <span className="text-xs font-black text-slate-800 block mt-0.5">${pricePerUnit.toLocaleString('en-US')} USD</span>
                       </div>
                       <div className="bg-indigo-950 text-indigo-100 p-2.5 rounded-xl">
-                        <span className="text-[8.5px] uppercase font-bold text-indigo-300 block">FOB Dasar</span>
+                        <span className="text-[12px] uppercase font-bold text-indigo-300 block">FOB Dasar</span>
                         <span className="text-xs font-black text-white block mt-0.5">${totalPrice.toLocaleString('en-US')} USD</span>
                       </div>
                     </div>
@@ -2389,18 +2389,18 @@ export default function NegotiationDashboard({
 
                       return (
                         <div className="p-3.5 bg-indigo-950 text-indigo-50 border border-indigo-900 rounded-xl space-y-2.5 text-xs text-left">
-                          <span className="text-[9.5px] font-black uppercase text-indigo-300 tracking-wider block">Rincian Termin Devisa Aktif</span>
+                          <span className="text-[12px] font-black uppercase text-indigo-300 tracking-wider block">Rincian Termin Devisa Aktif</span>
                           <div className="grid grid-cols-2 gap-3 pt-1">
                             <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                              <span className="text-[8.5px] text-indigo-300 block font-semibold">{dpLabel}</span>
+                              <span className="text-[12px] text-indigo-300 block font-semibold">{dpLabel}</span>
                               <span className="text-xs font-black text-white block mt-0.5">${(totalPrice * dpPercent).toLocaleString('en-US')}.00 USD</span>
                             </div>
                             <div className="bg-white/5 p-2 rounded-lg border border-white/10">
-                              <span className="text-[8.5px] text-indigo-300 block font-semibold">{lcLabel}</span>
+                              <span className="text-[12px] text-indigo-300 block font-semibold">{lcLabel}</span>
                               <span className="text-xs font-black text-white block mt-0.5">${(totalPrice * (1 - dpPercent)).toLocaleString('en-US')}.00 USD</span>
                             </div>
                           </div>
-                          <p className="text-[9.5px] text-indigo-200 leading-relaxed pt-1.5 border-t border-indigo-900">
+                          <p className="text-[12px] text-indigo-200 leading-relaxed pt-1.5 border-t border-indigo-900">
                             <strong>Aturan Main Termin:</strong> {desc}
                           </p>
                         </div>
@@ -2412,35 +2412,35 @@ export default function NegotiationDashboard({
                 {/* Right Side: Document Preview Column (Spans 5) */}
                 {showPreviewInModal && (
                   <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-4 shadow-inner space-y-3 max-h-[75vh] flex flex-col overflow-hidden">
-                    <span className="text-[10px] font-black text-slate-550 uppercase tracking-wider block border-b border-slate-100 pb-2">
+                    <span className="text-[12px] font-black text-slate-550 uppercase tracking-wider block border-b border-slate-100 pb-2">
                       Live Draft Preview: Penawaran Harga (Quotation)
                     </span>
                     <div className="flex-1 overflow-y-auto pr-1">
                       {/* Document Layout Paper */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 font-mono text-[9px] text-slate-705 space-y-4 shadow-3xs text-left">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 font-mono text-[12px] text-slate-705 space-y-4 shadow-3xs text-left">
                         <div className="border-b border-dashed border-slate-300 pb-2.5">
-                          <h5 className="font-bold text-slate-900 text-[11px]">PT MULTI RAKSA MADANI</h5>
-                          <p className="text-[8px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
-                          <p className="text-[8px] text-slate-400 font-bold mt-0.5">Email: export@multiraksamaradani.co.id</p>
+                          <h5 className="font-bold text-slate-900 text-[12px]">PT MULTI RAKSA MADANI</h5>
+                          <p className="text-[12px] text-slate-400">Gedung Devisa Ekspor Lantai 12, Jakarta, Indonesia</p>
+                          <p className="text-[12px] text-slate-400 font-bold mt-0.5">Email: export@multiraksamaradani.co.id</p>
                         </div>
-                        <div className="text-right text-[8px] text-slate-400">
+                        <div className="text-right text-[12px] text-slate-400">
                           <p className="font-bold text-slate-550">Doc Ref: AQ-QTN/2026/102</p>
                           <p>Date: June 17, 2026</p>
                         </div>
                         <div className="space-y-2">
                           <p className="font-bold text-slate-900">TO: YOSHIHIDE TRADING CO., LTD. (Tokyo, Japan)</p>
-                          <p className="font-bold text-[10px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
+                          <p className="font-bold text-[12px] underline text-indigo-900">OFFICIAL COMMERCIAL PRICE QUOTATION</p>
                           <p className="leading-relaxed text-slate-500">
                             Thank you for your LOI interest YT-LOI/2026/04. We are delighted to submit our best factory offering pricing & parameters below:
                           </p>
                           
                           <div className="bg-white rounded border border-slate-205 overflow-hidden">
-                            <div className="p-1.5 bg-slate-100 border-b border-slate-200 flex justify-between font-bold text-slate-800 text-[8px]">
+                            <div className="p-1.5 bg-slate-100 border-b border-slate-200 flex justify-between font-bold text-slate-800 text-[12px]">
                               <span>ITEM / SPECIFICATION</span>
                               <span>OFFER PRICE</span>
                             </div>
                             <div className="p-1.5 space-y-1">
-                              <p className="font-bold text-slate-900 text-[8.5px]">{selectedProduct.name}</p>
+                              <p className="font-bold text-slate-900 text-[12px]">{selectedProduct.name}</p>
                               <p className="text-slate-500 leading-snug">Specification: {selectedProduct.specification}</p>
                               <p className="text-slate-500 font-bold">Origin: {selectedProduct.origin} | HS CODE: {selectedProduct.hsCode}</p>
                               <div className="pt-1 flex justify-between border-t border-slate-100 font-bold text-indigo-950">
@@ -2450,7 +2450,7 @@ export default function NegotiationDashboard({
                             </div>
                           </div>
 
-                          <div className="p-2 bg-indigo-50/40 border border-indigo-100 rounded-lg space-y-1 text-[8px] text-slate-650">
+                          <div className="p-2 bg-indigo-50/40 border border-indigo-100 rounded-lg space-y-1 text-[12px] text-slate-650">
                             <div><strong>• Syarat Kirim (Incoterms):</strong> {incoterms}</div>
                             <div><strong>• Syarat Bayar (Payment):</strong> {paymentTerms}</div>
                             <div><strong>• Pelabuhan Bongkar:</strong> {portOfDischarge}</div>
@@ -2459,7 +2459,7 @@ export default function NegotiationDashboard({
                             </div>
                           </div>
                         </div>
-                        <div className="pt-3 border-t border-slate-200 flex justify-between items-center text-[7.5px]">
+                        <div className="pt-3 border-t border-slate-200 flex justify-between items-center text-[12px]">
                           <span className="text-slate-400 italic">Issued by: PT Multi Raksa Madani</span>
                           <span className="text-indigo-600 font-extrabold uppercase">DRAFT OFFER</span>
                         </div>
@@ -2474,7 +2474,7 @@ export default function NegotiationDashboard({
                 <button
                   type="button"
                   onClick={() => setIsTawaranModalOpen(false)}
-                  className="px-4 py-2 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold uppercase text-[12px] tracking-wider rounded-xl transition-all cursor-pointer"
                 >
                   Batal
                 </button>

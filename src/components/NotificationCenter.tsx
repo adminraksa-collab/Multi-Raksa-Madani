@@ -350,7 +350,7 @@ export default function NotificationCenter({
         <Bell className={`w-4 h-4 ${totalCount > 0 && !isOpen ? 'animate-bounce' : ''}`} />
         
         {totalCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white font-extrabold text-[9px] h-5 w-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm font-sans">
+          <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white font-extrabold text-[12px] h-5 w-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm font-sans">
             {totalCount}
           </span>
         )}
@@ -372,7 +372,7 @@ export default function NotificationCenter({
                 <Bell className="w-4 h-4 text-blue-400" />
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider">Pusat Notifikasi</h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[12px] text-slate-400 mt-0.5">
                     {currentUser ? `${currentUser.name} (${currentUser.role})` : 'Tamu Umum (Guest)'}
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export default function NotificationCenter({
               {activeSubTab === 'logs' && alerts.length > 0 && (
                 <button
                   onClick={onClearAlerts}
-                  className="text-[9.5px] font-bold text-slate-400 hover:text-white flex items-center gap-1 transition-colors uppercase cursor-pointer"
+                  className="text-[12px] font-bold text-slate-400 hover:text-white flex items-center gap-1 transition-colors uppercase cursor-pointer"
                 >
                   <Trash2 className="w-3 h-3" />
                   <span>Bersihkan</span>
@@ -392,12 +392,12 @@ export default function NotificationCenter({
 
             {/* Quick Multi-role Indicator */}
             {currentUser && (
-              <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100/50 flex items-center justify-between text-[10px]">
+              <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100/50 flex items-center justify-between text-[12px]">
                 <div className="flex items-center gap-1.5 text-indigo-700 font-bold">
                   <Shield className="w-3.5 h-3.5" />
                   <span>Peran Aktif: <strong className="uppercase font-extrabold">{currentUser.role}</strong></span>
                 </div>
-                <span className="text-[9px] text-indigo-500 font-medium">Beralih akun jika ingin ganti tugas</span>
+                <span className="text-[12px] text-indigo-500 font-medium">Beralih akun jika ingin ganti tugas</span>
               </div>
             )}
 
@@ -414,7 +414,7 @@ export default function NotificationCenter({
                 <FileSignature className="w-3.5 h-3.5" />
                 <span>Kewajiban Tugas</span>
                 {pendingTasks.length > 0 && (
-                  <span className="text-[9px] bg-red-100 text-red-600 font-extrabold px-1.5 py-0.2 rounded-full">
+                  <span className="text-[12px] bg-red-100 text-red-600 font-extrabold px-1.5 py-0.2 rounded-full">
                     {pendingTasks.length}
                   </span>
                 )}
@@ -430,7 +430,7 @@ export default function NotificationCenter({
                 <Clock className="w-3.5 h-3.5" />
                 <span>Log Aktivitas</span>
                 {unreadAlertsCount > 0 && (
-                  <span className="text-[9px] bg-indigo-100 text-indigo-600 font-extrabold px-1.5 py-0.2 rounded-full">
+                  <span className="text-[12px] bg-indigo-100 text-indigo-600 font-extrabold px-1.5 py-0.2 rounded-full">
                     {unreadAlertsCount}
                   </span>
                 )}
@@ -448,7 +448,7 @@ export default function NotificationCenter({
                   </div>
                   <div>
                     <h5 className="text-xs font-bold text-slate-800 uppercase">Sesi Terbatas</h5>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+                    <p className="text-[12px] text-slate-400 leading-relaxed mt-1">
                       Silakan login terlebih dahulu untuk mengakses kewajiban logistik, draf persetujuan PEB, penandatanganan Sales Contract, atau pelacakan kargo.
                     </p>
                   </div>
@@ -465,7 +465,7 @@ export default function NotificationCenter({
                       </div>
                       <div>
                         <h5 className="text-xs font-black text-emerald-800 uppercase">Tugas Selesai Bersih!</h5>
-                        <p className="text-[10.5px] text-slate-400 leading-relaxed mt-1">
+                        <p className="text-[12px] text-slate-400 leading-relaxed mt-1">
                           Semua kewajiban komersial dan operasional ekspor untuk peran <strong>{currentUser.role}</strong> telah diselesaikan. Tidak ada pekerjaan rumah aktif saat ini.
                         </p>
                       </div>
@@ -480,25 +480,25 @@ export default function NotificationCenter({
                         <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-1.5">
                           <div className="flex items-center gap-1.5">
                             {getCategoryIcon(task.category)}
-                            <span className="text-[9.5px] font-mono bg-slate-150 text-slate-600 font-extrabold px-1.5 py-0.5 rounded">
+                            <span className="text-[12px] font-mono bg-slate-150 text-slate-600 font-extrabold px-1.5 py-0.5 rounded">
                               {task.contractNumber}
                             </span>
                           </div>
                           
-                          <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded border ${getPriorityStyle(task.priority)}`}>
+                          <span className={`text-[12px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded border ${getPriorityStyle(task.priority)}`}>
                             {task.priority === 'high' ? 'PENTING' : task.priority === 'medium' ? 'SEDANG' : 'RENDAH'}
                           </span>
                         </div>
 
                         {/* Task Content */}
                         <div className="space-y-1">
-                          <h5 className="text-[11.5px] font-black text-slate-900 leading-snug">
+                          <h5 className="text-[12px] font-black text-slate-900 leading-snug">
                             {task.title}
                           </h5>
-                          <p className="text-[10.5px] text-slate-500 leading-relaxed">
+                          <p className="text-[12px] text-slate-500 leading-relaxed">
                             {task.description}
                           </p>
-                          <p className="text-[9.5px] text-slate-400 italic font-mono font-medium line-clamp-1">
+                          <p className="text-[12px] text-slate-400 italic font-mono font-medium line-clamp-1">
                             Komoditi: {task.productName}
                           </p>
                         </div>
@@ -507,7 +507,7 @@ export default function NotificationCenter({
                         <div className="pt-1 flex justify-end">
                           <button
                             onClick={() => handleTaskAction(task)}
-                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-3xs"
+                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[12px] uppercase tracking-wider rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-3xs"
                           >
                             <span>{task.actionLabel}</span>
                             <ArrowRight className="w-3 h-3" />
@@ -529,7 +529,7 @@ export default function NotificationCenter({
                       </div>
                       <div>
                         <h5 className="text-xs font-bold text-slate-700 uppercase">Tidak Ada Aktivitas</h5>
-                        <p className="text-[10.5px] text-slate-400 leading-relaxed mt-1">
+                        <p className="text-[12px] text-slate-400 leading-relaxed mt-1">
                           Log aktivitas ekspor saat ini kosong. Sinyal IoT pabean & pelayaran kargo belum dipicu.
                         </p>
                       </div>
@@ -549,12 +549,12 @@ export default function NotificationCenter({
                         >
                           {/* Alert Badge and Read dot */}
                           <div className="flex items-center justify-between gap-1 border-b border-dashed border-gray-100 pb-1">
-                            <span className="text-[9px] font-black uppercase text-slate-400 font-mono">
+                            <span className="text-[12px] font-black uppercase text-slate-400 font-mono">
                               {alert.contractNumber || 'LOG SISTEM'}
                             </span>
                             
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[8.5px] text-slate-400 font-mono font-bold">
+                              <span className="text-[12px] text-slate-400 font-mono font-bold">
                                 {new Date(alert.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                               {!isRead && (
@@ -564,14 +564,14 @@ export default function NotificationCenter({
                           </div>
 
                           <div className="space-y-0.5">
-                            <h6 className="text-[11px] font-black text-slate-850 flex items-center gap-1">
+                            <h6 className="text-[12px] font-black text-slate-850 flex items-center gap-1">
                               {alert.type === 'success' && <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />}
                               {alert.type === 'warning' && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
                               {alert.type === 'alert' && <CircleAlert className="w-3 h-3 text-red-500 shrink-0" />}
                               {alert.type === 'info' && <Info className="w-3 h-3 text-indigo-500 shrink-0" />}
                               <span className="truncate leading-none">{alert.title}</span>
                             </h6>
-                            <p className="text-[10.5px] text-slate-500 leading-relaxed">
+                            <p className="text-[12px] text-slate-500 leading-relaxed">
                               {alert.message}
                             </p>
                           </div>
@@ -585,7 +585,7 @@ export default function NotificationCenter({
             </div>
 
             {/* Dropdown Footer */}
-            <div className="p-3 bg-slate-50 border-t border-gray-150 text-center flex justify-between items-center text-[10px] text-slate-400 font-bold">
+            <div className="p-3 bg-slate-50 border-t border-gray-150 text-center flex justify-between items-center text-[12px] text-slate-400 font-bold">
               <span>{pendingTasks.length} Kewajiban Tugas Aktif</span>
               <button 
                 onClick={() => setIsOpen(false)}
