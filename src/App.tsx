@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ExportShipment, ExportDocument, ShipmentStep, RealTimeAlert, ExportProduct, Certification } from './types';
 import { onSnapshot, collection } from 'firebase/firestore';
 import { db } from './lib/firebase';
@@ -34,7 +35,7 @@ import {
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
   Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
-  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut, ChevronDown
 } from 'lucide-react';
 
 export default function App() {
@@ -703,6 +704,7 @@ export default function App() {
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<ExportDocument | null>(null);
   const [shipmentToDeleteId, setShipmentToDeleteId] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Form state for new contract builder
   const [newContractForm, setNewContractForm] = useState({
@@ -1936,57 +1938,67 @@ export default function App() {
 
               <div className="flex items-center gap-1.5 sm:gap-2 border-l border-gray-250 pl-2 sm:pl-3">
                 {currentUser ? (
-                  <>
-                    <img 
-                      src={currentUser.avatar} 
-                      alt={currentUser.name} 
-                      className="w-8 h-8 rounded-full border border-gray-100 object-cover"
-                    />
-                    <div className="hidden sm:block text-left text-sm">
-                      <p className="font-bold text-gray-900 flex items-center gap-1.5">
-                        <span>{currentUser.name.split(' ')[0]}</span>
-                        <button 
-                          onClick={() => {
-                            setCurrentUser(null);
-                            setShowRestrictedAlert(null);
-                          }}
-                          className="text-[11px] text-red-600 hover:text-red-700 font-extrabold px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded uppercase tracking-wider transition-all"
-                          title={t.logoutText}
-                        >
-                          {t.logoutText}
-                        </button>
-                        <button 
-                          onClick={openEditProfile}
-                          className="text-slate-600 hover:text-slate-800 p-1 bg-slate-100 hover:bg-slate-200 rounded-md flex items-center justify-center transition-all"
-                          title="Edit Profil & Sandi"
-                        >
-                          <Settings className="w-4 h-4 text-slate-600 hover:rotate-90 transition-transform duration-300" />
-                        </button>
-                      </p>
-                      <p className="text-xs text-gray-400 font-extrabold capitalize leading-none pt-1">{currentUser.role === 'Superadmin' ? 'Superadmin' : currentUser.role}</p>
-                    </div>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 hover:bg-slate-50 p-1 rounded-lg transition-all"
+                    >
+                      <img 
+                        src={currentUser.avatar} 
+                        alt={currentUser.name} 
+                        className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+                      />
+                      <div className="hidden sm:block text-left text-sm mr-1">
+                        <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                          <span>{currentUser.name.split(' ')[0]}</span>
+                        </p>
+                        <p className="text-xs text-gray-400 font-extrabold capitalize leading-none pt-0.5">{currentUser.role === 'Superadmin' ? 'Superadmin' : currentUser.role}</p>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+                    </button>
 
-                    {/* Compact Mobile Only Controls */}
-                    <div className="flex sm:hidden items-center gap-1">
-                      <button 
-                        onClick={openEditProfile}
-                        className="text-slate-600 hover:text-slate-800 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-all"
-                        title="Edit Profil & Sandi"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setCurrentUser(null);
-                          setShowRestrictedAlert(null);
-                        }}
-                        className="text-red-600 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-all"
-                        title={t.logoutText}
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </>
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 origin-top-right overflow-hidden"
+                        >
+                          <div className="sm:hidden px-4 py-2 border-b border-gray-50 mb-1">
+                            <p className="font-bold text-gray-900">{currentUser.name}</p>
+                            <p className="text-xs text-gray-400 font-extrabold capitalize">{currentUser.role === 'Superadmin' ? 'Superadmin' : currentUser.role}</p>
+                          </div>
+                          
+                          <button 
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              openEditProfile();
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
+                          >
+                            <Settings className="w-4 h-4" />
+                            Edit Profil & Sandi
+                          </button>
+                          
+                          <div className="h-px bg-gray-50 my-1 mx-2"></div>
+                          
+                          <button 
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              setCurrentUser(null);
+                              setShowRestrictedAlert(null);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            {t.logoutText}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-1.5">
                     {/* Desktop Button */}
