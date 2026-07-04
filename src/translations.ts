@@ -1,4 +1,7 @@
 export interface TranslationKeys {
+  telephoneContact: string;
+  whatsappContact: string;
+  emailContact: string;
   minOrder: string;
   fobPriceTentative: string;
   contactService: string;
@@ -142,23 +145,20 @@ export interface TranslationKeys {
   loginTab: string;
   registerTab: string;
   userEmailLabel: string;
-  passwordLabel: string;
+
   userEmailPlaceholder: string;
   passwordPlaceholder: string;
   verifyLoginBtn: string;
   fullNameLabel: string;
   max50Chars: string;
-  emailLabel: string;
+
   newPasswordLabel: string;
-  confirmPasswordLabel: string;
+
   companyLabel: string;
   accountRoleLabel: string;
   phoneOptionalLabel: string;
   selectRole: string;
-  roleTrader: string;
-  roleBuyer: string;
-  roleForwarder: string;
-  roleSupplier: string;
+
   submitRegistrationBtn: string;
   sandboxCredentialsTitle: string;
   actorUsernameEmail: string;
@@ -249,6 +249,35 @@ export interface TranslationKeys {
   tabAccount: string;
   activeShipmentLabel: string;
   logoutText: string;
+  roleSuperadmin: string;
+  roleForwarder: string;
+  roleSupplier: string;
+  roleTrader: string;
+  roleBuyer: string;
+  max100Char: string;
+  emailLabel: string;
+  createAccountBtn: string;
+  loginModalTitle: string;
+  registerNewAccountTitle: string;
+  placeholderRetype: string;
+  placeholderMinChars: string;
+  placeholderEmail: string;
+  placeholderCompany: string;
+  placeholderPhone: string;
+  phoneWhatsappLabel: string;
+  ecosystemRoleLabel: string;
+  institutionLabel: string;
+  confirmPasswordLabel: string;
+  passwordLabel: string;
+  placeholderExampleName: string;
+  customsTaxLabel: string;
+  exportProcessTitle: string;
+  exportStep1Title: string;
+  exportStep1Desc: string;
+  exportStep2Title: string;
+  exportStep2Desc: string;
+  exportStep3Title: string;
+  exportStep3Desc: string;
 }
 
 export const LANGUAGES = [
@@ -400,23 +429,20 @@ export const translations: Record<string, TranslationKeys> = {
     loginTab: "Masuk (Login)",
     registerTab: "Daftar Akun",
     userEmailLabel: "User/Email",
-    passwordLabel: "Kata Sandi (Password)",
+
     userEmailPlaceholder: "Masukkan username atau email...",
     passwordPlaceholder: "Masukkan kata sandi peran...",
     verifyLoginBtn: "Verifikasi & Masuk Ruang Kerja",
     fullNameLabel: "Nama Lengkap *",
     max50Chars: "Maks 50",
-    emailLabel: "Email *",
+
     newPasswordLabel: "Kata Sandi Baru *",
-    confirmPasswordLabel: "Konfirmasi Sandi *",
+
     companyLabel: "Instansi / Perusahaan *",
     accountRoleLabel: "Peran Akun *",
     phoneOptionalLabel: "No. Telepon (Opsional)",
     selectRole: "Pilih Peran...",
-    roleTrader: "Trader (Eksportir Lokal)",
-    roleBuyer: "Buyer (Importir Asing)",
-    roleForwarder: "Forwarder (Logistik)",
-    roleSupplier: "Supplier (Petani / Produsen)",
+
     submitRegistrationBtn: "Kirim Pendaftaran Akun",
     sandboxCredentialsTitle: "Kredensial Sandbox (Uji Coba)",
     actorUsernameEmail: "Aktor (Username/Email)",
@@ -496,8 +522,40 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "Panduan",
     tabAccount: "Atur Akun",
     activeShipmentLabel: "Aktif:",
-    logoutText: "Keluar"
-  },
+    logoutText: "Keluar",
+    roleSuperadmin: 'Superadmin',
+    roleForwarder: 'Forwarder / Logistik',
+    roleSupplier: 'Supplier / UMKM Penyedia',
+    roleTrader: 'Trader / Eksportir RI',
+    roleBuyer: 'Buyer (Pembeli Luar Negeri)',
+    max100Char: 'Maks 100',
+    emailLabel: 'Surel (Email) *',
+    createAccountBtn: 'BUAT AKUN BARU',
+    loginModalTitle: 'MASUK AKUN',
+    registerNewAccountTitle: 'DAFTAR AKUN BARU',
+    placeholderRetype: 'Ketik ulang',
+    placeholderMinChars: 'Min 6 karakter',
+    placeholderEmail: 'nama@perusahaan.com',
+    placeholderCompany: 'Nama perusahaan',
+    placeholderPhone: 'Contoh: +6281234567890',
+    phoneWhatsappLabel: 'Nomor Telepon / WhatsApp *',
+    ecosystemRoleLabel: 'Peran Ekosistem',
+    institutionLabel: 'Instansi *',
+    confirmPasswordLabel: 'Konfirmasi *',
+    passwordLabel: 'Sandi *',
+    placeholderExampleName: 'Contoh: Kenji Sato',
+    customsTaxLabel: 'PABEAN & PAJAK (NPWP)',
+    telephoneContact: 'Telepon:',
+    whatsappContact: 'WhatsApp:',
+    emailContact: 'Email:',
+    exportProcessTitle: "PROSES EKSPOR MUDAH & AMAN",
+    exportStep1Title: "1. Pilih Komoditas",
+    exportStep1Desc: "Pilih produk terbaik",
+    exportStep2Title: "2. Negosiasi & Sepakat",
+    exportStep2Desc: "Deal secara transparan",
+    exportStep3Title: "3. Logistik & Escrow",
+    exportStep3Desc: "Pembayaran aman & terjamin",
+},
   en: {
     minOrder: 'TBD',
     fobPriceTentative: 'TBD',
@@ -641,23 +699,20 @@ export const translations: Record<string, TranslationKeys> = {
     loginTab: "Log In",
     registerTab: "Register",
     userEmailLabel: "User/Email",
-    passwordLabel: "Password",
+
     userEmailPlaceholder: "Enter username or email...",
     passwordPlaceholder: "Enter role password...",
     verifyLoginBtn: "Verify & Enter Workspace",
     fullNameLabel: "Full Name *",
     max50Chars: "Max 50",
-    emailLabel: "Email *",
+
     newPasswordLabel: "New Password *",
-    confirmPasswordLabel: "Confirm Password *",
+
     companyLabel: "Agency / Company *",
     accountRoleLabel: "Account Role *",
     phoneOptionalLabel: "Phone No. (Optional)",
     selectRole: "Select Role...",
-    roleTrader: "Trader (Local Exporter)",
-    roleBuyer: "Buyer (Foreign Importer)",
-    roleForwarder: "Forwarder (Logistics)",
-    roleSupplier: "Supplier (Farmer / Producer)",
+
     submitRegistrationBtn: "Submit Account Registration",
     sandboxCredentialsTitle: "Sandbox Credentials (Trial)",
     actorUsernameEmail: "Actor (Username/Email)",
@@ -737,8 +792,40 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "Guide",
     tabAccount: "Account Settings",
     activeShipmentLabel: "Active:",
-    logoutText: "Logout"
-  },
+    logoutText: "Logout",
+    roleSuperadmin: 'Superadmin',
+    roleForwarder: 'Forwarder / Logistics',
+    roleSupplier: 'Supplier / SME',
+    roleTrader: 'Trader / ID Exporter',
+    roleBuyer: 'Buyer (Overseas)',
+    max100Char: 'Max 100',
+    emailLabel: 'Email Address *',
+    createAccountBtn: 'CREATE NEW ACCOUNT',
+    loginModalTitle: 'LOGIN ACCOUNT',
+    registerNewAccountTitle: 'REGISTER NEW ACCOUNT',
+    placeholderRetype: 'Retype',
+    placeholderMinChars: 'Min 6 chars',
+    placeholderEmail: 'name@company.com',
+    placeholderCompany: 'Company Name',
+    placeholderPhone: 'Example: +6281234567890',
+    phoneWhatsappLabel: 'Phone / WhatsApp *',
+    ecosystemRoleLabel: 'Ecosystem Role',
+    institutionLabel: 'Institution *',
+    confirmPasswordLabel: 'Confirm *',
+    passwordLabel: 'Password *',
+    placeholderExampleName: 'Example: Kenji Sato',
+    customsTaxLabel: 'CUSTOMS & TAX (NPWP)',
+    telephoneContact: 'Phone:',
+    whatsappContact: 'WhatsApp:',
+    emailContact: 'Email:',
+    exportProcessTitle: "EASY & SECURE EXPORT PROCESS",
+    exportStep1Title: "1. Choose Commodity",
+    exportStep1Desc: "Select the best product",
+    exportStep2Title: "2. Negotiate & Agree",
+    exportStep2Desc: "Deal transparently",
+    exportStep3Title: "3. Logistics & Escrow",
+    exportStep3Desc: "Safe & secure payment",
+},
   zh: {
     calculatorTitle: 'TBD',
     calculatorSub: 'TBD',
@@ -882,23 +969,20 @@ export const translations: Record<string, TranslationKeys> = {
     loginTab: "登录",
     registerTab: "注册",
     userEmailLabel: "用户/邮箱",
-    passwordLabel: "密码",
+
     userEmailPlaceholder: "输入用户名或邮箱...",
     passwordPlaceholder: "输入角色密码...",
     verifyLoginBtn: "验证并进入工作区",
     fullNameLabel: "全名 *",
     max50Chars: "最多 50 个",
-    emailLabel: "邮箱 *",
+
     newPasswordLabel: "新密码 *",
-    confirmPasswordLabel: "确认密码 *",
+
     companyLabel: "机构/公司 *",
     accountRoleLabel: "账户角色 *",
     phoneOptionalLabel: "电话号码 (可选)",
     selectRole: "选择角色...",
-    roleTrader: "贸易商 (本地出口商)",
-    roleBuyer: "买家 (外国进口商)",
-    roleForwarder: "货运代理 (物流)",
-    roleSupplier: "供应商 (农民/生产者)",
+
     submitRegistrationBtn: "提交账号注册",
     sandboxCredentialsTitle: "沙盒凭证 (试用)",
     actorUsernameEmail: "执行者 (用户名/电子邮件)",
@@ -978,8 +1062,33 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "指南",
     tabAccount: "账户设置",
     activeShipmentLabel: "激活交易:",
-    logoutText: "登出"
-  },
+    logoutText: "登出",
+    roleSuperadmin: 'TBD',
+    roleForwarder: 'TBD',
+    roleSupplier: 'TBD',
+    roleTrader: 'TBD',
+    roleBuyer: 'TBD',
+    max100Char: 'TBD',
+    emailLabel: 'TBD',
+    createAccountBtn: 'TBD',
+    loginModalTitle: 'TBD',
+    registerNewAccountTitle: 'TBD',
+    placeholderRetype: 'TBD',
+    placeholderMinChars: 'TBD',
+    placeholderEmail: 'TBD',
+    placeholderCompany: 'TBD',
+    placeholderPhone: 'TBD',
+    phoneWhatsappLabel: 'TBD',
+    ecosystemRoleLabel: 'TBD',
+    institutionLabel: 'TBD',
+    confirmPasswordLabel: 'TBD',
+    passwordLabel: 'TBD',
+    placeholderExampleName: 'TBD',
+    customsTaxLabel: 'TBD',
+    telephoneContact: 'TBD',
+    whatsappContact: 'TBD',
+    emailContact: 'TBD',
+},
   ar: {
     calculatorTitle: 'TBD',
     calculatorSub: 'TBD',
@@ -1123,23 +1232,20 @@ export const translations: Record<string, TranslationKeys> = {
     loginTab: "تسجيل الدخول",
     registerTab: "تسجيل",
     userEmailLabel: "المستخدم/البريد الإلكتروني",
-    passwordLabel: "كلمة المرور",
+
     userEmailPlaceholder: "أدخل اسم المستخدم أو البريد الإلكتروني...",
     passwordPlaceholder: "أدخل كلمة مرور الدور...",
     verifyLoginBtn: "تحقق وادخل مساحة العمل",
     fullNameLabel: "الاسم الكامل *",
     max50Chars: "بحد أقصى 50",
-    emailLabel: "البريد الإلكتروني *",
+
     newPasswordLabel: "كلمة المرور الجديدة *",
-    confirmPasswordLabel: "تأكيد كلمة المرور *",
+
     companyLabel: "الوكالة / الشركة *",
     accountRoleLabel: "دور الحساب *",
     phoneOptionalLabel: "رقم الهاتف (اختياري)",
     selectRole: "اختر الدور...",
-    roleTrader: "تاجر (مصدر محلي)",
-    roleBuyer: "مشتري (مستورد أجنبي)",
-    roleForwarder: "وكيل شحن (لوجستيات)",
-    roleSupplier: "مورد (مزارع / منتج)",
+
     submitRegistrationBtn: "إرسال تسجيل الحساب",
     sandboxCredentialsTitle: "بيانات اعتماد صندوق الحماية (تجريبي)",
     actorUsernameEmail: "الممثل (اسم المستخدم / البريد الإلكتروني)",
@@ -1219,9 +1325,37 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "الدليل",
     tabAccount: "إعدادات الحساب",
     activeShipmentLabel: "النشط:",
-    logoutText: "تسجيل الخروج"
-  },
+    logoutText: "تسجيل الخروج",
+    roleSuperadmin: 'TBD',
+    roleForwarder: 'TBD',
+    roleSupplier: 'TBD',
+    roleTrader: 'TBD',
+    roleBuyer: 'TBD',
+    max100Char: 'TBD',
+    emailLabel: 'TBD',
+    createAccountBtn: 'TBD',
+    loginModalTitle: 'TBD',
+    registerNewAccountTitle: 'TBD',
+    placeholderRetype: 'TBD',
+    placeholderMinChars: 'TBD',
+    placeholderEmail: 'TBD',
+    placeholderCompany: 'TBD',
+    placeholderPhone: 'TBD',
+    phoneWhatsappLabel: 'TBD',
+    ecosystemRoleLabel: 'TBD',
+    institutionLabel: 'TBD',
+    confirmPasswordLabel: 'TBD',
+    passwordLabel: 'TBD',
+    placeholderExampleName: 'TBD',
+    customsTaxLabel: 'TBD',
+    telephoneContact: 'TBD',
+    whatsappContact: 'TBD',
+    emailContact: 'TBD',
+},
   th: {
+    customsTaxLabel: 'CUSTOMS & TAX (NPWP)',
+
+                                                        
     calculatorTitle: 'TBD',
     calculatorSub: 'TBD',
     cargoSourcing: 'TBD',
@@ -1460,9 +1594,29 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "คู่มือการใช้งาน",
     tabAccount: "จัดการบัญชี",
     activeShipmentLabel: "ใช้งานอยู่:",
-    logoutText: "ออกจากระบบ"
-  },
+    logoutText: "ออกจากระบบ",
+    roleSuperadmin: 'TBD',
+    max100Char: 'TBD',
+    createAccountBtn: 'TBD',
+    loginModalTitle: 'TBD',
+    registerNewAccountTitle: 'TBD',
+    placeholderRetype: 'TBD',
+    placeholderMinChars: 'TBD',
+    placeholderEmail: 'TBD',
+    placeholderCompany: 'TBD',
+    placeholderPhone: 'TBD',
+    phoneWhatsappLabel: 'TBD',
+    ecosystemRoleLabel: 'TBD',
+    institutionLabel: 'TBD',
+    placeholderExampleName: 'TBD',
+    telephoneContact: 'TBD',
+    whatsappContact: 'TBD',
+    emailContact: 'TBD',
+},
   ru: {
+    customsTaxLabel: 'CUSTOMS & TAX (NPWP)',
+
+                                                                                    
     calculatorTitle: 'TBD',
     calculatorSub: 'TBD',
     cargoSourcing: 'TBD',
@@ -1701,9 +1855,32 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "Руководство",
     tabAccount: "Настройки",
     activeShipmentLabel: "Активно:",
-    logoutText: "Выйти"
-  },
+    logoutText: "Выйти",
+    roleSuperadmin: 'TBD',
+    max100Char: 'TBD',
+    createAccountBtn: 'TBD',
+    loginModalTitle: 'TBD',
+    registerNewAccountTitle: 'TBD',
+    placeholderRetype: 'TBD',
+    placeholderMinChars: 'TBD',
+    placeholderEmail: 'TBD',
+    placeholderCompany: 'TBD',
+    placeholderPhone: 'TBD',
+    phoneWhatsappLabel: 'TBD',
+    ecosystemRoleLabel: 'TBD',
+    institutionLabel: 'TBD',
+    placeholderExampleName: 'TBD',
+    telephoneContact: 'TBD',
+    whatsappContact: 'TBD',
+    emailContact: 'TBD',
+},
   ja: {
+    telephoneContact: '電話:',
+    whatsappContact: 'WhatsApp:',
+    emailContact: 'メール:',
+    customsTaxLabel: 'CUSTOMS & TAX (NPWP)',
+
+                                                                                    
     calculatorTitle: 'TBD',
     calculatorSub: 'TBD',
     cargoSourcing: 'TBD',
@@ -1954,6 +2131,21 @@ export const translations: Record<string, TranslationKeys> = {
     tabGuide: "ガイド",
     tabAccount: "アカウント設定",
     activeShipmentLabel: "有効トランザクション:",
-    logoutText: "ログアウト"
+    logoutText: "ログアウト",
+    roleSuperadmin: 'スーパー管理者',
+    max100Char: '最大100',
+    createAccountBtn: '新しいアカウントを作成',
+    loginModalTitle: 'アカウントにログイン',
+    registerNewAccountTitle: '新しいアカウントを登録',
+    placeholderRetype: '再入力',
+    placeholderMinChars: '最低6文字',
+    placeholderEmail: 'name@company.com',
+    placeholderCompany: '会社名',
+    placeholderPhone: '例: +6281234567890',
+    phoneWhatsappLabel: '電話 / WhatsApp *',
+    ecosystemRoleLabel: 'エコシステムの役割',
+    institutionLabel: '機関 *',
+    placeholderExampleName: '例: Kenji Sato',
+
   }
 };

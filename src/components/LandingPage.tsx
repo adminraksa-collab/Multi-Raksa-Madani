@@ -3,7 +3,7 @@ import {
   Globe, ArrowRight, ShieldCheck, FileText, 
   ChevronRight, Ship, FileSignature, Calculator, Info, X,
   Lock, UserPlus, Edit, Trash2, Save, Plus, Award, MapPin, Calendar,
-  Upload, Image, Package, Clock
+  Upload, Image, Package, Clock, Search, Handshake
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -551,6 +551,33 @@ interface LandingPageProps {
   onAddSampleRequest?: (req: any) => void;
 }
 
+// Compact infographic component for export process
+const ExportProcessInfographic = ({ t }: { t: any }) => {
+  const steps = [
+    { icon: Search, title: t.exportStep1Title, desc: t.exportStep1Desc },
+    { icon: Handshake, title: t.exportStep2Title, desc: t.exportStep2Desc },
+    { icon: ShieldCheck, title: t.exportStep3Title, desc: t.exportStep3Desc }
+  ];
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-5 text-center">{t.exportProcessTitle}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {steps.map((step, idx) => (
+          <div key={idx} className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center shrink-0">
+              <step.icon className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <div className="font-black text-sm text-slate-900">{step.title}</div>
+              <div className="text-xs text-slate-500 leading-tight">{step.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function LandingPage({ 
   onNavigate, 
   onStartNegotiation,
@@ -914,7 +941,7 @@ export default function LandingPage({
             {/* Col 2: Perpajakan & Pabean */}
             <div className="space-y-1">
               <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
-                Pabean & Pajak (NPWP)
+                {t.customsTaxLabel}
               </span>
               {companyProfile.npwp && (
                 <p className="text-slate-200 font-mono font-bold leading-relaxed mb-1">
@@ -954,15 +981,15 @@ export default function LandingPage({
               </span>
               <div className="text-slate-300 font-medium leading-relaxed space-y-0.5 text-[12px] sm:text-xs">
                 <div>
-                  Telepon: <span className="text-white font-bold">{companyProfile.telephone}</span>
+                  {t.telephoneContact} <span className="text-white font-bold">{companyProfile.telephone}</span>
                 </div>
                 {companyProfile.whatsapp && (
                   <div>
-                    WhatsApp: <span className="text-emerald-400 font-bold">{companyProfile.whatsapp}</span>
+                    {t.whatsappContact} <span className="text-emerald-400 font-bold">{companyProfile.whatsapp}</span>
                   </div>
                 )}
                 <div className="truncate">
-                  Email: <span className="text-indigo-300 font-semibold hover:underline">{companyProfile.email}</span>
+                  {t.emailContact} <span className="text-indigo-300 font-semibold hover:underline">{companyProfile.email}</span>
                 </div>
               </div>
             </div>
@@ -970,7 +997,12 @@ export default function LandingPage({
         </div>
       </div>
 
-      {/* 3. DYNAMIC INLINE COMMODITY CATALOG */}
+      {/* 3. EXPORT PROCESS INFOGRAPHIC */}
+      <div className="max-w-7xl mx-auto px-4">
+        <ExportProcessInfographic t={t} />
+      </div>
+
+      {/* 4. DYNAMIC INLINE COMMODITY CATALOG */}
       <div id="featured-commodities" className="space-y-6 scroll-mt-20">
           <div className="text-left border-b border-gray-200 pb-3 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -1001,7 +1033,14 @@ export default function LandingPage({
                   <div className="relative h-44 w-full bg-slate-100">
                     <img src={p.image} alt={String(getT(p, 'name'))} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <div className="absolute top-3 left-3 bg-slate-900/80 text-white text-[12px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-3xs animate-pulse">
-                      {String(getT(p, 'category')).toUpperCase() === 'PERTANIAN / HASIL BUMI' ? t.categoryAgri : p.category}
+                      {(() => {
+                        const catVal = getT(p, 'category') || p.category;
+                        const upper = String(catVal).toUpperCase().trim();
+                        if (upper === 'PERTANIAN / HASIL BUMI' || upper === 'AGRICULTURE / PRODUCE' || upper === 'AGRICULTURE/PRODUCE' || upper === 'PERTANIAN' || upper === 'AGRICULTURE') {
+                          return t.categoryAgri;
+                        }
+                        return catVal;
+                      })()}
                     </div>
 
                     {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
@@ -1032,7 +1071,7 @@ export default function LandingPage({
                         <span>{t.originLabel}: {getT(p, 'origin')}</span>
                       </p>
                     </div>
-                    <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium h-16 overflow-y-auto">
+                    <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 font-medium h-24 overflow-y-auto">
                       {getT(p, 'specification')}
                     </p>
                     {(() => {

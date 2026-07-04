@@ -404,7 +404,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Masuk (Login)
+                  {t.loginTab}
                 </button>
                 <button 
                   type="button"
@@ -419,7 +419,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Daftar Akun
+                  {t.registerTab}
                 </button>
               </div>
 
@@ -516,7 +516,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         setErrorMsg('');
                       }}
                       maxLength={50}
-                      placeholder="Contoh: Kenji Sato"
+                      placeholder={t.placeholderExampleName}
                       className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                       required
                     />
@@ -527,9 +527,9 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     <div className="flex justify-between items-center">
                       <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Mail className="w-3.5 h-3.5" />
-                        <span>Surel (Email) *</span>
+                        <span>{t.emailLabel}</span>
                       </label>
-                      <span className="text-[12px] text-slate-400 font-bold uppercase">Maks 100</span>
+                      <span className="text-[12px] text-slate-400 font-bold uppercase">{t.max100Char}</span>
                     </div>
                     <input
                       type="email"
@@ -539,7 +539,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         setErrorMsg('');
                       }}
                       maxLength={100}
-                      placeholder="nama@perusahaan.com"
+                      placeholder={t.placeholderEmail}
                       className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                       required
                     />
@@ -551,7 +551,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       <div className="flex justify-between items-center">
                         <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                           <Key className="w-3.5 h-3.5" />
-                          <span>Sandi *</span>
+                          <span>{t.passwordLabel}</span>
                         </label>
                       </div>
                       <div className="relative">
@@ -564,7 +564,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                           }}
                           minLength={6}
                           maxLength={32}
-                          placeholder="Min 6 karakter"
+                          placeholder={t.placeholderMinChars}
                           className="w-full text-xs sm:text-sm font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                           required
                         />
@@ -582,7 +582,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       <div className="flex justify-between items-center">
                         <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                           <Shield className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Konfirmasi *</span>
+                          <span>{t.confirmPasswordLabel}</span>
                         </label>
                       </div>
                       <div className="relative">
@@ -594,7 +594,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                             setErrorMsg('');
                           }}
                           maxLength={32}
-                          placeholder="Ketik ulang"
+                          placeholder={t.placeholderRetype}
                           className="w-full text-xs sm:text-sm font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                           required
                         />
@@ -614,7 +614,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     <div className="space-y-1">
                       <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Building className="w-3.5 h-3.5" />
-                        <span>Instansi *</span>
+                        <span>{t.institutionLabel}</span>
                       </label>
                       <input
                         type="text"
@@ -624,7 +624,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                           setErrorMsg('');
                         }}
                         maxLength={50}
-                        placeholder="Nama perusahaan"
+                        placeholder={t.placeholderCompany}
                         className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                         required
                       />
@@ -633,7 +633,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     <div className="space-y-1">
                       <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                         <Briefcase className="w-3.5 h-3.5" />
-                        <span>Peran Ekosistem</span>
+                        <span>{t.ecosystemRoleLabel}</span>
                       </label>
                       <select
                         value={regRole}
@@ -643,11 +643,11 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         }}
                         className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600 cursor-pointer"
                       >
-                        <option value="Buyer">Buyer (Pembeli Luar Negeri)</option>
-                        <option value="Trader">Trader / Eksportir RI</option>
-                        <option value="Supplier">Supplier / UMKM Penyedia</option>
-                        <option value="Forwarder">Forwarder / Logistik</option>
-                        <option value="Superadmin">Superadmin</option>
+                        <option value="Buyer">{t.roleBuyer}</option>
+                        <option value="Trader">{t.roleTrader}</option>
+                        <option value="Supplier">{t.roleSupplier}</option>
+                        <option value="Forwarder">{t.roleForwarder}</option>
+                        <option value="Superadmin">{t.roleSuperadmin}</option>
                       </select>
                     </div>
                   </div>
@@ -656,7 +656,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   <div className="space-y-1">
                     <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                       <Phone className="w-3.5 h-3.5" />
-                      <span>Nomor Telepon / WhatsApp *</span>
+                      <span>{t.phoneWhatsappLabel}</span>
                     </label>
                     <input
                       type="tel"
@@ -665,7 +665,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         setRegPhone(e.target.value);
                         setErrorMsg('');
                       }}
-                      placeholder="Contoh: +6281234567890"
+                      placeholder={t.placeholderPhone}
                       className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                       required
                     />
@@ -691,7 +691,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
                   >
                     <UserPlus className="w-4 h-4 text-indigo-200" />
-                    <span>Buat Akun Baru</span>
+                    <span>{t.createAccountBtn}</span>
                   </button>
                 </form>
               )}
@@ -706,7 +706,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                   }}
                   className="w-full py-2.5 bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-700 text-xs font-black uppercase rounded-xl border border-slate-200 hover:border-red-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <span>Keluar Peran & Jadikan Tamu (Akses Umum)</span>
+                  <span>{t.logoutText}</span>
                 </button>
               )}
             </div>
