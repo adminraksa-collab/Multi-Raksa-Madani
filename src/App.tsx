@@ -704,6 +704,7 @@ export default function App() {
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<ExportDocument | null>(null);
   const [shipmentToDeleteId, setShipmentToDeleteId] = useState<string | null>(null);
+  const [sampleRequestToDeleteId, setSampleRequestToDeleteId] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Form state for new contract builder
@@ -1849,7 +1850,7 @@ export default function App() {
                 className="px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-gray-600 hover:text-gray-950 hover:bg-gray-100"
               >
                 <BookOpen className="w-4 h-4 text-indigo-600" />
-                <span>Profil</span>
+                <span>{t.tabProfile}</span>
               </button>
 
               <button
@@ -1857,7 +1858,7 @@ export default function App() {
                 className="px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer text-gray-600 hover:text-gray-950 hover:bg-gray-100"
               >
                 <Layers className="w-4 h-4 text-indigo-600" />
-                <span>Katalog</span>
+                <span>{t.tabCatalog}</span>
               </button>
 
               {currentUser && (
@@ -2434,25 +2435,34 @@ export default function App() {
                                 </div>
                               </div>
                             </div>
-
                             {/* Card Footer */}
                             <div className="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
                               <div className="text-[11px] font-black text-indigo-700 font-mono">
                                 FOB: ${s.totalValue.toLocaleString('en-US')} USD
                               </div>
-
-                              <button
-                                onClick={() => {
-                                  setActiveShipmentId(s.id);
-                                  setSelectedShipmentIdForTracking(s.id);
-                                  setTargetStepIndex(undefined);
-                                  setTargetSubStepIndex(undefined);
-                                }}
-                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all flex items-center gap-1 shadow-3xs cursor-pointer border border-transparent"
-                              >
-                                <Globe className="w-3.5 h-3.5 text-indigo-300" />
-                                <span>Lacak Logistik (3 Langkah)</span>
-                              </button>
+                              <div className="flex items-center gap-2">
+                                {currentUser?.role === 'Superadmin' && (
+                                  <button
+                                    onClick={() => setShipmentToDeleteId(s.id)}
+                                    className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all border border-red-100 cursor-pointer"
+                                    title="Hapus Transaksi"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    setActiveShipmentId(s.id);
+                                    setSelectedShipmentIdForTracking(s.id);
+                                    setTargetStepIndex(undefined);
+                                    setTargetSubStepIndex(undefined);
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all flex items-center gap-1 shadow-3xs cursor-pointer border border-transparent"
+                                >
+                                  <Globe className="w-3.5 h-3.5 text-indigo-300" />
+                                  <span>Lacak Logistik (3 Langkah)</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         );
@@ -2538,26 +2548,37 @@ export default function App() {
                             </div>
 
                             {/* Status Update Actions for Exporter */}
-                            {isExporter && isPending && (
-                              <button
-                                onClick={() => {
-                                  setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'shipped' } : r));
-                                }}
-                                className="w-full mt-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                              >
-                                <span>Kirim Sampel</span>
-                              </button>
-                            )}
-                            {isExporter && isShipped && (
-                              <button
-                                onClick={() => {
-                                  setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'delivered' } : r));
-                                }}
-                                className="w-full mt-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                              >
-                                <span>Konfirmasi Terkirim</span>
-                              </button>
-                            )}
+                            <div className="space-y-2 mt-2">
+                              {currentUser?.role === 'Superadmin' && (
+                                <button
+                                  onClick={() => setSampleRequestToDeleteId(req.id)}
+                                  className="w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Hapus Permintaan</span>
+                                </button>
+                              )}
+                              {isExporter && isPending && (
+                                <button
+                                  onClick={() => {
+                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'shipped' } : r));
+                                  }}
+                                  className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                  <span>Kirim Sampel</span>
+                                </button>
+                              )}
+                              {isExporter && isShipped && (
+                                <button
+                                  onClick={() => {
+                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'delivered' } : r));
+                                  }}
+                                  className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                  <span>Konfirmasi Terkirim</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -3057,6 +3078,55 @@ export default function App() {
         </div>
       )}
 
+      {/* Deletion Confirmation Modal for Sample Requests */}
+      {sampleRequestToDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-red-100 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center animate-pulse">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">
+                  Hapus Permintaan Sampel
+                </h3>
+                <p className="text-[10px] text-red-500 font-extrabold uppercase">
+                  Otorisasi Superadmin
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Apakah Anda yakin ingin menghapus permintaan sampel{" "}
+              <strong className="font-mono text-indigo-600">
+                {sampleRequests.find(s => s.id === sampleRequestToDeleteId)?.productName}
+              </strong>{" "}
+              dari <strong className="font-sans text-slate-800">{sampleRequests.find(s => s.id === sampleRequestToDeleteId)?.buyerName}</strong> secara permanen? Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setSampleRequestToDeleteId(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all cursor-pointer"
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={() => {
+                  if (sampleRequestToDeleteId) {
+                    setSampleRequests(prev => prev.filter(s => s.id !== sampleRequestToDeleteId));
+                    setSampleRequestToDeleteId(null);
+                  }
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-3xs cursor-pointer animate-none"
+              >
+                Hapus Permanen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* New Sales Contract Builder Modal (Mulai transaksi dari awal) */}
       {isNewContractModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
@@ -3261,10 +3331,10 @@ export default function App() {
       {/* Portal humble professional footer */}
       <footer className="mt-16 border-t border-gray-200 pt-8 max-w-7xl mx-auto px-4 text-center space-y-2">
         <p className="text-xs font-medium text-gray-500">
-          Aplikasi Manajemen Administrasi Ekspor Indonesia (ExportFlow) &bull; Terintegrasi dengan Karantina, Bea Cukai RI, CEISA, & INSW.
+          {t.footerLine1}
         </p>
         <p className="text-[10px] text-gray-400">
-          Proyek Simulasi Pameran Kemendag RI &copy; 2026. Semua kalkulasi FOB dan data kepabeanan mematuhi standar INCOTERMS internasional.
+          {t.footerLine2}
         </p>
       </footer>
 

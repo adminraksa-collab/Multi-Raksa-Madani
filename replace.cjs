@@ -1,29 +1,14 @@
 const fs = require('fs');
-const path = require('path');
+let text = fs.readFileSync('src/translations.ts', 'utf8');
 
-const filePath = path.join(__dirname, 'src', 'App.tsx');
-let content = fs.readFileSync(filePath, 'utf8');
+text = text.replace('  logoutText: string;\n}', '  logoutText: string;\n  requestSample: string;\n}');
 
-const cargoViewPath = path.join(__dirname, 'cargo_view.txt');
-const replacementContent = fs.readFileSync(cargoViewPath, 'utf8');
+text = text.replace(/logoutText: "Keluar"/g, 'logoutText: "Keluar",\n    requestSample: "Minta Sampel"');
+text = text.replace(/logoutText: "Logout"/g, 'logoutText: "Logout",\n    requestSample: "Request Sample"');
+text = text.replace(/logoutText: "退出"/g, 'logoutText: "退出",\n    requestSample: "申请样品"');
+text = text.replace(/logoutText: "تسجيل خروج"/g, 'logoutText: "تسجيل خروج",\n    requestSample: "طلب عينة"');
+text = text.replace(/logoutText: "ออกจากระบบ"/g, 'logoutText: "ออกจากระบบ",\n    requestSample: "ขอตัวอย่าง"');
+text = text.replace(/logoutText: "Выйти"/g, 'logoutText: "Выйти",\n    requestSample: "Запросить образец"');
+text = text.replace(/logoutText: "ログアウト"/g, 'logoutText: "ログアウト",\n    requestSample: "サンプルをリクエスト"');
 
-const startMarker = "\n            {workflowSubTab === 'cargo' ? (";
-const endMarker = "\n            ) : (";
-
-const startIndex = content.indexOf(startMarker);
-if (startIndex === -1) {
-  console.error('Start marker not found!');
-  process.exit(1);
-}
-
-// Find the end marker after the start index
-const endIndex = content.indexOf(endMarker, startIndex);
-if (endIndex === -1) {
-  console.error('End marker not found!');
-  process.exit(1);
-}
-
-// Perform replacement
-const finalContent = content.substring(0, startIndex + 1) + replacementContent.trim() + content.substring(endIndex);
-fs.writeFileSync(filePath, finalContent, 'utf8');
-console.log('Successfully updated src/App.tsx using precise cargo_view.txt!');
+fs.writeFileSync('src/translations.ts', text);

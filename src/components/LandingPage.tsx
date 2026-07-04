@@ -13,6 +13,8 @@ import { deleteProductFromFirestore, saveProductToFirestore } from '../lib/fireb
 
 const landingTranslations: Record<string, Record<string, string>> = {
   id: {
+    logisticsCert: "Logistik & Sertifikat",
+    requestSample: "Minta Sampel",
     heroTagline: "PORTAL PENJUALAN KOMODITAS EKSPOR INDONESIA",
     heroTitle: "Sourcing Komoditas Premium Secara Aman & Transparan",
     heroDesc: "PT Multi Raksa Madani menghubungkan petani lokal dengan pembeli internasional secara transparan. Mulai negosiasi kargo bilateral secara elektronik, awasi draf berkas pabean dari meja kerja Anda.",
@@ -72,6 +74,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "Lolos Bea Cukai & Karantina"
   },
   en: {
+    logisticsCert: "Logistics & Certificates",
+    requestSample: "Request Sample",
     heroTagline: "INDONESIAN EXPORT COMMODITY SALES PORTAL",
     heroTitle: "Source Premium Commodities Securely & Transparently",
     heroDesc: "PT Multi Raksa Madani connects local farmers with international buyers transparently. Start bilateral cargo negotiations electronically, oversee custom clearance draft documents from your desk.",
@@ -131,6 +135,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "Passed Customs & Quarantine"
   },
   zh: {
+    logisticsCert: "物流与证书",
+    requestSample: "申请样品",
     heroTagline: "印尼出口商品销售门户",
     heroTitle: "安全透明地采购优质商品",
     heroDesc: "PT Multi Raksa Madani 透明地连接本地农民与国际买家。在线启动双边货物谈判，在办公桌前监督清关草案文件。",
@@ -190,6 +196,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "通过海关与检疫"
   },
   ar: {
+    logisticsCert: "اللوجستيات والشهادات",
+    requestSample: "طلب عينة",
     heroTagline: "بوابة مبيعات السلع التصديرية الإندونيسية",
     heroTitle: "الحصول على السلع الممتازة بأمان وشفافية",
     heroDesc: "تربط PT Multi Raksa Madani المزارعين المحليين بالمشترين الدوليين بشفافية. ابدأ مفاوضات الشحنات الثنائية إلكترونيًا، وأشرف على مسودات وثائق التخليص الجمركي من مكتبك.",
@@ -249,6 +257,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "اجتاز الجمارك والحجر"
   },
   th: {
+    logisticsCert: "โลจิสติกส์และใบรับรอง",
+    requestSample: "ขอตัวอย่าง",
     heroTagline: "พอร์ทัลการขายสินค้าโภคภัณฑ์ส่งออกของอินโดนีเซีย",
     heroTitle: "จัดหาสินค้าโภคภัณฑ์ระดับพรีเมียมอย่างปลอดภัยและโปร่งใส",
     heroDesc: "PT Multi Raksa Madani เชื่อมโยงเกษตรกรในท้องถิ่นกับผู้ซื้อต่างประเทศอย่างโปร่งใส เริ่มเจรจาการขนส่งสินค้าระดับทวิภาคีทางอิเล็กทรอนิกส์ ตรวจสอบร่างเอกสารพิธีการศุลกากรจากโต๊ะทำงานของคุณ",
@@ -308,6 +318,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "ผ่านศุลกากรและการกักกัน"
   },
   ru: {
+    logisticsCert: "Логистика и сертификаты",
+    requestSample: "Запросить образец",
     heroTagline: "ИНДОНЕЗИЙСКИЙ ПОРТАЛ ПРОДАЖ ЭКСПОРТНЫХ ТОВАРОВ",
     heroTitle: "Закупайте премиальные товары безопасно и прозрачно",
     heroDesc: "PT Multi Raksa Madani прозрачно связывает местных фермеров с международными покупателями. Начните двусторонние переговоры по грузам в электронном виде, контролируйте проекты документов по таможенной очистке со своего стола.",
@@ -367,6 +379,8 @@ const landingTranslations: Record<string, Record<string, string>> = {
     customsClearedShort: "Прошел таможню и карантин"
   },
   ja: {
+    logisticsCert: "物流と証明書",
+    requestSample: "サンプルをリクエスト",
     heroTagline: "インドネシア輸出商品販売ポータル",
     heroTitle: "安全かつ透明性の高い方法でプレミアム商品を調達",
     heroDesc: "PT Multi Raksa Madani は、地元の農家と国際的なバイヤーを透明性をもって結びつけます。双方向の電子貨物交渉を開始し、デスクからカスタム通関草案書類を監視します。",
@@ -946,7 +960,7 @@ export default function LandingPage({
                   <div className="relative h-44 w-full bg-slate-100">
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <div className="absolute top-3 left-3 bg-slate-900/80 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-3xs animate-pulse">
-                      {p.category}
+                      {p.category.toUpperCase() === 'PERTANIAN / HASIL BUMI' ? t.categoryAgri : p.category}
                     </div>
 
                     {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
@@ -974,7 +988,7 @@ export default function LandingPage({
                       <p className="text-[10px] text-gray-400 font-extrabold flex items-center gap-1">
                         <span className="px-1.5 py-0.5 bg-gray-100 rounded">HS {p.hsCode}</span>
                         <span>&bull;</span>
-                        <span>Asal: {p.origin}</span>
+                        <span>{t.originLabel}: {p.origin}</span>
                       </p>
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium h-16 overflow-y-auto">
@@ -1043,7 +1057,7 @@ export default function LandingPage({
                     }}
                     className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
-                    <span>Logistik & Sertifikat</span>
+                    <span>{t.logisticsCert}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -1052,7 +1066,7 @@ export default function LandingPage({
                     }}
                     className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
-                    <span>Minta Sampel</span>
+                    <span>{t.requestSample}</span>
                   </button>
                 </div>
               </div>
@@ -1355,7 +1369,7 @@ export default function LandingPage({
                     <div>
                       <span className="text-[8px] font-black uppercase text-emerald-600 tracking-wider block mb-0.5">KOMODITAS</span>
                       <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{selectedSampleProduct.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; Asal: {selectedSampleProduct.origin}</p>
+                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; {t.originLabel}: {selectedSampleProduct.origin}</p>
                     </div>
                   </div>
 
