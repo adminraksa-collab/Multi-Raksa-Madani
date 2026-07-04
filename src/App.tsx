@@ -34,7 +34,7 @@ import {
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
   Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
-  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut
 } from 'lucide-react';
 
 export default function App() {
@@ -1902,7 +1902,7 @@ export default function App() {
             </nav>
 
             {/* Right side controls user actions with dynamic Logout for testability */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Notification Center Bell */}
               <NotificationCenter 
                 currentUser={currentUser}
@@ -1970,20 +1970,20 @@ export default function App() {
                     <div className="flex sm:hidden items-center gap-1">
                       <button 
                         onClick={openEditProfile}
-                        className="text-slate-600 hover:text-slate-800 p-1 bg-slate-100 hover:bg-slate-200 rounded-md transition-all"
+                        className="text-slate-600 hover:text-slate-800 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-all"
                         title="Edit Profil & Sandi"
                       >
-                        <Settings className="w-3.5 h-3.5" />
+                        <Settings className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => {
                           setCurrentUser(null);
                           setShowRestrictedAlert(null);
                         }}
-                        className="text-[10px] text-red-600 font-extrabold px-1.5 py-1 bg-red-50 hover:bg-red-100 rounded uppercase tracking-wider transition-all"
+                        className="text-red-600 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-all"
                         title={t.logoutText}
                       >
-                        Keluar
+                        <LogOut className="w-4 h-4" />
                       </button>
                     </div>
                   </>
