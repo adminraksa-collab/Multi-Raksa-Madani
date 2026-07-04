@@ -116,13 +116,55 @@ export default function App() {
 
   // Local storage based user list and login credential state
   const [users, setUsers] = useState<UserProfile[]>(() => {
+    const isSandboxToRemove = (emailStr: string) => {
+      const e = (emailStr || '').trim().toLowerCase();
+      return [
+        'admin@exportflow.com',
+        'hendry@nusantara-traders.com',
+        'hans.m@tokyocoffee-import.de',
+        'siti.aminah@samuderatrans.co.id',
+        'wayan@organic-bali-spices.com'
+      ].includes(e);
+    };
+
     const stored = localStorage.getItem('exportflow_users');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        let us = JSON.parse(stored);
+        us = us.map((u: any) => u.role === 'Owner/Direktur' ? { ...u, role: 'Superadmin' } : u);
+        us = us.filter((u: any) => !isSandboxToRemove(u.email));
+        
+        // Ensure joko is present in users
+        if (!us.some((u: any) => u.name.toLowerCase() === 'joko')) {
+          us.unshift({
+            id: 'usr-joko',
+            name: 'joko',
+            role: 'Superadmin',
+            email: 'joko@exportflow.com',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+            companyName: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)',
+            phone: '0822-1832-2672',
+            isApproved: true
+          } as any);
+        }
+        // Ensure lis is present in users
+        if (!us.some((u: any) => u.name.toLowerCase() === 'lis')) {
+          us.unshift({
+            id: 'usr-lis',
+            name: 'lis',
+            role: 'Trader',
+            email: 'lis@exportflow.com',
+            avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+            companyName: 'PT Multi Raksa Madani',
+            phone: '0857-2045-21691',
+            isApproved: true
+          } as any);
+        }
+        localStorage.setItem('exportflow_users', JSON.stringify(us));
+        return us;
       } catch (e) {}
     }
-    const initial = mockUsers.map(u => ({ ...u, isApproved: true }));
+    const initial = mockUsers.map(u => ({ ...u, isApproved: true })).filter((u: any) => !isSandboxToRemove(u.email));
     localStorage.setItem('exportflow_users', JSON.stringify(initial));
     return initial;
   });
@@ -141,11 +183,15 @@ export default function App() {
   // Local storage based company profile
   const [companyProfile, setCompanyProfile] = useState(() => {
     const defaultProfile = {
-      nib: 'No. NIB 0122110034455 / SIUP 452/32.10/2026',
+      nib: '0602230086432',
       nibNotes: '(Izin Ekspor Pertanian & Agro-Industri Aktif)',
-      address: 'Gedung Graha Dirgantara Lt. 5, Jl. Jend. Sudirman No. 45, Jakarta Selatan 12190',
-      telephone: '+62 21 8089 7788',
-      email: 'support@multiraksamaradani.co.id',
+      npwp: '62.708.227.4-429.000',
+      ceisa: 'rec CEISA',
+      insw: 'rec insw',
+      address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
+      telephone: '0857-2045-21691',
+      whatsapp: '0822-1832-2672',
+      email: 'support@ptmrm.my.id',
       bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80',
       originPort: 'Tanjung Priok, JKT',
       exporterLegality: 'NIK-294021796-A',
@@ -181,6 +227,29 @@ export default function App() {
       const updatedCurrentUser = { ...currentUser, companyName: 'PT Multi Raksa Madani' };
       setCurrentUser(updatedCurrentUser);
       localStorage.setItem('exportflow_current_user', JSON.stringify(updatedCurrentUser));
+    }
+
+    // Migrate company profile to updated legality and contact info
+    const storedProfile = localStorage.getItem('exportflow_company_profile');
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        if (parsed.nib === 'No. NIB 0122110034455 / SIUP 452/32.10/2026' || !parsed.npwp || parsed.email === 'support@multiraksamaradani.co.id') {
+          const updatedProfile = {
+            ...parsed,
+            nib: '0602230086432',
+            npwp: '62.708.227.4-429.000',
+            ceisa: 'rec CEISA',
+            insw: 'rec insw',
+            address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
+            telephone: '0857-2045-21691',
+            whatsapp: '0822-1832-2672',
+            email: 'support@ptmrm.my.id',
+          };
+          setCompanyProfile(updatedProfile);
+          localStorage.setItem('exportflow_company_profile', JSON.stringify(updatedProfile));
+        }
+      } catch (e) {}
     }
   }, []);
 
@@ -483,18 +552,18 @@ export default function App() {
     }
   };
 
-  const handleTabClick = (tab: 'home' | 'workflow' | 'guide' | 'negotiation' | 'users', keepActiveShipment?: boolean) => {
+  const handleTabClick = (tab: 'home' | 'workflow' | 'guide' | 'negotiation' | 'users') => {
     if (isRestricted && tab !== 'home') {
       setShowRestrictedAlert(tab);
       // Auto-hide alert after 8 seconds
       setTimeout(() => setShowRestrictedAlert(null), 8000);
       return;
     }
+    if (tab === 'guide' && currentUser && currentUser.role !== 'Superadmin' && currentUser.role !== 'Trader') {
+      return;
+    }
     setShowRestrictedAlert(null);
     setActiveTab(tab);
-    if (tab === 'workflow' && !keepActiveShipment) {
-      setActiveShipmentId('');
-    }
   };
 
   const scrollToSection = (id: string) => {
@@ -515,6 +584,10 @@ export default function App() {
   useEffect(() => {
     if (isRestricted && activeTab !== 'home') {
       setActiveTab('home');
+    }
+    // If not superadmin or trader, they cannot access the guide tab
+    if (currentUser && activeTab === 'guide' && currentUser.role !== 'Superadmin' && currentUser.role !== 'Trader') {
+      setActiveTab('workflow');
     }
   }, [currentUser, activeTab, isRestricted]);
 
@@ -780,7 +853,7 @@ export default function App() {
       shipmentId: newDoc.shipmentId,
       contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Penerbitan Dokumen Baru',
-      message: `${newDoc.type} ekspor berhasil dirilis oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'} (${currentUser?.name}) dengan nomor formal ${newDoc.code}.`,
+      message: `${newDoc.type} ekspor berhasil dirilis oleh ${currentUser?.role === 'Superadmin' ? 'Superadmin (mewakili Trader)' : 'Trader'} (${currentUser?.name}) dengan nomor formal ${newDoc.code}.`,
       type: 'info',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -822,7 +895,7 @@ export default function App() {
   };
 
   const handleApproveDocument = (docId: string) => {
-    // Customs (Owner/Direktur) stamps / approves the document
+    // Customs (Superadmin) stamps / approves the document
     setShipments(prev => prev.map(s => {
       return {
         ...s,
@@ -846,7 +919,7 @@ export default function App() {
       shipmentId: activeShipmentId,
       contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Pabean Memvalidasi Dokumen',
-      message: `Pihak Bea Cukai (Owner/Direktur) telah meneliti fisik serta menerbitkan cap validasi pabean hijau pada berkas.`,
+      message: `Pihak Bea Cukai (Superadmin) telah meneliti fisik serta menerbitkan cap validasi pabean hijau pada berkas.`,
       type: 'success',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -1009,7 +1082,7 @@ export default function App() {
       shipmentId,
       contractNumber: activeShipment?.contractNumber || 'SC-GLOBAL',
       title: 'Sertifikasi Tambahan Diterbitkan',
-      message: `Sertifikasi tambahan "${name}" dilampirkan oleh ${currentUser?.role === 'Owner/Direktur' ? 'Owner/Direktur (mewakili Trader)' : 'Trader'}.`,
+      message: `Sertifikasi tambahan "${name}" dilampirkan oleh ${currentUser?.role === 'Superadmin' ? 'Superadmin (mewakili Trader)' : 'Trader'}.`,
       type: 'info',
       timestamp: new Date().toISOString(),
       readBy: []
@@ -1121,7 +1194,7 @@ export default function App() {
     vesselName: string;
     hsCode: string;
   }) => {
-    const newShipmentId = `ship-${Date.now().toString().slice(-4)}`;
+    const newShipmentId = `ship-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const randNum = Math.floor(100 + Math.random() * 900);
     const prodCode = formData.productId.toUpperCase().replace('PROD-', 'PR');
     const newShip: ExportShipment = {
@@ -1330,7 +1403,7 @@ export default function App() {
         id: 'alert-' + Date.now(),
         type: 'alert',
         title: 'Akun Terhapus',
-        message: `Akun pendaftaran atas nama ${userObj.name} (${userObj.role}) telah dihapus dari database pabean oleh Direktur.`,
+        message: `Akun pendaftaran atas nama ${userObj.name} (${userObj.role}) telah dihapus dari database pabean oleh Superadmin.`,
         timestamp: new Date().toISOString(),
         readBy: []
       };
@@ -1361,8 +1434,8 @@ export default function App() {
         type: isApproved ? 'success' : 'warning',
         title: isApproved ? 'Akun Disahkan' : 'Pengesahan Akun Dicabut',
         message: isApproved 
-          ? `Akun ${userObj.name} (${userObj.role}) telah disahkan secara penuh oleh Direktur Bea Cukai untuk menjalankan aktivitas ekspor.`
-          : `Pengesahan lisensi akun ${userObj.name} telah dicabut oleh Direktur Bea Cukai. Akses logistik dibatasi.`,
+          ? `Akun ${userObj.name} (${userObj.role}) telah disahkan secara penuh oleh Superadmin Bea Cukai untuk menjalankan aktivitas ekspor.`
+          : `Pengesahan lisensi akun ${userObj.name} telah dicabut oleh Superadmin Bea Cukai. Akses logistik dibatasi.`,
         timestamp: new Date().toISOString(),
         readBy: []
       };
@@ -1556,13 +1629,14 @@ export default function App() {
               className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
               title="Kembali ke Beranda Utama"
             >
-              <div className="p-2 bg-slate-900 text-white rounded-lg">
-                <Globe className="w-5 h-5 text-blue-400 animate-spin-slow" />
-              </div>
-              <div>
-                <span className="text-base font-black text-gray-900 uppercase tracking-widest block">{t.titleNavbar}</span>
-                <span className="text-xs text-gray-500 font-bold block">{t.subtitleNavbar}</span>
-              </div>
+              <svg viewBox="0 0 150 80" className="w-10 h-6 drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Right Dark Blue */}
+                <polygon points="90,25 100,10 125,10 145,55 135,70 110,70" fill="#1b329a" />
+                {/* Middle Purple */}
+                <polygon points="45,25 55,10 80,10 100,55 90,70 65,70" fill="#9c64c4" />
+                {/* Left Light Blue Hexagon */}
+                <polygon points="13,55 20,40 40,40 47,55 40,70 20,70" fill="#7bc4ed" />
+              </svg>
             </div>
 
             {/* Desktop Center Navigation with short, easy-to-understand menus including Profil and Katalog */}
@@ -1596,18 +1670,20 @@ export default function App() {
                     <FileSignature className="w-4 h-4" />
                     <span>{t.tabWorkflow}</span>
                   </button>
-                  <button
-                    onClick={() => handleTabClick('guide')}
-                    className={`px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      activeTab === 'guide'
-                        ? 'bg-slate-900 text-white shadow-sm font-extrabold'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span>{t.tabGuide}</span>
-                  </button>
-                  {currentUser.role === 'Owner/Direktur' && (
+                  {(currentUser.role === 'Superadmin' || currentUser.role === 'Trader') && (
+                    <button
+                      onClick={() => handleTabClick('guide')}
+                      className={`px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                        activeTab === 'guide'
+                          ? 'bg-slate-900 text-white shadow-sm font-extrabold'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span>{t.tabGuide}</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'Superadmin' && (
                     <button
                       onClick={() => handleTabClick('users')}
                       className={`px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -1651,13 +1727,13 @@ export default function App() {
                 >
                   {LANGUAGES.map((l) => (
                     <option key={l.code} value={l.code} className="text-gray-950 bg-white">
-                      {l.label}
+                      {l.code.toUpperCase()}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="hidden sm:flex items-center gap-2 border-l border-gray-250 pl-3">
+              <div className="flex items-center gap-1.5 sm:gap-2 border-l border-gray-250 pl-2 sm:pl-3">
                 {currentUser ? (
                   <>
                     <img 
@@ -1665,7 +1741,7 @@ export default function App() {
                       alt={currentUser.name} 
                       className="w-8 h-8 rounded-full border border-gray-100 object-cover"
                     />
-                    <div className="text-left text-sm">
+                    <div className="hidden sm:block text-left text-sm">
                       <p className="font-bold text-gray-900 flex items-center gap-1.5">
                         <span>{currentUser.name.split(' ')[0]}</span>
                         <button 
@@ -1686,30 +1762,54 @@ export default function App() {
                           <Settings className="w-4 h-4 text-slate-600 hover:rotate-90 transition-transform duration-300" />
                         </button>
                       </p>
-                      <p className="text-xs text-gray-400 font-extrabold capitalize leading-none pt-1">{currentUser.role === 'Owner/Direktur' ? 'Owner/Direktur' : currentUser.role}</p>
+                      <p className="text-xs text-gray-400 font-extrabold capitalize leading-none pt-1">{currentUser.role === 'Superadmin' ? 'Superadmin' : currentUser.role}</p>
+                    </div>
+
+                    {/* Compact Mobile Only Controls */}
+                    <div className="flex sm:hidden items-center gap-1">
+                      <button 
+                        onClick={openEditProfile}
+                        className="text-slate-600 hover:text-slate-800 p-1 bg-slate-100 hover:bg-slate-200 rounded-md transition-all"
+                        title="Edit Profil & Sandi"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setCurrentUser(null);
+                          setShowRestrictedAlert(null);
+                        }}
+                        className="text-[10px] text-red-600 font-extrabold px-1.5 py-1 bg-red-50 hover:bg-red-100 rounded uppercase tracking-wider transition-all"
+                        title={t.logoutText}
+                      >
+                        Keluar
+                      </button>
                     </div>
                   </>
                 ) : (
                   <div className="flex items-center gap-1.5">
+                    {/* Desktop Button */}
                     <button
                       onClick={() => {
                         setLoginModalMode('login');
                         setIsLoginOpen(true);
                       }}
-                      className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-md hover:-translate-y-0.5 uppercase tracking-wider cursor-pointer font-sans"
+                      className="hidden sm:flex px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all items-center gap-1 shadow-md hover:-translate-y-0.5 uppercase tracking-wider cursor-pointer font-sans"
                     >
                       <UserCheck className="w-3.5 h-3.5" />
                       <span>Login</span>
                     </button>
+
+                    {/* Mobile Button - compact icon only */}
                     <button
                       onClick={() => {
-                        setLoginModalMode('register');
+                        setLoginModalMode('login');
                         setIsLoginOpen(true);
                       }}
-                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-xs hover:-translate-y-0.5 uppercase tracking-wider cursor-pointer font-sans"
+                      className="flex sm:hidden p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all items-center justify-center shadow-md hover:-translate-y-0.5 cursor-pointer"
+                      title="Login"
                     >
-                      <UserPlus className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Daftar</span>
+                      <UserCheck className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -1779,15 +1879,17 @@ export default function App() {
                 >
                   Transaksi
                 </button>
-                <button
-                  onClick={() => handleTabClick('guide')}
-                  className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
-                    activeTab === 'guide' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
-                  }`}
-                >
-                  Panduan
-                </button>
-                {currentUser?.role === 'Owner/Direktur' ? (
+                {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
+                  <button
+                    onClick={() => handleTabClick('guide')}
+                    className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                      activeTab === 'guide' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
+                    }`}
+                  >
+                    Panduan
+                  </button>
+                )}
+                {currentUser?.role === 'Superadmin' ? (
                   <button
                     onClick={() => handleTabClick('users')}
                     className={`text-center py-2 px-2 text-[9.5px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
@@ -1837,530 +1939,297 @@ export default function App() {
           />
         ) : activeTab === 'workflow' ? (
           <div className="space-y-6">
-            {(activeShipmentId === '' || !activeShipment) ? (
-              /* ================= OPTION B: ALL TRANSACTIONS DASHBOARD OVERVIEW ================= */
-              <div className="space-y-6">
-                {/* Tab Switcher: Cargo vs Sample */}
-                <div className="flex border-b border-gray-150 gap-4">
-                  <button
-                    onClick={() => setWorkflowSubTab('cargo')}
-                    className={`pb-2 text-xs font-black uppercase tracking-wider transition-all border-b-2 px-1 cursor-pointer ${
-                      workflowSubTab === 'cargo'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    📦 Kontrak Dagang &amp; Logistik Kargo
-                  </button>
-                  <button
-                    onClick={() => setWorkflowSubTab('sample')}
-                    className={`pb-2 text-xs font-black uppercase tracking-wider transition-all border-b-2 px-1 flex items-center gap-1.5 cursor-pointer ${
-                      workflowSubTab === 'sample'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    🧪 Permintaan Sampel Komoditas
-                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-                      workflowSubTab === 'sample' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {sampleRequests.length}
-                    </span>
-                  </button>
-                </div>
+            {/* Header and Controls */}
+            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white p-4 rounded-2xl border border-gray-150 shadow-3xs text-left">
+              <div className="space-y-1">
+                <h2 className="text-base font-black text-slate-850 uppercase tracking-tight">
+                  Dasbor Tata Kelola Transaksi Kargo Ekspor
+                </h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Pantau, verifikasi dokumen kepabeanan RI, audit COO/Karantina, dan kelola alur pengapalan internasional secara real-time.
+                </p>
+              </div>
 
-                {workflowSubTab === 'cargo' ? (
-                  <>
-                    {/* Dashboard Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
-                        <Clock className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase text-gray-400 tracking-wider">Negosiasi Kontrak Aktif</p>
-                        <h3 className="text-lg font-black text-slate-900 mt-0.5">
-                          {visibleShipments.filter(s => !isShipmentDealCompleted(s)).length} <span className="text-xs text-gray-500 font-bold">Negosiasi</span>
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
+              {/* Action buttons (New Contract) */}
+              {(currentUser?.role === 'Trader' || currentUser?.role === 'Buyer' || currentUser?.role === 'Superadmin') && (
+                <button
+                  onClick={() => setIsNewContractModalOpen(true)}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer animate-none"
+                >
+                  <Plus className="w-4 h-4 text-emerald-400" />
+                  <span>Mulai Kontrak Baru</span>
+                </button>
+              )}
+            </div>
 
-                  <div className="bg-white p-4.5 rounded-xl border border-gray-150 shadow-3xs text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                        <CheckCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase text-gray-400 tracking-wider">Kontrak Disetujui (Selesai)</p>
-                        <h3 className="text-lg font-black text-slate-900 mt-0.5">
-                          {visibleShipments.filter(s => isShipmentDealCompleted(s)).length} <span className="text-xs text-gray-500 font-bold">Disetujui</span>
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Sub-tab Navigation */}
+            <div className="flex border-b border-slate-200">
+              <button
+                onClick={() => setWorkflowSubTab('cargo')}
+                className={`py-2 px-4 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                  workflowSubTab === 'cargo'
+                    ? 'border-indigo-600 text-indigo-700 font-black'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
+                }`}
+              >
+                Kargo Ekspor ({filteredShipments.length})
+              </button>
+              <button
+                onClick={() => setWorkflowSubTab('sample')}
+                className={`py-2 px-4 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                  workflowSubTab === 'sample'
+                    ? 'border-indigo-600 text-indigo-700 font-black'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
+                }`}
+              >
+                Permintaan Sampel ({sampleRequests.length})
+              </button>
+            </div>
 
-                {/* Subtitle with Actions & Compact Search */}
-                <div className="pt-2 border-b border-gray-150 pb-3 flex flex-col lg:flex-row lg:items-end justify-between gap-3 text-left">
-                  <div className="space-y-1">
-                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                      Negosiasi &amp; Kontrak Dagang Anda 
-                      {shipmentSearchQuery || shipmentStatusFilter !== 'All' ? (
-                        <span className="text-indigo-600 font-extrabold ml-1">
-                          ({filteredShipments.length} dari {visibleShipments.length})
-                        </span>
-                      ) : (
-                        ` (${visibleShipments.length})`
-                      )}
-                    </h2>
-                    <p className="text-xs text-slate-400">Silakan pilih salah satu kargo kontainer atau draf LOI di bawah ini untuk memulai pelacakan alur kerja terpadu.</p>
-                  </div>
-
-                  {/* Compact Search & Filter Controls */}
-                  <div className="flex items-center gap-2 max-w-full sm:max-w-md shrink-0">
-                    {/* Search Input */}
-                    <div className="relative flex-1 sm:w-56">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
-                        <Search className="w-3.5 h-3.5" />
-                      </span>
+            {workflowSubTab === 'cargo' ? (
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+                {/* Left Column: Shipments list */}
+                <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-gray-150 shadow-3xs space-y-4 text-left">
+                  <div className="space-y-2.5">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                      Daftar Transaksi ({filteredShipments.length})
+                    </h3>
+                    
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
                         type="text"
+                        placeholder="Cari Kontrak/Pelabuhan..."
                         value={shipmentSearchQuery}
                         onChange={(e) => setShipmentSearchQuery(e.target.value)}
-                        placeholder="Cari kontrak, produk, buyer..."
-                        className="w-full bg-white text-xs border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 text-slate-700 font-medium placeholder-slate-400"
+                        className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
                       />
-                      {shipmentSearchQuery && (
-                        <button
-                          onClick={() => setShipmentSearchQuery('')}
-                          className="absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
                     </div>
 
-                    {/* Step Filter Dropdown */}
-                    <select
-                      value={shipmentStatusFilter}
-                      onChange={(e) => setShipmentStatusFilter(e.target.value as any)}
-                      className="bg-white text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-slate-600 font-bold cursor-pointer"
-                    >
-                      <option value="All">Semua Kontrak</option>
-                      <option value="Draft">Negosiasi Aktif</option>
-                      <option value="Completed">Kontrak Disetujui</option>
-                    </select>
+                    {/* Status Filters */}
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { code: 'All', label: 'Semua' },
+                        { code: 'Draft', label: 'Draf' },
+                        { code: 'Completed', label: 'Selesai' }
+                      ].map(f => (
+                        <button
+                          key={f.code}
+                          onClick={() => setShipmentStatusFilter(f.code)}
+                          className={`py-1.5 px-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer text-center ${
+                            shipmentStatusFilter === f.code
+                              ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-transparent'
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Shipments List */}
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                    {filteredShipments.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-gray-400 font-semibold">
+                        Tidak ada transaksi.
+                      </div>
+                    ) : (
+                      filteredShipments.map((s) => {
+                        const isActive = s.id === activeShipment?.id;
+                        const isCompleted = s.currentStep === 'Completed';
+                        const isDraft = s.currentStep === 'Draft';
+                        
+                        return (
+                          <div
+                            key={s.id}
+                            onClick={() => {
+                              setActiveShipmentId(s.id);
+                              setTargetStepIndex(undefined);
+                              setTargetSubStepIndex(undefined);
+                            }}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                              isActive
+                                ? 'bg-indigo-50/50 border-indigo-200 shadow-3xs'
+                                : 'bg-white hover:bg-slate-50 border-slate-150'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="text-[10px] font-bold font-mono text-indigo-650">{s.id.toUpperCase()}</span>
+                              <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight ${
+                                isCompleted
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : isDraft
+                                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                              }`}>
+                                {s.currentStep}
+                              </span>
+                            </div>
+                            
+                            <div>
+                              <h4 className="text-[11px] font-extrabold text-slate-800 line-clamp-1">{s.productName}</h4>
+                              <p className="text-[10px] text-slate-400 font-bold tracking-tight mt-0.5 font-mono">{s.contractNumber}</p>
+                            </div>
+
+                            <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold border-t border-slate-100 pt-1.5 mt-0.5">
+                              <span className="line-clamp-1">{s.buyerCompany}</span>
+                              <span className="font-extrabold text-indigo-600 shrink-0">{s.quantity} {s.unit.split(' ')[0]}</span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 
-                {/* Grid list of shipments */}
-                {visibleShipments.length === 0 ? (
-                  <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto space-y-4 shadow-3xs">
-                    <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
-                      <FileSignature className="w-8 h-8" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Belum Ada Kontrak Dagang</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        Anda saat ini masuk sebagai <strong>{currentUser?.role === 'Buyer' ? 'Buyer' : currentUser?.role || 'Pengguna'} ({currentUser?.name})</strong>. Belum ada draf negosiasi atau draf kontrak dagang aktif yang terkait dengan akun Anda.
-                      </p>
-                    </div>
-                    <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
-                      <button
-                        onClick={() => setActiveTab('home')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-3xs"
-                      >
-                        Pilih Produk di Katalog
-                      </button>
-                      <button
-                        onClick={() => setIsNewContractModalOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-3xs"
-                      >
-                        Mulai Kontrak Baru
-                      </button>
-                    </div>
-                  </div>
-                ) : filteredShipments.length === 0 ? (
-                  <div className="bg-white rounded-xl border border-gray-150 p-10 text-center max-w-md mx-auto space-y-3 shadow-3xs">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
-                      <Search className="w-5 h-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Pencarian Tidak Ditemukan</h3>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Tidak ada transaksi yang sesuai dengan kata kunci atau filter tahap yang Anda pilih.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShipmentSearchQuery('');
-                        setShipmentStatusFilter('All');
+                {/* Right Column: Shipment detail (InteractiveInfographic) */}
+                <div className="lg:col-span-3">
+                  {activeShipment ? (
+                    <InteractiveInfographic
+                      shipment={activeShipment}
+                      currentUser={currentUser}
+                      currentLanguage={lang}
+                      onSelectUser={handleSelectUser}
+                      onUpdateStep={handleUpdateStep}
+                      onOpenDocumentEditor={() => setIsDocEditorOpen(true)}
+                      onSimulateEvent={handleSimulateEvent}
+                      negoStepId={negoStepId}
+                      onNegoStepIdChange={setNegoStepId}
+                      onUpdateShipmentFromDeal={handleUpdateShipmentFromDeal}
+                      autoOpenLoi={autoOpenLoi}
+                      onResetAutoOpenLoi={() => setAutoOpenLoi(false)}
+                      targetStepIndex={targetStepIndex}
+                      targetSubStepIndex={targetSubStepIndex}
+                      onResetTargetStepIndices={() => {
+                        setTargetStepIndex(undefined);
+                        setTargetSubStepIndex(undefined);
                       }}
-                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] font-black uppercase py-1.5 px-3.5 rounded-lg transition-all cursor-pointer inline-block"
-                    >
-                      Reset Filter &amp; Cari Kembali
-                    </button>
+                    />
+                  ) : (
+                    <div className="bg-white rounded-2xl border border-gray-150 p-16 text-center shadow-3xs max-w-lg mx-auto space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
+                        <Layers className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Belum Ada Transaksi</h3>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+                          Pilih transaksi atau mulai buat transaksi baru untuk memantau alur logistik ekspor.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6 text-left">
+                <div className="bg-emerald-50 border border-emerald-150 rounded-2xl p-4 flex items-start gap-3">
+                  <div className="p-2.5 bg-emerald-100 text-emerald-750 rounded-xl shrink-0 mt-0.5">
+                    <Award className="w-5 h-5 text-emerald-800" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Jurnal Permintaan Sampel</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      Daftar permintaan sampel yang masuk dari calon buyer Anda.
+                    </p>
+                  </div>
+                </div>
+
+                {sampleRequests.length === 0 ? (
+                  <div className="bg-white rounded-xl border border-gray-150 p-12 text-center max-w-lg mx-auto space-y-4 shadow-3xs">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
+                      <Award className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Belum Ada Permintaan</h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+                        Saat ini belum ada permintaan sampel produk rill yang diajukan oleh calon buyer.
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredShipments.map(s => {
-                      const stepInfo = getStepDetails(s);
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {sampleRequests.map((req) => {
+                      const isPending = req.status === 'pending';
+                      const isShipped = req.status === 'shipped';
+                      const isDelivered = req.status === 'delivered';
+                      const isExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin';
+
                       return (
                         <div 
-                          key={s.id} 
-                          className="bg-white rounded-xl border border-gray-150 hover:border-indigo-200 hover:shadow-xs transition-all p-4 flex flex-col justify-between gap-3 text-left"
+                          key={req.id}
+                          className="bg-white rounded-2xl border border-gray-150 hover:border-emerald-200 transition-all p-5 flex flex-col justify-between gap-4 shadow-3xs"
                         >
-                          <div className="space-y-3">
-                            {/* Header: Contract & Step */}
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono bg-slate-100 py-0.5 px-2 rounded-md text-[11px] text-slate-600 font-extrabold tracking-tight">
-                                {s.contractNumber}
+                          <div className="space-y-3.5">
+                            <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-3">
+                              <div>
+                                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider font-mono">KODE: {req.id}</span>
+                                <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-0.5">{req.productName}</h4>
+                              </div>
+                              <span className={`px-2 py-0.5 text-[9.5px] font-bold uppercase rounded-md border shrink-0 ${
+                                isPending 
+                                  ? 'text-amber-700 bg-amber-50 border-amber-200'
+                                  : isShipped
+                                    ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                                    : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                              }`}>
+                                {isPending ? 'Menunggu Kirim' : isShipped ? 'Dalam Perjalanan' : 'Telah Sampai'}
                               </span>
-                              {(() => {
-                                if (s.currentStep === 'Completed') {
-                                  return (
-                                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-emerald-750 bg-emerald-50 border-emerald-200">
-                                      <CheckCircle className="w-2.5 h-2.5" />
-                                      <span>Selesai &amp; Lunas</span>
-                                    </span>
-                                  );
-                                } else if (s.currentStep === 'Shipping') {
-                                  let completedSubs: number[] = [];
-                                  const stored = localStorage.getItem(`exportflow_completed_substeps_${s.id}`);
-                                  if (stored) {
-                                    try {
-                                      completedSubs = JSON.parse(stored);
-                                    } catch (e) {}
-                                  }
-                                  const completedCount = completedSubs.length;
-                                  return (
-                                    <span className="px-2 py-0.5 text-[11px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-indigo-700 bg-indigo-50 border-indigo-200">
-                                      <Ship className="w-2.5 h-2.5" />
-                                      <span>Logistik ({completedCount}/4)</span>
-                                    </span>
-                                  );
-                                } else {
-                                  const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || (d.type as string) === 'Proforma Invoice') && d.status === 'Approved');
-                                  if (isSigned) {
-                                    return (
-                                      <span className="px-2 py-0.5 text-[11px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-teal-700 bg-teal-50 border-teal-200">
-                                        <CheckCircle className="w-2.5 h-2.5" />
-                                        <span>Kontrak Disetujui</span>
-                                      </span>
-                                    );
-                                  } else {
-                                    return (
-                                      <span className="px-2 py-0.5 text-[11px] font-bold uppercase rounded-md border flex items-center gap-1 shrink-0 text-amber-700 bg-amber-50/70 border-amber-200">
-                                        <FileSignature className="w-2.5 h-2.5" />
-                                        <span>Negosiasi Aktif</span>
-                                      </span>
-                                    );
-                                  }
-                                }
-                              })()}
-                            </div>
-                            
-                            {/* Product Name & Value */}
-                            <div>
-                              <h4 className="text-sm font-black text-slate-900 leading-snug line-clamp-1">
-                                {s.productName}
-                              </h4>
-                              <p className="text-xs text-indigo-600 font-extrabold mt-0.5">
-                                ${s.totalValue.toLocaleString('id-ID')} USD
-                              </p>
                             </div>
 
-                            {/* Details Grid */}
-                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-dashed border-gray-100 text-xs">
+                            <div className="grid grid-cols-2 gap-3.5 text-xs text-left">
                               <div>
-                                <span className="text-gray-400 font-semibold block text-[11px]">Buyer:</span>
-                                <span className="font-bold text-slate-700 block truncate" title={s.buyerCompany}>{s.buyerCompany}</span>
+                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Calon Buyer:</span>
+                                <span className="font-extrabold text-slate-800 block mt-0.5">{req.buyerName}</span>
+                                <span className="text-[10px] text-slate-500 font-semibold block">{req.buyerCompany}</span>
                               </div>
+
                               <div>
-                                <span className="text-gray-400 font-semibold block text-[11px]">Volume:</span>
-                                <span className="font-bold text-slate-700 block">{s.quantity} {s.unit}</span>
+                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Jumlah Sampel:</span>
+                                <span className="font-extrabold text-indigo-600 block mt-0.5">{req.quantity}</span>
                               </div>
+
                               <div className="col-span-2">
-                                <span className="text-gray-400 font-semibold block text-[11px]">Rute (POL → POD):</span>
-                                <span className="font-bold text-slate-600 block truncate" title={`${s.portOfLoading} → ${s.portOfDischarge}`}>
-                                  {s.portOfLoading.split(',')[0]} → {s.portOfDischarge.split(',')[0]}
-                                </span>
-                              </div>
-                              <div className="col-span-2">
-                                <span className="text-gray-400 font-semibold block text-[11px]">Jadwal (ETD → ETA):</span>
-                                <span className="font-bold text-slate-600 block truncate">
-                                  {s.etd} → {s.eta}
+                                <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Alamat Pengiriman:</span>
+                                <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[10.5px] mt-0.5">
+                                  {req.shippingAddress}
                                 </span>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Progress & Actions Footer */}
-                          <div className="space-y-3 pt-2 border-t border-gray-100">
-                            {/* Minimalist Progress Bar */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                                <span>Progres</span>
-                                <span className="text-indigo-600 font-black">{stepInfo.percent}%</span>
-                              </div>
-                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                <div 
-                                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" 
-                                  style={{ width: `${stepInfo.percent}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center justify-end gap-1.5">
-                              {(currentUser?.role === 'Owner/Direktur' || (currentUser?.role === 'Buyer' && s.buyerId === currentUser.id)) && (
-                                <button
-                                  onClick={() => setShipmentToDeleteId(s.id)}
-                                  className="p-1.5 text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-all cursor-pointer shadow-3xs"
-                                  title="Hapus Transaksi"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              
+                            {/* Status Update Actions for Exporter */}
+                            {isExporter && isPending && (
                               <button
                                 onClick={() => {
-                                  setActiveShipmentId(s.id);
+                                  setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'shipped' } : r));
                                 }}
-                                className={`flex-1 px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-3xs ${
-                                  s.currentStep === 'Draft'
-                                    ? 'bg-amber-600 text-white hover:bg-amber-700 hover:-translate-y-0.5 active:scale-95'
-                                    : 'bg-slate-900 text-white hover:bg-indigo-600 hover:-translate-y-0.5 active:scale-95'
-                                }`}
+                                className="w-full mt-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                               >
-                                <span>Lacak &amp; Kelola</span>
-                                <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                                <span>Kirim Sampel</span>
                               </button>
-                            </div>
+                            )}
+                            {isExporter && isShipped && (
+                              <button
+                                onClick={() => {
+                                  setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'delivered' } : r));
+                                }}
+                                className="w-full mt-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                              >
+                                <span>Konfirmasi Terkirim</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
-                  </>
-                ) : (
-                  /* ================= SAMPLE REQUESTS DASHBOARD ================= */
-                  <div className="space-y-6 text-left">
-                    <div className="bg-emerald-50 border border-emerald-150 rounded-2xl p-4 flex items-start gap-3">
-                      <div className="p-2.5 bg-emerald-100 text-emerald-750 rounded-xl shrink-0 mt-0.5">
-                        <Award className="w-5 h-5 text-emerald-800" />
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Pusat Layanan Sampel Komoditas</h3>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Fasilitas pengiriman sampel ekspor disediakan gratis oleh <strong>PT Multi Raksa Madani</strong> untuk membuktikan kualitas kargo rill kepada calon buyer. Sesuai konvensi niaga ekspor-impor, ongkos kurir udara (DHL/FedEx) dibebankan kepada pihak importir (Buyer) kecuali disepakati kebijakan khusus lainnya.
-                        </p>
-                      </div>
-                    </div>
-
-                    {sampleRequests.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-gray-150 p-12 text-center max-w-lg mx-auto space-y-4 shadow-3xs">
-                        <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
-                          <Award className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Belum Ada Permintaan Sampel</h3>
-                          <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                            Saat ini belum ada permintaan sampel produk rill yang diajukan oleh calon buyer Anda.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {sampleRequests.map((req) => {
-                          const isPending = req.status === 'pending';
-                          const isShipped = req.status === 'shipped';
-                          const isDelivered = req.status === 'delivered';
-                          const isExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur';
-
-                          return (
-                            <div 
-                              key={req.id}
-                              className="bg-white rounded-2xl border border-gray-150 hover:border-emerald-200 transition-all p-5 flex flex-col justify-between gap-4 shadow-3xs"
-                            >
-                              <div className="space-y-3.5">
-                                {/* Card Header */}
-                                <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-3">
-                                  <div>
-                                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider font-mono">KODE: {req.id}</span>
-                                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-0.5">{req.productName}</h4>
-                                  </div>
-                                  <span className={`px-2 py-0.5 text-[9.5px] font-bold uppercase rounded-md border shrink-0 ${
-                                    isPending 
-                                      ? 'text-amber-700 bg-amber-50 border-amber-200'
-                                      : isShipped
-                                        ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                        : 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                                  }`}>
-                                    {isPending ? 'Menunggu Kirim' : isShipped ? 'Dalam Perjalanan' : 'Telah Sampai'}
-                                  </span>
-                                </div>
-
-                                {/* Card Details Grid */}
-                                <div className="grid grid-cols-2 gap-3.5 text-xs text-left">
-                                  <div>
-                                    <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Calon Buyer / Importir:</span>
-                                    <span className="font-extrabold text-slate-800 block mt-0.5">{req.buyerName}</span>
-                                    <span className="text-[10px] text-slate-500 font-semibold block">{req.buyerCompany}</span>
-                                  </div>
-
-                                  <div>
-                                    <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Jumlah Sampel:</span>
-                                    <span className="font-extrabold text-indigo-600 block mt-0.5">{req.quantity}</span>
-                                  </div>
-
-                                  <div className="col-span-2">
-                                    <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Alamat Pengiriman Sampel:</span>
-                                    <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[10.5px] mt-0.5">
-                                      {req.shippingAddress}
-                                    </span>
-                                  </div>
-
-                                  <div className="col-span-2 grid grid-cols-2 gap-3 pt-1">
-                                    <div>
-                                      <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Kurir &amp; Akun:</span>
-                                      <span className="font-bold text-slate-700 block mt-0.5">{req.courier}</span>
-                                      {req.courierAccount ? (
-                                        <span className="text-[9.5px] font-mono text-indigo-600 bg-indigo-50 py-0.5 px-1.5 rounded inline-block mt-0.5 font-bold font-mono">Acc: {req.courierAccount}</span>
-                                      ) : (
-                                        <span className="text-[9.5px] text-slate-400 italic block mt-0.5">Tanpa Akun (Freight Prepaid)</span>
-                                      )}
-                                    </div>
-
-                                    <div>
-                                      <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Biaya Kirim Sampel:</span>
-                                      <span className="font-bold text-slate-700 block mt-0.5 uppercase text-[10px]">
-                                        {req.shippingFeePaidBy === 'buyer' ? 'Ditanggung Buyer' : 'Ditanggung Seller'}
-                                      </span>
-                                      <span className="text-[10px] text-slate-500 font-mono font-bold block mt-0.5">Estimasi: ${req.shippingFeeAmount} USD</span>
-                                    </div>
-                                  </div>
-
-                                  {req.trackingNumber && (
-                                    <div className="col-span-2 pt-2 border-t border-dashed border-gray-100">
-                                      <span className="text-gray-400 font-bold block text-[9.5px] uppercase tracking-wider font-sans">Nomor Resi / AWB Tracking:</span>
-                                      <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="font-mono text-xs font-black text-indigo-600 bg-indigo-50 border border-indigo-200 py-0.5 px-2 rounded">
-                                          {req.trackingNumber}
-                                        </span>
-                                        <span className="text-[10px] text-slate-400 font-medium font-sans">(Lacak via kurir {req.courier})</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Exporter Panel Aksi */}
-                              {isExporter && (
-                                <div className="mt-2 pt-3 border-t border-gray-100 space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-left">
-                                  <span className="text-[9.5px] font-black text-emerald-800 uppercase tracking-wider block font-sans">Panel Aksi Eksportir (PT Multi Raksa Madani)</span>
-                                  {isPending ? (
-                                    <div className="space-y-2">
-                                      <div className="space-y-1">
-                                        <label className="block text-[9.5px] font-bold text-slate-500 uppercase tracking-wider font-sans">Masukkan No. Resi Pengiriman (AWB)</label>
-                                        <div className="flex gap-2">
-                                          <input
-                                            type="text"
-                                            id={`awb-input-${req.id}`}
-                                            placeholder="Contoh: DHL-AWB-112233"
-                                            className="flex-1 p-2 bg-white border border-gray-200 rounded-lg text-xs font-mono font-bold focus:outline-none focus:border-emerald-500 text-slate-700"
-                                          />
-                                          <button
-                                            onClick={() => {
-                                              const inputEl = document.getElementById(`awb-input-${req.id}`) as HTMLInputElement;
-                                              const awb = inputEl?.value || `AWB-${Math.floor(100000 + Math.random() * 900000)}`;
-                                              const updated = sampleRequests.map(sr => 
-                                                sr.id === req.id 
-                                                  ? { ...sr, status: 'shipped' as const, trackingNumber: awb } 
-                                                  : sr
-                                              );
-                                              setSampleRequests(updated);
-                                            }}
-                                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase rounded-lg transition-all cursor-pointer"
-                                          >
-                                            Kirim Sampel
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ) : isShipped ? (
-                                    <div className="flex items-center justify-between gap-4 font-sans">
-                                      <span className="text-[10px] text-slate-500 font-semibold leading-snug">Kargo sampel dalam perjalanan kurir udara.</span>
-                                      <button
-                                        onClick={() => {
-                                          const updated = sampleRequests.map(sr => 
-                                            sr.id === req.id 
-                                              ? { ...sr, status: 'delivered' as const } 
-                                              : sr
-                                          );
-                                          setSampleRequests(updated);
-                                        }}
-                                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase rounded-lg transition-all cursor-pointer shrink-0"
-                                      >
-                                        Set: Telah Tiba
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 font-sans">
-                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                                      <span>Sampel produk rill telah berhasil diterima oleh calon buyer luar negeri!</span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* ================= SELECTED SHIPMENT ALUR DETAILED TRACKING ================= */
-              <div className="space-y-6">
-
-                {/* Document Editor Component (Toggle Mode) */}
-                {isDocEditorOpen ? (
-                  <DocumentEditor
-                    shipments={shipments}
-                    currentUser={currentUser}
-                    onSaveDocument={handleSaveNewDocument}
-                    onClose={() => setIsDocEditorOpen(false)}
-                  />
-                ) : (
-                  <InteractiveInfographic
-                    shipment={activeShipment}
-                    currentUser={currentUser}
-                    currentLanguage={lang}
-                    onSelectUser={(profile) => setCurrentUser(profile)}
-                    onUpdateStep={handleUpdateStep}
-                    onOpenDocumentEditor={() => setIsDocEditorOpen(true)}
-                    onSimulateEvent={handleSimulateEvent}
-                    negoStepId={negoStepId}
-                    onNegoStepIdChange={(stepId) => setNegoStepId(stepId)}
-                    onUpdateShipmentFromDeal={handleUpdateShipmentFromDeal}
-                    autoOpenLoi={autoOpenLoi}
-                    onResetAutoOpenLoi={() => setAutoOpenLoi(false)}
-                    targetStepIndex={targetStepIndex}
-                    targetSubStepIndex={targetSubStepIndex}
-                    onResetTargetStepIndices={() => {
-                      setTargetStepIndex(undefined);
-                      setTargetSubStepIndex(undefined);
-                    }}
-                  />
-                )}
               </div>
             )}
           </div>
+        ) : activeTab === 'guide' && (currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') ? (
+          <ExportGuide />
         ) : activeTab === 'users' ? (
           <AccountManagement
             users={users}
@@ -2369,8 +2238,6 @@ export default function App() {
             onToggleApprove={handleToggleApproveUser}
             onUpdateUsersList={handleUpdateUsersList}
           />
-        ) : activeTab === 'guide' ? (
-          <ExportGuide />
         ) : null}
 
       </main>
@@ -2380,19 +2247,19 @@ export default function App() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 flex flex-col overflow-hidden max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-5 bg-indigo-900 text-white flex justify-between items-center shrink-0">
+            <div className="p-5 bg-white text-slate-900 border-b border-slate-200 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-indigo-500 rounded-lg text-white">
-                  <Lock className="w-4 h-4 text-white" />
+                <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                  <Lock className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm uppercase tracking-wider">Ganti Sandi Akun</h3>
-                  <p className="text-[10px] text-indigo-200">Perbarui kata sandi login untuk peran: {currentUser?.role}</p>
+                  <p className="text-[10px] text-slate-500">Perbarui kata sandi login untuk peran: {currentUser?.role}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsChangePasswordOpen(false)}
-                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 p-1.5 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2503,19 +2370,19 @@ export default function App() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-150 flex flex-col overflow-hidden max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-5 bg-indigo-950 text-white flex justify-between items-center shrink-0">
+            <div className="p-5 bg-white text-slate-900 border-b border-slate-200 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-600 rounded-xl text-white">
-                  <User className="w-5 h-5 text-white" />
+                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                  <User className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm uppercase tracking-wider">Edit Profil & Kata Sandi</h3>
-                  <p className="text-[10px] text-indigo-300 font-semibold">Perbarui data profil & sandi login Anda ({currentUser.role})</p>
+                  <p className="text-[10px] text-slate-500 font-semibold">Perbarui data profil & sandi login Anda ({currentUser.role})</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsEditProfileOpen(false)}
-                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 p-1.5 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2756,7 +2623,7 @@ export default function App() {
         initialMode={loginModalMode}
       />
 
-      {/* Deletion Confirmation Modal for Owner/Direktur or Buyer */}
+      {/* Deletion Confirmation Modal for Superadmin or Buyer */}
       {shipmentToDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-red-100 space-y-4">
@@ -2769,7 +2636,7 @@ export default function App() {
                   {currentUser?.role === 'Buyer' ? 'Batalkan / Hapus Order' : 'Hapus Transaksi'}
                 </h3>
                 <p className="text-[10px] text-red-500 font-extrabold uppercase">
-                  {currentUser?.role === 'Buyer' ? 'Otorisasi Importir (Buyer)' : 'Otorisasi Owner/Direktur'}
+                  {currentUser?.role === 'Buyer' ? 'Otorisasi Importir (Buyer)' : 'Otorisasi Superadmin'}
                 </p>
               </div>
             </div>
@@ -2806,7 +2673,7 @@ export default function App() {
                         title: isBuyer ? 'Order Dibatalkan Oleh Buyer' : 'Transaksi Dihapus Secara Permanen',
                         message: isBuyer
                           ? `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dibatalkan & dihapus secara permanen dari portal oleh pihak Importir (Buyer).`
-                          : `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dihapus secara permanen dari pabean oleh Direktur Utama.`,
+                          : `Transaksi untuk ${shipmentToDelete.productName} (${shipmentToDelete.contractNumber}) senilai $${shipmentToDelete.totalValue.toLocaleString('id-ID')} USD telah dihapus secara permanen dari pabean oleh Superadmin.`,
                         type: 'warning',
                         timestamp: new Date().toISOString(),
                         readBy: []
@@ -2830,19 +2697,19 @@ export default function App() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-slate-205 flex flex-col overflow-hidden max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
+            <div className="p-6 bg-white text-slate-900 border-b border-slate-200 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500 rounded-lg text-slate-900">
-                  <FileSignature className="w-5 h-5 text-slate-900" />
+                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                  <FileSignature className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
                   <h3 className="text-base font-black uppercase tracking-wider">Mulai Kontrak Penjualan Baru</h3>
-                  <p className="text-[10px] text-emerald-400 font-sans font-bold">TAHAP AWAL (DRAFT) - SALES CONTRACT INSTANSI EKSPOR</p>
+                  <p className="text-[10px] text-emerald-600 font-sans font-bold">TAHAP AWAL (DRAFT) - SALES CONTRACT INSTANSI EKSPOR</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsNewContractModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -3005,6 +2872,16 @@ export default function App() {
         initialMode={loginModalMode}
       />
 
+      {/* Floating document editor with templates */}
+      {isDocEditorOpen && (
+        <DocumentEditor
+          shipments={shipments}
+          currentUser={currentUser}
+          onSaveDocument={handleSaveNewDocument}
+          onClose={() => setIsDocEditorOpen(false)}
+        />
+      )}
+
       {/* Floating document detailed viewer with PRINT utilities */}
       {viewingDocument && (
         <DocumentViewer
@@ -3019,7 +2896,7 @@ export default function App() {
       {/* Portal humble professional footer */}
       <footer className="mt-16 border-t border-gray-200 pt-8 max-w-7xl mx-auto px-4 text-center space-y-2">
         <p className="text-xs font-medium text-gray-500">
-          Aplikasi Manajemen Administrasi Ekspor Indonesia (ExportFlow) &bull; Terintegrasi Karantina & Bea Cukai RI.
+          Aplikasi Manajemen Administrasi Ekspor Indonesia (ExportFlow) &bull; Terintegrasi dengan Karantina, Bea Cukai RI, CEISA, & INSW.
         </p>
         <p className="text-[10px] text-gray-400">
           Proyek Simulasi Pameran Kemendag RI &copy; 2026. Semua kalkulasi FOB dan data kepabeanan mematuhi standar INCOTERMS internasional.

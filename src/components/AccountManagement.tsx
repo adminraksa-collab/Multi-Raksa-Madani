@@ -36,7 +36,7 @@ export default function AccountManagement({
     }
     return [
       {
-        role: 'Owner/Direktur',
+        role: 'Superadmin',
         email: 'admin@exportflow.com',
         password: 'admin123',
         name: 'Budi Raharjo',
@@ -51,10 +51,10 @@ export default function AccountManagement({
       },
       {
         role: 'Buyer',
-        email: 'hans.m@eurofoods-import.de',
+        email: 'hans.m@TokyoCoffee-import.de',
         password: 'buyer123',
-        name: 'Hans Mueller',
-        company: 'EuroFoods Import GmbH'
+        name: 'Kenji Sato',
+        company: 'Tokyo Coffee Trading Co.'
       },
       {
         role: 'Forwarder',
@@ -300,7 +300,7 @@ export default function AccountManagement({
   // Role details styling helper
   const getRoleBadgeStyle = (role: UserRole) => {
     switch (role) {
-      case 'Owner/Direktur':
+      case 'Superadmin':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Trader':
         return 'bg-blue-50 text-blue-700 border-blue-200';
@@ -328,7 +328,7 @@ export default function AccountManagement({
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-lg text-indigo-300 font-extrabold text-[10px] tracking-wider uppercase">
-              Direktur Utama Panel
+              Superadmin Panel
             </span>
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -340,7 +340,7 @@ export default function AccountManagement({
             <span>Manajemen User, Akun &amp; Kata Sandi</span>
           </h1>
           <p className="text-xs text-slate-300 font-medium">
-            Otoritas tertinggi Direktur untuk mengawasi akun, menyunting username, melihat kata sandi, mengubah approval, dan mendaftarkan kru baru.
+            Otoritas tertinggi Superadmin untuk mengawasi akun, menyunting username, melihat kata sandi, mengubah approval, dan mendaftarkan kru baru.
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/10">
@@ -500,7 +500,7 @@ export default function AccountManagement({
                     <option value="Forwarder">Forwarder (Mitra Logistik)</option>
                     <option value="Supplier">Supplier (Koperasi Produsen)</option>
                     <option value="Buyer">Buyer (Importir Asing)</option>
-                    <option value="Owner/Direktur">Owner/Direktur Utama</option>
+                    <option value="Superadmin">Superadmin Utama</option>
                   </select>
                 </div>
 
@@ -596,7 +596,7 @@ export default function AccountManagement({
               <option value="Forwarder">Forwarder Logistik</option>
               <option value="Supplier">Supplier / Produsen</option>
               <option value="Buyer">Buyer / Importir</option>
-              <option value="Owner/Direktur">Direktur / Bea Cukai</option>
+              <option value="Superadmin">Superadmin</option>
             </select>
           </div>
 
@@ -916,7 +916,7 @@ export default function AccountManagement({
                     <option value="Forwarder">Forwarder (Mitra Logistik)</option>
                     <option value="Supplier">Supplier (Koperasi Produsen)</option>
                     <option value="Buyer">Buyer (Importir Asing)</option>
-                    <option value="Owner/Direktur">Owner/Direktur Utama</option>
+                    <option value="Superadmin">Superadmin Utama</option>
                   </select>
                 </div>
 
@@ -984,7 +984,7 @@ export default function AccountManagement({
         )}
       </AnimatePresence>
 
-      {/* Guide Banner for Owner on how validations affect users */}
+      {/* Guide Banner for Superadmin on how validations affect users */}
       <div className="bg-indigo-50 border border-indigo-150 rounded-2xl p-4 flex gap-3 text-left">
         <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5 animate-pulse" />
         <div className="text-xs space-y-1 text-indigo-950">

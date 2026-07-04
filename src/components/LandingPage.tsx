@@ -500,8 +500,12 @@ const PRODUCT_LOGISTICS_CERTIFICATES: Record<string, ProductLogisticsData> = {
 interface CompanyProfileData {
   nib: string;
   nibNotes: string;
+  npwp?: string;
+  ceisa?: string;
+  insw?: string;
   address: string;
   telephone: string;
+  whatsapp?: string;
   email: string;
   bannerImage?: string;
   originPort?: string;
@@ -660,6 +664,8 @@ export default function LandingPage({
 
   // Catalog products editing state
   const [editingProduct, setEditingProduct] = useState<ExportProduct | 'new' | null>(null);
+  const [productToDeleteId, setProductToDeleteId] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [productForm, setProductForm] = useState({
     name: '',
     category: '',
@@ -670,10 +676,13 @@ export default function LandingPage({
     origin: '',
     minOrder: '',
     image: '',
+    attachmentUrl: '',
+    attachmentName: '',
   });
 
   const handleEditProductClick = (prod: ExportProduct) => {
     setEditingProduct(prod);
+    setFileError(null);
     setProductForm({
       name: prod.name,
       category: prod.category,
@@ -684,11 +693,14 @@ export default function LandingPage({
       origin: prod.origin,
       minOrder: prod.minOrder,
       image: prod.image,
+      attachmentUrl: prod.attachmentUrl || '',
+      attachmentName: prod.attachmentName || '',
     });
   };
 
   const handleAddProductClick = () => {
     setEditingProduct('new');
+    setFileError(null);
     setProductForm({
       name: '',
       category: 'Pertanian / Hasil Bumi',
@@ -699,14 +711,15 @@ export default function LandingPage({
       origin: 'Indonesia',
       minOrder: '10 MT',
       image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
+      attachmentUrl: '',
+      attachmentName: '',
     });
   };
 
   const handleDeleteProduct = (productId: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus komoditas ini dari katalog?')) {
-      const updated = products.filter(p => p.id !== productId);
-      onUpdateProducts(updated);
-    }
+    const updated = products.filter(p => p.id !== productId);
+    onUpdateProducts(updated);
+    setProductToDeleteId(null);
   };
 
   const handleSaveProduct = (e: React.FormEvent) => {
@@ -724,6 +737,8 @@ export default function LandingPage({
         minOrder: productForm.minOrder,
         image: productForm.image || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
         supplierName: 'Koperasi Mitra AgriFlow',
+        attachmentUrl: productForm.attachmentUrl || undefined,
+        attachmentName: productForm.attachmentName || undefined,
       };
       onUpdateProducts([...products, newProd]);
       // set as default target
@@ -742,8 +757,9 @@ export default function LandingPage({
             origin: productForm.origin,
             minOrder: productForm.minOrder,
             image: productForm.image,
-            // keep old supplier or fallback
             supplierName: p.supplierName || 'Koperasi Mitra AgriFlow',
+            attachmentUrl: productForm.attachmentUrl || undefined,
+            attachmentName: productForm.attachmentName || undefined,
           };
         }
         return p;
@@ -790,94 +806,105 @@ export default function LandingPage({
   return (
     <div className="space-y-12 pb-16 animate-fade-in">
       
-      {/* 1. HERO SECTION */}
+      {/* 1. COMPACT COMPANY PROFILE HERO */}
       <div 
-        className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-cover bg-center"
+        className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-lg bg-cover bg-center"
         style={{ 
-          backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.92) 45%, rgba(15, 23, 42, 0.75) 100%), url(${companyProfile.bannerImage || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80'})` 
+          backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%), url(${companyProfile.bannerImage || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80'})` 
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none" />
 
-        <div className="py-6 px-6 sm:py-8 sm:px-10 lg:py-10 lg:px-12 relative z-15 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-          <div className="lg:col-span-7 text-left space-y-3">
-            <span className="text-xs font-extrabold text-indigo-400 md:text-sm uppercase tracking-widest block">{t.heroTagline}</span>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight uppercase">
-              {t.heroTitle}
-            </h1>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-2xl font-medium">
-              {t.heroDesc}
-            </p>
-
-            {/* Dynamic Tracker Bar - Non-icons layout */}
-            <div className="border-t border-slate-700/50 pt-3 mt-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
-                  <span className="text-[10px] text-emerald-400 font-black uppercase tracking-wider block">Pelabuhan Asal</span>
-                  <span className="text-slate-100 font-bold text-xs mt-1 block">{companyProfile.originPort || 'Tanjung Priok, JKT'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-400 font-black uppercase tracking-wider block">Legalitas Eksportir</span>
-                  <span className="text-slate-100 font-bold text-xs mt-1 block">{companyProfile.exporterLegality || 'NIK-294021796-A'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-400 font-black uppercase tracking-wider block">Kepatuhan Mutu</span>
-                  <span className="text-slate-100 font-bold text-xs mt-1 block">{companyProfile.qualityCompliance || 'ISO 9001, SVLK'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-emerald-400 font-black uppercase tracking-wider block">Jaminan Keuangan</span>
-                  <span className="text-slate-100 font-bold text-xs mt-1 block">{companyProfile.financialGuarantee || 'Bank Escrow SSL'}</span>
-                </div>
-              </div>
+        <div id="company-profile-section" className="scroll-mt-20 p-4 sm:p-5 lg:p-6 relative z-15 space-y-4">
+          {/* Header Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-500/20 pb-2.5">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-black text-white tracking-wider uppercase">
+                {t.companyProfileTitle} — PT Multi Raksa Madani
+              </span>
+              <span className="px-2.5 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+                {t.verified}
+              </span>
             </div>
-          </div>
-
-          <div id="company-profile-section" className="scroll-mt-20 lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-2xl p-5 text-left space-y-3 shadow-xl backdrop-blur-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2 mb-3">
-                <span className="text-[11px] font-black text-indigo-400 tracking-widest uppercase">{t.companyProfileTitle}</span>
-                <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">{t.verified}</span>
-              </div>
-              
-              <div className="space-y-3 text-xs">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t.officialLicense}</span>
-                  <p className="text-slate-200 font-semibold leading-relaxed">
-                    {companyProfile.nib} 
-                    <span className="block text-[10px] text-indigo-300 mt-0.5">{companyProfile.nibNotes}</span>
-                  </p>
-                </div>
-                
-                <div className="border-t border-slate-800/80" />
-                
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t.officeAddress}</span>
-                  <p className="text-slate-300 font-medium leading-relaxed">
-                    {companyProfile.address}
-                  </p>
-                </div>
-                
-                <div className="border-t border-slate-800/80" />
-                
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t.contactService}</span>
-                  <p className="text-slate-300 font-medium leading-relaxed">
-                    Telp: <span className="text-white font-semibold">{companyProfile.telephone}</span><br />
-                    Email: <span className="text-indigo-300 font-semibold hover:underline">{companyProfile.email}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {currentUser?.role === 'Owner/Direktur' && (
+            {currentUser?.role === 'Superadmin' && (
               <button
                 onClick={handleEditProfileClick}
-                className="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10.5px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow hover:shadow-lg border border-indigo-505 cursor-pointer"
+                className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow hover:shadow-md border border-indigo-500 cursor-pointer animate-pulse"
               >
-                <Edit className="w-3.5 h-3.5 text-indigo-100" />
+                <Edit className="w-3.5 h-3.5" />
                 <span>{t.editCompanyProfile}</span>
               </button>
             )}
+          </div>
+
+          {/* Grid Content */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 text-xs text-left">
+            {/* Col 1: Izin Resmi */}
+            <div className="space-y-1">
+              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+                {t.officialLicense}
+              </span>
+              <p className="text-slate-200 font-semibold leading-relaxed">
+                NIB: <span className="text-white font-black">{companyProfile.nib}</span>
+              </p>
+
+            </div>
+
+            {/* Col 2: Perpajakan & Pabean */}
+            <div className="space-y-1">
+              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+                Pabean & Pajak (NPWP)
+              </span>
+              {companyProfile.npwp && (
+                <p className="text-slate-200 font-mono font-bold leading-relaxed mb-1">
+                  NPWP: <span className="text-white font-mono">{companyProfile.npwp}</span>
+                </p>
+              )}
+              <div className="flex gap-4">
+                {companyProfile.ceisa && (
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">CEISA</span>
+                    <p className="text-slate-200 font-semibold">{companyProfile.ceisa}</p>
+                  </div>
+                )}
+                {companyProfile.insw && (
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">INSW</span>
+                    <p className="text-slate-200 font-semibold">{companyProfile.insw}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Col 3: Alamat Kantor */}
+            <div className="space-y-1">
+              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+                {t.officeAddress}
+              </span>
+              <p className="text-slate-300 font-medium leading-relaxed text-[11px] sm:text-xs">
+                {companyProfile.address}
+              </p>
+            </div>
+
+            {/* Col 4: Kontak & Layanan */}
+            <div className="space-y-1">
+              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+                {t.contactService}
+              </span>
+              <div className="text-slate-300 font-medium leading-relaxed space-y-0.5 text-[11px] sm:text-xs">
+                <div>
+                  Telepon: <span className="text-white font-bold">{companyProfile.telephone}</span>
+                </div>
+                {companyProfile.whatsapp && (
+                  <div>
+                    WhatsApp: <span className="text-emerald-400 font-bold">{companyProfile.whatsapp}</span>
+                  </div>
+                )}
+                <div className="truncate">
+                  Email: <span className="text-indigo-300 font-semibold hover:underline">{companyProfile.email}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -890,7 +917,7 @@ export default function LandingPage({
               <p className="text-xs text-slate-500">{t.featuredCommoditiesDesc}</p>
             </div>
             <div className="flex gap-2 items-center">
-              {currentUser?.role === 'Owner/Direktur' && (
+              {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
                 <button
                   onClick={handleAddProductClick}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow transition-all cursor-pointer uppercase tracking-wider"
@@ -916,7 +943,7 @@ export default function LandingPage({
                       {p.category}
                     </div>
 
-                    {currentUser?.role === 'Owner/Direktur' && (
+                    {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
                       <div className="absolute top-3 right-3 flex gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleEditProductClick(p)}
@@ -926,7 +953,7 @@ export default function LandingPage({
                           <Edit className="w-3.5 h-3.5 text-indigo-300" />
                         </button>
                         <button
-                          onClick={() => handleDeleteProduct(p.id)}
+                          onClick={() => setProductToDeleteId(p.id)}
                           className="p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-lg backdrop-blur-3xs transition-colors cursor-pointer border border-red-700"
                           title="Hapus Komoditas"
                         >
@@ -947,6 +974,36 @@ export default function LandingPage({
                     <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium h-16 overflow-y-auto">
                       {p.specification}
                     </p>
+                    {(() => {
+                      const hasAttachment = p.attachmentUrl || p.id === 'prod-1' || p.id === 'prod-2' || p.id === 'prod-3';
+                      const attachmentUrl = p.attachmentUrl || 'data:application/pdf;base64,JVBERi0xLjUKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqMiAwIG9iajw8L1R5cGUvUGFnZXMvS2lkc1szIDAgUl0vQ291bnQgMT4+ZW5kb2JqMyAwIG9iajw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNTk1IDg0Ml0vUGFyZW50IDIgMCBSPj5lbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmCjAwMDAwMDAwMTcgMDAwMDAgbgowMDAwMDAwMDY2IDAwMDAwIG4KMDAwMDAwMDExNSAwMDAwMCBuCnRyYWlsZXI8PC9TaXplIDQvUm9vdCAxIDAgUj4+c3RhcnR4cmVmCjE2OQolJUVPRg==';
+                      const attachmentName = p.attachmentName || (
+                        p.id === 'prod-1' ? 'Spesifikasi_Coconut_Shell_Charcoal_PT_MRM.pdf' :
+                        p.id === 'prod-2' ? 'Spesifikasi_Gayo_Coffee_Grade1_PT_MRM.pdf' :
+                        p.id === 'prod-3' ? 'Spesifikasi_Premium_Nutmeg_PT_MRM.pdf' :
+                        'Dokumen_Spesifikasi.pdf'
+                      );
+
+                      if (!hasAttachment) return null;
+
+                      return (
+                        <div className="flex items-center justify-between p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-950 mt-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                            <span className="text-[10px] font-bold truncate text-slate-700" title={attachmentName}>
+                              {attachmentName}
+                            </span>
+                          </div>
+                          <a
+                            href={attachmentUrl}
+                            download={attachmentName}
+                            className="text-[9px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg transition-colors uppercase tracking-wider shrink-0 cursor-pointer text-center"
+                          >
+                            Unduh
+                          </a>
+                        </div>
+                      );
+                    })()}
                     <div className="pt-2 flex justify-between items-center border-t border-slate-100">
                       <div>
                         <span className="text-[9px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.fobPriceTentative}</span>
@@ -971,7 +1028,6 @@ export default function LandingPage({
                     }}
                     className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
-                    <Calculator className="w-3.5 h-3.5 text-indigo-200" />
                     <span>{t.calculatorTitle}</span>
                   </button>
                   <button
@@ -981,7 +1037,6 @@ export default function LandingPage({
                     }}
                     className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-teal-200" />
                     <span>Logistik & Sertifikat</span>
                   </button>
                   <button
@@ -991,7 +1046,6 @@ export default function LandingPage({
                     }}
                     className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
-                    <Award className="w-3.5 h-3.5 text-emerald-200" />
                     <span>Minta Sampel</span>
                   </button>
                 </div>
@@ -1016,22 +1070,22 @@ export default function LandingPage({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto text-white shadow-2xl flex flex-col z-10 font-sans"
+              className="relative bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto text-slate-900 shadow-2xl flex flex-col z-10 font-sans"
             >
               {/* Modal Header */}
-              <div className="sticky top-0 bg-slate-900 z-20 px-6 py-5 border-b border-slate-800/80 flex items-center justify-between">
+              <div className="sticky top-0 bg-white z-20 px-6 py-5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-indigo-550/10 bg-indigo-600/10 rounded-xl border border-indigo-500/20">
-                    <Calculator className="w-5 h-5 text-indigo-400" />
+                  <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <Calculator className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-lg font-black tracking-tight text-white leading-none mb-1">{t.calculatorTitle}</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">{t.calculatorSub}</p>
+                    <h3 className="text-lg font-black tracking-tight text-slate-900 leading-none mb-1">{t.calculatorTitle}</h3>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">{t.calculatorSub}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsCalcOpen(false)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-440 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1042,42 +1096,42 @@ export default function LandingPage({
                 <div className="lg:col-span-5 space-y-6 flex flex-col justify-between text-left">
                   <div className="space-y-5">
                     {/* Detail Komoditas Terpilih */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4.5 space-y-4">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-4">
                       <div className="flex items-start gap-3">
                         {activeProduct.rawProduct?.image && (
                           <img
                             src={activeProduct.rawProduct.image}
                             alt={activeProduct.name}
-                            className="w-16 h-16 object-cover rounded-xl border border-white/10 shrink-0"
+                            className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0"
                             referrerPolicy="no-referrer"
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block mb-1">{t.cargoSourcing}</span>
-                          <h4 className="text-sm font-extrabold text-white leading-snug break-words">{activeProduct.name}</h4>
-                          <span className="text-[10px] text-slate-400 font-mono font-semibold block mt-1">{t.originLabel || 'Asal'}: {activeProduct.rawProduct?.origin || 'Indonesia'}</span>
+                          <span className="text-[9px] font-black uppercase text-indigo-600 tracking-wider block mb-1">{t.cargoSourcing}</span>
+                          <h4 className="text-sm font-extrabold text-slate-900 leading-snug break-words">{activeProduct.name}</h4>
+                          <span className="text-[10px] text-slate-500 font-mono font-semibold block mt-1">{t.originLabel || 'Asal'}: {activeProduct.rawProduct?.origin || 'Indonesia'}</span>
                         </div>
                       </div>
                       
-                      <div className="border-t border-white/10 pt-3 space-y-3">
+                      <div className="border-t border-slate-200 pt-3 space-y-3">
                         {activeProduct.rawProduct?.specification && (
                           <div className="text-left">
-                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">{t.mainSpecification}</span>
-                            <p className="text-[11px] text-slate-300 leading-relaxed font-medium line-clamp-3">
+                            <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.mainSpecification}</span>
+                            <p className="text-[11px] text-slate-600 leading-relaxed font-medium line-clamp-3">
                               {activeProduct.rawProduct.specification}
                             </p>
                           </div>
                         )}
-                        <div className="flex justify-between items-center text-xs pt-2 border-t border-white/5">
-                          <span className="text-slate-400 font-bold uppercase text-[9px] tracking-wider">{t.fobPriceRef}</span>
-                          <span className="font-mono font-black text-indigo-300">${activeProduct.pricePerTon.toLocaleString('id-ID')} USD / MT</span>
+                        <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200">
+                          <span className="text-slate-500 font-bold uppercase text-[9px] tracking-wider">{t.fobPriceRef}</span>
+                          <span className="font-mono font-black text-indigo-600">${activeProduct.pricePerTon.toLocaleString('id-ID')} USD / MT</span>
                         </div>
                       </div>
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-2 gap-2 text-left">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">{t.determineVolume}</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">{t.determineVolume}</label>
                         <div className="flex items-center gap-1.5">
                           <input
                             type="number"
@@ -1094,9 +1148,9 @@ export default function LandingPage({
                                   setOrderVolume(activeProduct.minVol);
                               }
                             }}
-                            className="w-20 py-1 px-2 text-center font-mono font-black text-xs text-indigo-400 bg-indigo-500/10 rounded border border-indigo-500/30 focus:outline-none focus:border-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-20 py-1 px-2 text-center font-mono font-black text-xs text-indigo-600 bg-indigo-50 rounded border border-indigo-200 focus:outline-none focus:border-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <span className="text-[11px] font-bold text-slate-400">MT</span>
+                          <span className="text-[11px] font-bold text-slate-500">MT</span>
                         </div>
                       </div>
                       <input
@@ -1106,7 +1160,7 @@ export default function LandingPage({
                         step="1"
                         value={orderVolume || activeProduct.minVol}
                         onChange={(e) => setOrderVolume(Number(e.target.value))}
-                        className="w-full h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                       />
                       <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
                         <span>{t.minVolLabel || 'Min'}: {activeProduct.minVol} MT</span>
@@ -1116,60 +1170,60 @@ export default function LandingPage({
                   </div>
                 </div>
 
-                <div className="lg:col-span-7 bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col justify-between space-y-6 text-left">
+                <div className="lg:col-span-7 bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col justify-between space-y-6 text-left">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border-b border-white/10 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">{t.hsCodeStandard}</span>
-                      <span className="text-sm font-mono font-bold text-indigo-300">{activeProduct.hsCode}</span>
+                    <div className="border-b border-slate-200 pb-3 text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.hsCodeStandard}</span>
+                      <span className="text-sm font-mono font-bold text-indigo-600">{activeProduct.hsCode}</span>
                     </div>
-                    <div className="border-b border-white/10 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">{t.oceanContainerType}</span>
-                      <span className="text-sm font-bold text-slate-200">FCL Container (20ft Dry Van)</span>
+                    <div className="border-b border-slate-200 pb-3 text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.oceanContainerType}</span>
+                      <span className="text-sm font-bold text-slate-800">FCL Container (20ft Dry Van)</span>
                     </div>
-                    <div className="border-b border-white/10 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">{t.estLeadTime}</span>
-                      <span className="text-sm font-bold text-slate-200">~{activeProduct.leadTimeDays} {t.hoursWorking || 'Hari Kerja'}</span>
+                    <div className="border-b border-slate-200 pb-3 text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.estLeadTime}</span>
+                      <span className="text-sm font-bold text-slate-800">~{activeProduct.leadTimeDays} {t.hoursWorking || 'Hari Kerja'}</span>
                     </div>
-                    <div className="border-b border-white/10 pb-3 text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">{t.containersNeeded}</span>
-                      <span className="text-sm font-mono font-bold text-indigo-300">{fclCount} × {t.fclContainers || 'Wadah Kontainer 20ft'}</span>
+                    <div className="border-b border-slate-200 pb-3 text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block mb-1">{t.containersNeeded}</span>
+                      <span className="text-sm font-mono font-bold text-indigo-600">{fclCount} × {t.fclContainers || 'Wadah Kontainer 20ft'}</span>
                     </div>
                   </div>
 
-                  <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
                     <div className="flex justify-between items-center text-left">
                       <div>
-                        <span className="text-[9px] font-black uppercase text-amber-500 tracking-wider block">{t.totalEstFobPrice}</span>
-                        <span className="text-xs text-slate-400 font-medium">{t.fobTermsDesc}</span>
+                        <span className="text-[9px] font-black uppercase text-amber-600 tracking-wider block">{t.totalEstFobPrice}</span>
+                        <span className="text-xs text-slate-500 font-medium">{t.fobTermsDesc}</span>
                       </div>
-                      <span className="text-2xl font-black text-white font-mono">${totalCost.toLocaleString('id-ID')} USD</span>
+                      <span className="text-2xl font-black text-slate-900 font-mono">${totalCost.toLocaleString('id-ID')} USD</span>
                     </div>
 
                     {/* Edukasi Tanggung Jawab Ongkir (FOB) */}
-                    <div className="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2 text-[10px] leading-relaxed text-slate-350">
-                      <div className="flex items-center gap-1.5 text-indigo-400 font-extrabold uppercase text-[9px] tracking-wider">
-                        <Info className="w-3.5 h-3.5 text-indigo-400" />
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-[10px] leading-relaxed text-slate-600">
+                      <div className="flex items-center gap-1.5 text-indigo-600 font-extrabold uppercase text-[9px] tracking-wider">
+                        <Info className="w-3.5 h-3.5 text-indigo-600" />
                         <span>💡 BIAYA KIRIM & TANGGUNG JAWAB LOGISTIK (FOB)</span>
                       </div>
-                      <p className="text-slate-300">
-                        Harga ini berbasis <strong className="text-white">FOB (Free On Board) Pelabuhan Asal Indonesia</strong>. Berikut pembagian biayanya:
+                      <p className="text-slate-700">
+                        Harga ini berbasis <strong className="text-slate-900">FOB (Free On Board) Pelabuhan Asal Indonesia</strong>. Berikut pembagian biayanya:
                       </p>
                       <ul className="space-y-1.5 pl-1">
                         <li className="flex items-start gap-1.5">
-                          <span className="text-amber-400 font-bold shrink-0">1. Ongkos Kapal Laut & Asuransi:</span>
-                          <span className="text-slate-400">Ditanggung sepenuhnya oleh <strong className="text-amber-300">BUYER</strong>. Buyer bebas menunjuk Freight Forwarder sendiri untuk penjemputan kontainer di pelabuhan muat kami.</span>
+                          <span className="text-amber-600 font-bold shrink-0">1. Ongkos Kapal Laut & Asuransi:</span>
+                          <span className="text-slate-600">Ditanggung sepenuhnya oleh <strong className="text-amber-600">BUYER</strong>. Buyer bebas menunjuk Freight Forwarder sendiri untuk penjemputan kontainer di pelabuhan muat kami.</span>
                         </li>
                         <li className="flex items-start gap-1.5">
-                          <span className="text-emerald-400 font-bold shrink-0">2. Biaya Lokal Pelabuhan Asal:</span>
-                          <span className="text-slate-400">Trucking dari gudang tani, stuffing ke kontainer, penumpukan THC pelabuhan muat, & Bea Cukai ekspor ditanggung oleh <strong className="text-emerald-300">PT Multi Raksa Madani (Eksportir)</strong>.</span>
+                          <span className="text-emerald-600 font-bold shrink-0">2. Biaya Lokal Pelabuhan Asal:</span>
+                          <span className="text-slate-600">Trucking dari gudang tani, stuffing ke kontainer, penumpukan THC pelabuhan muat, & Bea Cukai ekspor ditanggung oleh <strong className="text-emerald-700">PT Multi Raksa Madani (Eksportir)</strong>.</span>
                         </li>
                       </ul>
                     </div>
                     
                     {/* Pembatasan Autentikasi Peran Buyer */}
                     {currentUser?.role !== 'Buyer' && (
-                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-left rounded-lg text-[10.5px] text-amber-300 leading-relaxed font-semibold flex items-start gap-2">
-                        <Info className="w-4.5 h-4.5 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="p-3 bg-amber-50 border border-amber-200 text-left rounded-lg text-[10.5px] text-amber-700 leading-relaxed font-semibold flex items-start gap-2">
+                        <Info className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="space-y-2 flex-1">
                           <p>
                             {!currentUser 
@@ -1182,28 +1236,28 @@ export default function LandingPage({
                               onClick={() => {
                                 onOpenProfile('login', true);
                               }}
-                              className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-[8.5px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1"
+                              className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[10px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                             >
-                              <Lock className="w-3 h-3 text-slate-900" />
+                              <Lock className="w-3.5 h-3.5 text-white" />
                               <span>{t.loginBtn}</span>
                             </button>
                             <button
                               onClick={() => {
                                 onOpenProfile('register', true);
                               }}
-                              className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/10 text-amber-300 font-extrabold uppercase text-[8.5px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1"
+                              className="px-4 py-1.5 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[10px] tracking-wider rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                             >
-                              <UserPlus className="w-3 h-3 text-amber-400" />
-                              <span>{t.registerBtn}</span>
+                              <UserPlus className="w-3.5 h-3.5 text-amber-650" />
+                              <span>{t.registerBtn || "Daftar"}</span>
                             </button>
                           </div>
                         </div>
                       </div>
                     )}
                     
-                    <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-slate-400">
+                    <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[10.5px] text-slate-500">
                       <span className="italic flex items-center gap-1">
-                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         {t.fobPriceLimitText}: ${activeProduct.pricePerTon}/MT
                       </span>
                       <button
@@ -1219,7 +1273,7 @@ export default function LandingPage({
                         className={`px-3.5 py-1.5 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all flex items-center gap-1 shadow ${
                           currentUser?.role === 'Buyer'
                             ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-                            : "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
                         }`}
                       >
                         <span>{t.reqLoiBtn}</span>
@@ -1249,21 +1303,21 @@ export default function LandingPage({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
+              className="relative bg-white border border-slate-200 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto text-slate-900 shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                    <Award className="w-5 h-5 text-emerald-400" />
+                  <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <Award className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
                     <h3 className="text-base font-black uppercase tracking-tight">Permintaan Sampel Produk</h3>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Commodity Sample Request Gateway</p>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Commodity Sample Request Gateway</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsSampleModalOpen(false)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1283,30 +1337,30 @@ export default function LandingPage({
                 <form onSubmit={handleRequestSampleSubmit} className="space-y-4 text-xs font-semibold">
                   
                   {/* Info Produk */}
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
                     {selectedSampleProduct.image && (
                       <img
                         src={selectedSampleProduct.image}
                         alt={selectedSampleProduct.name}
-                        className="w-12 h-12 object-cover rounded-lg border border-white/10 shrink-0"
+                        className="w-12 h-12 object-cover rounded-lg border border-slate-200 shrink-0"
                         referrerPolicy="no-referrer"
                       />
                     )}
                     <div>
-                      <span className="text-[8px] font-black uppercase text-emerald-400 tracking-wider block mb-0.5">KOMODITAS</span>
-                      <h4 className="text-xs font-bold text-white line-clamp-1">{selectedSampleProduct.name}</h4>
-                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; Asal: {selectedSampleProduct.origin}</p>
+                      <span className="text-[8px] font-black uppercase text-emerald-600 tracking-wider block mb-0.5">KOMODITAS</span>
+                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{selectedSampleProduct.name}</h4>
+                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">HS: {selectedSampleProduct.hsCode} &bull; Asal: {selectedSampleProduct.origin}</p>
                     </div>
                   </div>
 
                   {/* Quantity & Courier info */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jumlah Sampel</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jumlah Sampel</label>
                       <select
                         value={sampleQty}
                         onChange={(e) => setSampleQty(e.target.value)}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
                       >
                         <option value="500 gram">500 Gram</option>
                         <option value="1 kg">1 Kilogram (Standar)</option>
@@ -1317,11 +1371,11 @@ export default function LandingPage({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kurir Logistik</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kurir Logistik</label>
                       <select
                         value={sampleCourier}
                         onChange={(e) => setSampleCourier(e.target.value)}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer"
                       >
                         <option value="DHL Express">DHL Express</option>
                         <option value="FedEx International">FedEx International</option>
@@ -1332,47 +1386,47 @@ export default function LandingPage({
 
                   {/* No Akun Kurir (Optional) */}
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                       <span>No. Akun Kurir (Freight Collect)</span>
-                      <span className="text-[8px] text-slate-500 font-normal lowercase italic">Opsional</span>
+                      <span className="text-[8px] text-slate-400 font-normal lowercase italic">Opsional</span>
                     </label>
                     <input
                       type="text"
                       placeholder="Contoh: DHL-987654321"
                       value={sampleCourierAcc}
                       onChange={(e) => setSampleCourierAcc(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 placeholder-slate-600 font-mono"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 font-mono"
                     />
                   </div>
 
                   {/* Alamat Pengiriman */}
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Lengkap Tujuan</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alamat Lengkap Tujuan</label>
                     <textarea
                       required
                       rows={2.5}
                       placeholder="Tuliskan nama jalan, kota, negara bagian, kode pos, dan negara pembeli secara lengkap..."
                       value={sampleAddress}
                       onChange={(e) => setSampleAddress(e.target.value)}
-                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 placeholder-slate-600 resize-none font-medium text-[11px]"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500 placeholder-slate-400 resize-none font-medium text-[11px]"
                     />
                   </div>
 
                   {/* Penanggung Ongkir */}
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Penanggung Ongkos Kirim</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penanggung Ongkos Kirim</label>
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         type="button"
                         onClick={() => setSampleFeePayer('buyer')}
                         className={`p-2.5 rounded-xl border flex flex-col justify-between text-left transition-all ${
                           sampleFeePayer === 'buyer'
-                            ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
                       >
                         <span className="text-[10px] font-bold block">1. Ditanggung BUYER</span>
-                        <span className="text-[8.5px] leading-tight text-slate-400 block mt-1 font-medium">Standard perdagangan ekspor (via No. Akun / Transfer)</span>
+                        <span className={`text-[8.5px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'buyer' ? 'text-emerald-600' : 'text-slate-400'}`}>Standard perdagangan ekspor (via No. Akun / Transfer)</span>
                       </button>
 
                       <button
@@ -1380,24 +1434,24 @@ export default function LandingPage({
                         onClick={() => setSampleFeePayer('seller')}
                         className={`p-2.5 rounded-xl border flex flex-col justify-between text-left transition-all ${
                           sampleFeePayer === 'seller'
-                            ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
                       >
                         <span className="text-[10px] font-bold block">2. Ditanggung SELLER</span>
-                        <span className="text-[8.5px] leading-tight text-slate-400 block mt-1 font-medium">Khusus pembeli loyal atau negosiasi strategis disetujui</span>
+                        <span className={`text-[8.5px] leading-tight block mt-1 font-medium ${sampleFeePayer === 'seller' ? 'text-emerald-600' : 'text-slate-400'}`}>Khusus pembeli loyal atau negosiasi strategis disetujui</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Edukasi Aturan Sampel */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1 text-[10px] text-slate-400 leading-relaxed font-medium">
-                    <p className="font-bold text-amber-400 flex items-center gap-1 text-[9px] uppercase tracking-wider">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-[10px] text-slate-600 leading-relaxed font-medium">
+                    <p className="font-bold text-amber-600 flex items-center gap-1 text-[9px] uppercase tracking-wider">
                       <Info className="w-3.5 h-3.5 animate-pulse" />
                       <span>Aturan Ongkir Sampel Internasional</span>
                     </p>
                     <p>
-                      Sesuai konvensi dagang internasional, komoditas sampel disediakan <strong className="text-white">GRATIS (Tanpa Biaya)</strong> oleh PT Multi Raksa Madani selaku eksportir. Namun, biaya kirim udara (airfreight courier) ditanggung sepenuhnya oleh pihak <strong className="text-white">BUYER</strong>, kecuali disetujui kebijakan khusus VIP.
+                      Sesuai konvensi dagang internasional, komoditas sampel disediakan <strong className="text-slate-900">GRATIS (Tanpa Biaya)</strong> oleh PT Multi Raksa Madani selaku eksportir. Namun, biaya kirim udara (airfreight courier) ditanggung sepenuhnya oleh pihak <strong className="text-slate-900">BUYER</strong>, kecuali disetujui kebijakan khusus VIP.
                     </p>
                   </div>
 
@@ -1407,12 +1461,12 @@ export default function LandingPage({
                       type="submit"
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs rounded-xl transition-all tracking-wider shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
                     >
-                      <Award className="w-4 h-4 text-emerald-200" />
+                      <Award className="w-4 h-4 text-emerald-100" />
                       <span>Ajukan Permintaan Sampel Resmi</span>
                     </button>
                   ) : (
-                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 text-center rounded-xl space-y-2.5 mt-2">
-                      <p className="text-[10.5px] text-amber-300 leading-normal font-semibold">
+                    <div className="p-3.5 bg-amber-50 border border-amber-200 text-center rounded-xl space-y-2.5 mt-2">
+                      <p className="text-[10.5px] text-amber-700 leading-normal font-semibold">
                         {!currentUser 
                           ? 'Anda perlu Masuk (Login) ke akun Buyer Anda terlebih dahulu untuk mengirim permintaan sampel produk secara resmi ke sistem kami.'
                           : `Peran Anda saat ini (${currentUser.role}) tidak diizinkan meminta sampel kargo. Hanya akun ber-peran BUYER yang diizinkan mengajukan sampel.`
@@ -1425,9 +1479,9 @@ export default function LandingPage({
                             setIsSampleModalOpen(false);
                             onOpenProfile('login', false);
                           }}
-                          className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black uppercase text-[9px] tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                          className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
-                          <Lock className="w-3.5 h-3.5 text-slate-900" />
+                          <Lock className="w-4 h-4 text-white" />
                           <span>Login Buyer</span>
                         </button>
                         <button
@@ -1436,9 +1490,9 @@ export default function LandingPage({
                             setIsSampleModalOpen(false);
                             onOpenProfile('register', false);
                           }}
-                          className="px-4 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 text-amber-300 font-extrabold uppercase text-[9px] tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                          className="px-5 py-2 bg-white hover:bg-slate-50 border border-amber-200 text-amber-700 font-black uppercase text-[10px] tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
-                          <UserPlus className="w-3.5 h-3.5 text-amber-400" />
+                          <UserPlus className="w-4 h-4 text-amber-600" />
                           <span>Daftar Akun</span>
                         </button>
                       </div>
@@ -1513,23 +1567,23 @@ export default function LandingPage({
                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                className="relative bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
+                className="relative bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-slate-900 shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
               >
                 {/* Simplified Header with Edit Button & Close Button */}
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-5">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3.5 mb-5">
                   <div>
-                    <h3 className="text-base font-black uppercase tracking-tight text-white">{selectedLogisticsProduct.name}</h3>
-                    <p className="text-[10px] text-teal-400 font-extrabold uppercase tracking-widest mt-0.5">
+                    <h3 className="text-base font-black uppercase tracking-tight text-slate-900">{selectedLogisticsProduct.name}</h3>
+                    <p className="text-[10px] text-teal-600 font-extrabold uppercase tracking-widest mt-0.5">
                       {isEditingLogistics ? 'Edit Profil Logistik & Kepatuhan' : 'Profil Logistik & Kepatuhan Ekspor'}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {!isEditingLogistics && currentUser?.role === 'Owner/Direktur' && (
+                    {!isEditingLogistics && currentUser?.role === 'Superadmin' && (
                       <button
                         onClick={startEditing}
-                        className="py-1.5 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 text-[11px] font-black rounded-xl border border-slate-700 hover:border-slate-600 transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
+                        className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black rounded-xl border border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
                       >
-                        <Edit className="w-3.5 h-3.5 text-teal-400" />
+                        <Edit className="w-3.5 h-3.5 text-teal-600" />
                         <span>Edit Data</span>
                       </button>
                     )}
@@ -1538,7 +1592,7 @@ export default function LandingPage({
                         setIsEditingLogistics(false);
                         setIsLogisticsModalOpen(false);
                       }}
-                      className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1551,14 +1605,14 @@ export default function LandingPage({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* ASAL WILAYAH */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Asal Wilayah</label>
+                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Asal Wilayah</label>
                         <div className="relative">
-                          <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                          <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
                             type="text"
                             value={editOriginRegion}
                             onChange={(e) => setEditOriginRegion(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
                             placeholder="Asal Wilayah"
                           />
                         </div>
@@ -1566,14 +1620,14 @@ export default function LandingPage({
 
                       {/* KEMASAN EKSPOR */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Kemasan Ekspor</label>
+                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Kemasan Ekspor</label>
                         <div className="relative">
-                          <Package className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                          <Package className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
                             type="text"
                             value={editExportPackaging}
                             onChange={(e) => setEditExportPackaging(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
                             placeholder="Kemasan Ekspor"
                           />
                         </div>
@@ -1581,14 +1635,14 @@ export default function LandingPage({
 
                       {/* LEAD TIME PRODUKSI */}
                       <div className="space-y-1">
-                        <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Lead Time Produksi</label>
+                        <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Lead Time Produksi</label>
                         <div className="relative">
-                          <Clock className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                          <Clock className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
                           <input
                             type="text"
                             value={editLeadTime}
                             onChange={(e) => setEditLeadTime(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600"
                             placeholder="Lead Time Produksi"
                           />
                         </div>
@@ -1597,13 +1651,13 @@ export default function LandingPage({
 
                     {/* MOQ Notice Box Edit */}
                     <div className="space-y-1">
-                      <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Minimum Order Quantity (MOQ)</label>
+                      <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Minimum Order Quantity (MOQ)</label>
                       <div className="relative">
-                        <Info className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                        <Info className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                         <textarea
                           value={editMoqDetails}
                           onChange={(e) => setEditMoqDetails(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 pl-9 pr-3 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-teal-500 h-16 resize-none"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-3 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600 h-16 resize-none"
                           placeholder="Detail MOQ"
                         />
                       </div>
@@ -1611,17 +1665,17 @@ export default function LandingPage({
 
                     {/* Certifications Section Edit */}
                     <div className="space-y-2">
-                      <span className="text-[10px] text-teal-400 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
+                      <span className="text-[10px] text-teal-600 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
                       
                       {/* List existing certifications with remove buttons */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {editCertifications.map((cert, index) => (
                           <div
                             key={index}
-                            className="bg-slate-950 border border-slate-800 text-slate-200 p-2.5 rounded-xl flex items-center justify-between gap-2 text-xs font-bold"
+                            className="bg-slate-50 border border-slate-200 text-slate-800 p-2.5 rounded-xl flex items-center justify-between gap-2 text-xs font-bold"
                           >
                             <div className="flex items-center gap-2 overflow-hidden">
-                              <ShieldCheck className="w-4 h-4 text-teal-400 shrink-0" />
+                              <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0" />
                               <span className="truncate leading-snug">{cert}</span>
                             </div>
                             <button
@@ -1629,7 +1683,7 @@ export default function LandingPage({
                               onClick={() => {
                                 setEditCertifications(editCertifications.filter((_, i) => i !== index));
                               }}
-                              className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/15 transition-colors cursor-pointer"
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
                               title="Hapus"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -1654,7 +1708,7 @@ export default function LandingPage({
                               }
                             }
                           }}
-                          className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-teal-500 placeholder-slate-500"
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-600 placeholder-slate-400"
                         />
                         <button
                           type="button"
@@ -1672,11 +1726,11 @@ export default function LandingPage({
                     </div>
 
                     {/* Edit Form Action Buttons */}
-                    <div className="pt-4 border-t border-slate-800 flex justify-end gap-2 mt-4">
+                    <div className="pt-4 border-t border-slate-200 flex justify-end gap-2 mt-4">
                       <button
                         type="button"
                         onClick={handleCancel}
-                        className="py-2.5 px-4 bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                        className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
                       >
                         Batal
                       </button>
@@ -1685,7 +1739,7 @@ export default function LandingPage({
                         onClick={handleSave}
                         className="py-2.5 px-5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 cursor-pointer uppercase tracking-wider font-sans"
                       >
-                        <Save className="w-3.5 h-3.5 text-teal-200" />
+                        <Save className="w-3.5 h-3.5 text-teal-100" />
                         <span>Simpan Perubahan</span>
                       </button>
                     </div>
@@ -1696,41 +1750,41 @@ export default function LandingPage({
                     {/* Top Row Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* ASAL WILAYAH */}
-                      <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl flex flex-col justify-between space-y-2">
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Asal Wilayah</span>
                         <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-                          <span className="text-xs font-bold text-slate-200 leading-snug">{logisticsData.originRegion}</span>
+                          <MapPin className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                          <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.originRegion}</span>
                         </div>
                       </div>
 
                       {/* KEMASAN EKSPOR */}
-                      <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl flex flex-col justify-between space-y-2">
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Kemasan Ekspor</span>
                         <div className="flex items-start gap-2">
-                          <Package className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-                          <span className="text-xs font-bold text-slate-200 leading-snug">{logisticsData.exportPackaging}</span>
+                          <Package className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                          <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.exportPackaging}</span>
                         </div>
                       </div>
 
                       {/* LEAD TIME PRODUKSI */}
-                      <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl flex flex-col justify-between space-y-2">
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2">
                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Lead Time Produksi</span>
                         <div className="flex items-start gap-2">
-                          <Clock className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-                          <span className="text-xs font-bold text-slate-200 leading-snug">{logisticsData.leadTime}</span>
+                          <Clock className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                          <span className="text-xs font-bold text-slate-800 leading-snug">{logisticsData.leadTime}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-800/80 my-1" />
+                    <div className="border-t border-slate-200 my-1" />
 
                     {/* MOQ Notice Box */}
-                    <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3 text-xs text-amber-200">
-                      <Info className="w-4.5 h-4.5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3 text-xs text-amber-800">
+                      <Info className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-black uppercase tracking-wider block text-[10px] text-amber-300 mb-0.5">Minimum Order Quantity (MOQ)</span>
-                        <p className="font-semibold leading-relaxed text-slate-200">
+                        <span className="font-black uppercase tracking-wider block text-[10px] text-amber-600 mb-0.5">Minimum Order Quantity (MOQ)</span>
+                        <p className="font-semibold leading-relaxed text-amber-800">
                           {logisticsData.moqDetails}
                         </p>
                       </div>
@@ -1738,15 +1792,15 @@ export default function LandingPage({
 
                     {/* Certifications Section */}
                     <div className="space-y-2.5">
-                      <span className="text-[10px] text-teal-400 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
+                      <span className="text-[10px] text-teal-600 font-black uppercase tracking-widest block">Kepatuhan & Sertifikasi Internasional</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {logisticsData.certifications.map((cert, index) => (
                           <div
                             key={index}
-                            className="bg-teal-500/5 border border-teal-500/15 text-teal-300 p-3 rounded-xl flex items-center gap-2.5 text-xs font-bold"
+                            className="bg-teal-50 border border-teal-100 text-teal-800 p-3 rounded-xl flex items-center gap-2.5 text-xs font-bold"
                           >
-                            <ShieldCheck className="w-4.5 h-4.5 text-teal-400 shrink-0" />
-                            <span className="leading-snug text-slate-200">{cert}</span>
+                            <ShieldCheck className="w-4.5 h-4.5 text-teal-600 shrink-0" />
+                            <span className="leading-snug text-teal-900">{cert}</span>
                           </div>
                         ))}
                       </div>
@@ -1775,16 +1829,16 @@ export default function LandingPage({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
+              className="relative bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto text-slate-900 shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
                 <div className="flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-indigo-400" />
+                  <Edit className="w-5 h-5 text-indigo-600" />
                   <h3 className="text-base font-black uppercase tracking-wider">Edit Profil Perusahaan</h3>
                 </div>
                 <button
                   onClick={() => setIsProfileModalOpen(false)}
-                  className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1813,6 +1867,36 @@ export default function LandingPage({
                   />
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">NPWP (Tax ID)</label>
+                    <input
+                      type="text"
+                      value={tempProfile.npwp || ''}
+                      onChange={(e) => setTempProfile({ ...tempProfile, npwp: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">CEISA Status</label>
+                    <input
+                      type="text"
+                      value={tempProfile.ceisa || ''}
+                      onChange={(e) => setTempProfile({ ...tempProfile, ceisa: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">INSW Status</label>
+                    <input
+                      type="text"
+                      value={tempProfile.insw || ''}
+                      onChange={(e) => setTempProfile({ ...tempProfile, insw: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Kantor</label>
                   <textarea
@@ -1831,6 +1915,16 @@ export default function LandingPage({
                     required
                     value={tempProfile.telephone}
                     onChange={(e) => setTempProfile({ ...tempProfile, telephone: e.target.value })}
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor WhatsApp</label>
+                  <input
+                    type="text"
+                    value={tempProfile.whatsapp || ''}
+                    onChange={(e) => setTempProfile({ ...tempProfile, whatsapp: e.target.value })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold"
                   />
                 </div>
@@ -2036,18 +2130,18 @@ export default function LandingPage({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl overflow-y-auto max-h-[90vh] text-white shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
+              className="relative bg-white border border-slate-200 rounded-2xl w-full max-w-xl overflow-y-auto max-h-[90vh] text-slate-900 shadow-2xl flex flex-col z-10 p-6 font-sans text-left"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4 shrink-0">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 shrink-0">
                 <div className="flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-indigo-400" />
+                  <Edit className="w-5 h-5 text-indigo-600" />
                   <h3 className="text-base font-black uppercase tracking-wider">
                     {editingProduct === 'new' ? 'Tambah Komoditas Baru' : 'Edit Komoditas Katalog'}
                   </h3>
                 </div>
                 <button
                   onClick={() => setEditingProduct(null)}
-                  className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2143,28 +2237,94 @@ export default function LandingPage({
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Preset JPG/PNG Link)</label>
-                  <select
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:indigo-500 font-semibold select-none mb-1.5 focus:border-indigo-500"
-                  >
-                    <option value="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400">Gayo Coffee Beans (Kopi)</option>
-                    <option value="https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400">Coconut Shell Charcoal (Briket Arang)</option>
-                    <option value="https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400">Whole Nutmeg (Pala Kupas)</option>
-                    <option value="https://images.unsplash.com/photo-1622484211148-71749840bcec?w=400">Palm Olein Oils (Minyak Kelapa Sawit)</option>
-                    <option value="https://images.unsplash.com/photo-1550592755-cb0c0fc33827?w=400">Desiccated Coconut (Kelapa Kering)</option>
-                    <option value="https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=400">Raw Cocoa Beans (Biji Kakao Cokelat)</option>
-                    <option value="https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400">Green Tea Leaves (Daun Teh)</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Atau masukkan tautan gambar kustom..."
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold font-mono"
-                  />
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Pilih Preset / Upload Gambar)</label>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Presets and URL inputs */}
+                    <div className="space-y-2">
+                      <select
+                        value={productForm.image}
+                        onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold select-none text-xs"
+                      >
+                        <option value="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400">Gayo Coffee Beans (Kopi)</option>
+                        <option value="https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400">Coconut Shell Charcoal (Briket Arang)</option>
+                        <option value="https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400">Whole Nutmeg (Pala Kupas)</option>
+                        <option value="https://images.unsplash.com/photo-1622484211148-71749840bcec?w=400">Palm Olein Oils (Minyak Kelapa Sawit)</option>
+                        <option value="https://images.unsplash.com/photo-1550592755-cb0c0fc33827?w=400">Desiccated Coconut (Kelapa Kering)</option>
+                        <option value="https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=400">Raw Cocoa Beans (Biji Kakao Cokelat)</option>
+                        <option value="https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400">Green Tea Leaves (Daun Teh)</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Atau masukkan tautan gambar kustom..."
+                        value={productForm.image}
+                        onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold font-mono text-xs"
+                      />
+                    </div>
+
+                    {/* Drag and Drop Upload Area */}
+                    <div 
+                      className="border-2 border-dashed border-slate-800 hover:border-indigo-500 bg-slate-950/40 rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all cursor-pointer group relative overflow-hidden"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (typeof reader.result === 'string') {
+                              setProductForm(prev => ({ ...prev, image: reader.result as string }));
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    >
+                      <input 
+                        type="file"
+                        accept="image/*"
+                        id="commodity-file-upload"
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === 'string') {
+                                setProductForm(prev => ({ ...prev, image: reader.result as string }));
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      {productForm.image && (productForm.image.startsWith('data:') || productForm.image.startsWith('http')) ? (
+                        <div className="relative w-full h-20 flex items-center justify-center">
+                          <img 
+                            src={productForm.image} 
+                            alt="Preview" 
+                            className="h-full object-contain rounded-lg max-w-full"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity rounded-lg text-slate-200 gap-1">
+                            <Upload className="w-4 h-4 text-indigo-400" />
+                            <span className="text-[9px] font-bold uppercase">Ganti File Gambar</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-2">
+                          <Upload className="w-6 h-6 text-slate-500 group-hover:text-indigo-400 mx-auto mb-1 transition-colors" />
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200">Lepaskan file / Klik di sini</p>
+                          <p className="text-[8px] text-slate-500 font-semibold mt-0.5">Mendukung file JPG, PNG, WEBP</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -2177,6 +2337,105 @@ export default function LandingPage({
                     onChange={(e) => setProductForm({ ...productForm, specification: e.target.value })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold resize-none"
                   />
+                </div>
+
+                <div className="space-y-2 border-t border-slate-200 pt-4">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Dokumen Spesifikasi Katalog (Maks 3MB)
+                    </label>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">Format: PDF, DOCX, XLSX, Gambar (Opsional)</span>
+                  </div>
+
+                  {productForm.attachmentUrl ? (
+                    <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileText className="w-5 h-5 text-indigo-600 shrink-0" />
+                        <div className="text-left overflow-hidden">
+                          <p className="text-xs font-bold text-slate-800 truncate">
+                            {productForm.attachmentName || 'Dokumen_Katalog.pdf'}
+                          </p>
+                          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Siap diunduh buyer</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '' }));
+                          setFileError(null);
+                        }}
+                        className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Dokumen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative ${
+                        fileError ? 'border-red-300 bg-red-50/20' : 'border-slate-200 hover:border-indigo-500 bg-slate-50'
+                      }`}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          if (file.size > 3 * 1024 * 1024) {
+                            setFileError('Ukuran file melebihi batas maksimal 3MB!');
+                            return;
+                          }
+                          setFileError(null);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (typeof reader.result === 'string') {
+                              setProductForm(prev => ({ 
+                                ...prev, 
+                                attachmentUrl: reader.result, 
+                                attachmentName: file.name 
+                              }));
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    >
+                      <input 
+                        type="file"
+                        accept=".pdf,.docx,.xlsx,.doc,.xls,.png,.jpg,.jpeg,.webp"
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 3 * 1024 * 1024) {
+                              setFileError('Ukuran file melebihi batas maksimal 3MB!');
+                              return;
+                            }
+                            setFileError(null);
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === 'string') {
+                                setProductForm(prev => ({ 
+                                  ...prev, 
+                                  attachmentUrl: reader.result, 
+                                  attachmentName: file.name 
+                                }));
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <Upload className={`w-5 h-5 mb-1 ${fileError ? 'text-red-400' : 'text-slate-400'}`} />
+                      <p className="text-[10px] text-slate-500 font-bold uppercase">Tarik & Lepas file dokumen di sini atau klik</p>
+                      <p className="text-[8px] text-slate-400 mt-0.5">Ukuran file maksimal: 3 Megabyte (3MB)</p>
+                    </div>
+                  )}
+
+                  {fileError && (
+                    <p className="text-[10px] text-red-600 font-black text-left">
+                      ⚠️ {fileError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-slate-800 flex justify-end gap-2.5 shrink-0">
@@ -2200,6 +2459,42 @@ export default function LandingPage({
           </div>
         )}
       </AnimatePresence>
+
+      {/* Deletion Confirmation Modal for Products */}
+      {productToDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-red-100 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center animate-pulse">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-tight">Hapus Komoditas</h3>
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-red-400">Tindakan Permanen</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-600 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl border border-slate-200">
+              Apakah Anda yakin ingin menghapus komoditas ini dari katalog <strong>secara permanen</strong>?
+            </p>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setProductToDeleteId(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all cursor-pointer"
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(productToDeleteId)}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-3xs cursor-pointer animate-none"
+              >
+                Hapus Permanen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
     </div>
   );

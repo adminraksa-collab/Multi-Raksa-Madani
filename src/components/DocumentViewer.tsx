@@ -155,7 +155,7 @@ export default function DocumentViewer({
               <Printer className="w-4 h-4" />
               Cetak Dokumen
             </button>
-            {document.status === 'Issued' && currentUser?.role === 'Owner/Direktur' && onApproveDocument && (
+            {document.status === 'Issued' && currentUser?.role === 'Superadmin' && onApproveDocument && (
               <button
                 onClick={() => onApproveDocument(document.id)}
                 className="flex items-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-3 rounded-lg transition-colors"
@@ -186,10 +186,10 @@ export default function DocumentViewer({
             <span className="flex items-center gap-2 font-medium">
               <Milestone className="w-5 h-5 text-blue-600 shrink-0 animate-pulse" />
               <span>
-                <strong>Surat Pengajuan Aktif</strong>: Pihak Eksportir telah mengirimkan draf permohonan. Menunggu tanda tangan pabean dari <strong>Owner/Direktur</strong>.
+                <strong>Surat Pengajuan Aktif</strong>: Pihak Eksportir telah mengirimkan draf permohonan. Menunggu tanda tangan pabean dari <strong>Superadmin</strong>.
               </span>
             </span>
-            {currentUser?.role === 'Owner/Direktur' && onApproveDocument && (
+            {currentUser?.role === 'Superadmin' && onApproveDocument && (
               <button
                 onClick={() => onApproveDocument(document.id)}
                 className="py-1 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold uppercase text-[10px] tracking-wide transition-colors self-end sm:self-auto shrink-0 shadow-xs"

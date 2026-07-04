@@ -1,4 +1,4 @@
-export type UserRole = 'Owner/Direktur' | 'Trader' | 'Buyer' | 'Forwarder' | 'Supplier';
+export type UserRole = 'Superadmin' | 'Trader' | 'Buyer' | 'Forwarder' | 'Supplier';
 
 export interface UserProfile {
   id: string;
@@ -136,6 +136,8 @@ export interface ExportProduct {
   supplierName: string;
   origin: string;
   minOrder: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 export interface RealTimeAlert {

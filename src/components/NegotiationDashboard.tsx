@@ -411,7 +411,7 @@ export default function NegotiationDashboard({
 
   const isContractSigned = shipment?.documents.some(d => d.type === 'Sales Contract' && d.status === 'Approved');
   const isLocked = !!(shipment && (shipment.currentStep !== 'Draft' || isContractSigned));
-  const canSignExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur';
+  const canSignExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin';
   const canSignBuyer = currentUser?.role === 'Buyer';
 
   // Zoom and Pan States for Interactive Document Viewport
@@ -1956,7 +1956,7 @@ export default function NegotiationDashboard({
                 <div>
                   <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400 block">Pihak 1: Eksportir</span>
                   <span className="font-bold text-slate-100 block">PT MULTI RAKSA MADANI</span>
-                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Trader / Owner</span>
+                  <span className="text-[8.5px] text-slate-450 block">Wewenang: Trader / Superadmin</span>
                 </div>
                 <button
                   disabled={isLocked || !canSignExporter}

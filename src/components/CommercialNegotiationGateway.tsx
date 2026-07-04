@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   FileText, Check, Send, UserCheck, ArrowRight, Lock, Unlock, Coffee, 
   DollarSign, Globe, Building, Award, PenTool, CheckCircle2, 
   MessageSquare, Eye, RefreshCw, AlertCircle, FileSignature,
   Printer, Download, X, Upload, Trash2, Paperclip,
-  User, Mail, Phone, MapPin, CreditCard, Sliders
+  User, Mail, Phone, MapPin, CreditCard, Sliders, Minus, Maximize2, Move, ChevronDown
 } from 'lucide-react';
 import { ExportShipment, UserProfile, ShipmentStep } from '../types';
 import { translations } from '../translations';
@@ -98,7 +98,7 @@ export default function CommercialNegotiationGateway({
       notes: 'Kadar air biji kopi tervalidasi maksimal 12%, pengemasan menggunakan karung goni berlapis GrainPro.',
       proposer: 'Trader',
       buyerAgreed: false,
-      traderAgreed: true, // Exporter/Trader publishes the initial proposal, so they agree
+      traderAgreed: false,
       timestamp: new Date().toISOString()
     };
   });
@@ -106,7 +106,7 @@ export default function CommercialNegotiationGateway({
   // Derived or override active simulated role based strictly on actual logged-in user
   const activeSimulatedRole: 'Buyer' | 'Trader' | 'Viewer' = 
     currentUser?.role === 'Buyer' ? 'Buyer' : 
-    (currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur') ? 'Trader' : 
+    (currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') ? 'Trader' : 
     'Viewer';
 
   const [selectedProfile, setSelectedProfile] = useState<'buyer' | 'trader' | null>(null);
@@ -181,6 +181,10 @@ export default function CommercialNegotiationGateway({
   // Print blocked warning banner state
   const [printBlockedError, setPrintBlockedError] = useState<boolean>(false);
 
+  const [isChatMinimized, setIsChatMinimized] = useState<boolean>(true);
+  
+  const [isLoiDetailOpen, setIsLoiDetailOpen] = useState<boolean>(false);
+
   // Chat Bilateral states
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     try {
@@ -193,24 +197,24 @@ export default function CommercialNegotiationGateway({
       {
         id: '1',
         sender: 'Buyer',
-        senderName: 'Hans Mueller (Buyer)',
-        avatar: '🇩🇪',
-        message: `Halo Pak Hendry. Kami dari EuroFoods Import GmbH sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
+        senderName: 'Kenji Sato (Importir)',
+        avatar: '🇯🇵',
+        message: `Halo Pak Hendry. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
         timestamp: '10:15'
       },
       {
         id: '2',
         sender: 'Trader',
-        senderName: 'Hendry Kurniawan (Trader)',
+        senderName: 'Hendry Kurniawan (Eksportir)',
         avatar: '🇮🇩',
-        message: 'Selamat pagi Pak Hans! Senang mendengar ketertarikan Anda. Kami siap menyuplai biji kopi pilihan dengan standardisasi ekspor terbaik dan sertifikasi lengkap.',
+        message: 'Selamat pagi Sato-san! Senang mendengar ketertarikan Anda. Kami siap menyuplai biji kopi pilihan dengan standardisasi ekspor terbaik dan sertifikasi lengkap.',
         timestamp: '10:20'
       },
       {
         id: '3',
         sender: 'Buyer',
-        senderName: 'Hans Mueller (Buyer)',
-        avatar: '🇩🇪',
+        senderName: 'Kenji Sato (Importir)',
+        avatar: '🇯🇵',
         message: 'Keluaran LOI kami ajukan dengan spesifikasi Premium Grade. Kami ingin mendiskusikan harga terbaik serta metode pengiriman yang paling efisien.',
         timestamp: '10:25'
       }
@@ -352,20 +356,20 @@ export default function CommercialNegotiationGateway({
 
   // Simulate automatic state transitions for a fluid demo
   const handleSendLoi = () => {
-    setSubStage('negotiating');
+    setSubStage('signed');
     setNegotiatedQty(shipment.quantity || 20);
+    setNegotiatedPrice(1450);
     
     // Set officialProposal to reflect that the Buyer initiated/sent this LOI proposal
-    // Therefore, Buyer is agreed (buyerAgreed: true) and Trader is not yet agreed (traderAgreed: false)
     const initialLoiProposal: OfficialProposal = {
       quantity: shipment.quantity || 20,
-      price: negotiatedPrice || 1450,
-      incoterm: selectedIncoterm || 'FOB Belawan Port (Incoterms 2020)',
-      payment: selectedPayment || 'Letter of Credit (L/C) at Sight',
-      notes: negotiationNotes || 'Kadar air biji kopi tervalidasi maksimal 12%, pengemasan menggunakan karung goni berlapis GrainPro.',
-      proposer: 'Buyer',
+      price: 1450,
+      incoterm: 'FOB Belawan Port (Incoterms 2020)',
+      payment: 'Letter of Credit (L/C) at Sight',
+      notes: 'Kadar air biji kopi tervalidasi maksimal 12%, pengemasan menggunakan karung goni berlapis GrainPro.',
+      proposer: 'Trader',
       buyerAgreed: true,
-      traderAgreed: false,
+      traderAgreed: true,
       timestamp: new Date().toISOString()
     };
     setOfficialProposal(initialLoiProposal);
@@ -377,7 +381,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: '📢 Buyer (EuroFoods) mengajukan minat impor resmi (LOI) dan membuka forum negosiasi bilateral.',
+      message: '✓ Pesanan diterima dan disetujui. Proforma Invoice diterbitkan.',
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages([logMsg]);
@@ -388,8 +392,8 @@ export default function CommercialNegotiationGateway({
     if (!msgText) return;
 
     const senderRole = activeSimulatedRole === 'Viewer' ? 'Buyer' : activeSimulatedRole;
-    const senderName = senderRole === 'Buyer' ? 'Hans Mueller (Buyer)' : 'Hendry Kurniawan (Trader)';
-    const avatar = senderRole === 'Buyer' ? '🇩🇪' : '🇮🇩';
+    const senderName = senderRole === 'Buyer' ? 'Kenji Sato (Importir)' : 'Hendry Kurniawan (Eksportir)';
+    const avatar = senderRole === 'Buyer' ? '🇯🇵' : '🇮🇩';
 
     const newMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -406,16 +410,28 @@ export default function CommercialNegotiationGateway({
     }
   };
 
-  const handleSubmitCounterOffer = () => {
+  const handleSubmitCounterOffer = (overrides?: {
+    quantity?: number;
+    price?: number;
+    incoterm?: string;
+    payment?: string;
+    notes?: string;
+  }) => {
+    const updatedQty = overrides?.quantity ?? negotiatedQty;
+    const updatedPrice = overrides?.price ?? negotiatedPrice;
+    const updatedIncoterm = overrides?.incoterm ?? selectedIncoterm;
+    const updatedPayment = overrides?.payment ?? selectedPayment;
+    const updatedNotes = overrides?.notes ?? negotiationNotes;
+
     const updated: OfficialProposal = {
-      quantity: negotiatedQty,
-      price: negotiatedPrice,
-      incoterm: selectedIncoterm,
-      payment: selectedPayment,
-      notes: negotiationNotes,
+      quantity: updatedQty,
+      price: updatedPrice,
+      incoterm: updatedIncoterm,
+      payment: updatedPayment,
+      notes: updatedNotes,
       proposer: activeSimulatedRole === 'Viewer' ? 'Trader' : activeSimulatedRole,
-      buyerAgreed: activeSimulatedRole === 'Buyer',
-      traderAgreed: activeSimulatedRole === 'Trader',
+      buyerAgreed: false,
+      traderAgreed: true, // Auto agree since it's the Trader who proposed it
       timestamp: new Date().toISOString()
     };
     setOfficialProposal(updated);
@@ -427,10 +443,65 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: `📢 ${activeSimulatedRole === 'Buyer' ? 'Buyer' : 'Trader'} mengajukan proposal draf baru: ${negotiatedQty} MT @ $${negotiatedPrice}/MT via ${selectedIncoterm.split(' ')[0]} & ${selectedPayment.split(' ')[0]}.`,
+      message: `📢 Eksportir mengajukan proposal draf baru: ${updatedQty} MT @ $${updatedPrice}/MT via ${updatedIncoterm.split(' ')[0]} & ${updatedPayment.split(' ')[0]}. Menunggu respons Importir...`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
+
+    // Simulate Buyer Bot Response
+    setTimeout(() => {
+      let buyerReplyMsg = "";
+      let buyerAccepts = false;
+
+      // Simple negotiation logic
+      if (updatedPrice > 1600) {
+        buyerReplyMsg = `Harga $${updatedPrice}/MT terlalu tinggi untuk pasar kami saat ini. Bisakah Anda memberikan diskon di bawah $1600/MT?`;
+      } else if (updatedQty < 15) {
+        buyerReplyMsg = `Kuantitas ${updatedQty} MT terlalu sedikit, minimum efisiensi logistik kami adalah 15 MT. Mohon tingkatkan kuantitas.`;
+      } else if (updatedPayment.includes("100%")) {
+        buyerReplyMsg = `Kami tidak bisa menggunakan metode pembayaran T/T 100% di muka. Mohon gunakan L/C atau skema DP 30%.`;
+      } else {
+        buyerReplyMsg = `Kami sepakat dengan penawaran ini (${updatedQty} MT @ $${updatedPrice}/MT, ${updatedIncoterm.split(' ')[0]}, ${updatedPayment.split(' ')[0]}). Draf Proforma Invoice disetujui.`;
+        buyerAccepts = true;
+      }
+
+      // Buyer Chat Response
+      const buyerChat: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'Buyer',
+        senderName: 'Kenji Sato (Importir)',
+        avatar: '🇯🇵',
+        message: buyerReplyMsg,
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      setChatMessages(prev => [...prev, buyerChat]);
+
+      // If accepted, update the proposal status
+      if (buyerAccepts) {
+        setTimeout(() => {
+          setOfficialProposal(prev => {
+            const acceptedProposal = {
+              ...prev,
+              buyerAgreed: true,
+              traderAgreed: true
+            };
+            localStorage.setItem(`commercial_nego_official_proposal_${shipment.id}`, JSON.stringify(acceptedProposal));
+            return acceptedProposal;
+          });
+
+          const acceptLogMsg: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            sender: 'System',
+            senderName: 'Sistem Portal',
+            avatar: '⚙️',
+            message: `✓ Importir menyetujui draf proposal resmi! Parameter komersial kini terkunci dan draf Proforma Invoice bilateral siap ditandatangani.`,
+            timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          };
+          setChatMessages(prev => [...prev, acceptLogMsg]);
+        }, 1500);
+      }
+    }, 2500); // 2.5 seconds delay for buyer bot thinking
   };
 
   const handleAcceptProposal = () => {
@@ -447,7 +518,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: `✓ ${activeSimulatedRole === 'Buyer' ? 'Buyer' : 'Trader'} menyetujui draf proposal resmi! Parameter komersial kini terkunci dan draf Proforma Invoice bilateral siap ditandatangani.`,
+      message: `✓ Draf proposal resmi disetujui! Parameter komersial kini terkunci dan draf Proforma Invoice bilateral siap ditandatangani.`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
@@ -467,7 +538,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: `❌ ${activeSimulatedRole === 'Buyer' ? 'Buyer' : 'Trader'} menolak draf proposal. Silakan sesuaikan kembali kalkulator untuk mengajukan penawaran baru.`,
+      message: `❌ Draf proposal ditolak. Silakan sesuaikan kembali kalkulator untuk mengajukan penawaran baru.`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
@@ -490,7 +561,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: '✍️ Buyer (Hans Mueller) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
+      message: '✍️ Importir (Kenji Sato) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
@@ -504,7 +575,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: '✍️ Trader (Hendry Kurniawan) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
+      message: '✍️ Eksportir (Hendry Kurniawan) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
@@ -518,8 +589,8 @@ export default function CommercialNegotiationGateway({
         pricePerUnit: officialProposal.price,
         paymentTerms: officialProposal.payment,
         incoterms: officialProposal.incoterm,
-        portOfDischarge: shipment.portOfDischarge || 'Port of Hamburg, Germany',
-        buyerCompany: shipment.buyerCompany || 'EuroFoods Import GmbH',
+        portOfDischarge: shipment.portOfDischarge || 'Port of Tokyo, Japan',
+        buyerCompany: shipment.buyerCompany || 'Tokyo Coffee Trading Co.',
         nextStep: 'Shipping',
         comments: `Fase I Komersial Selesai: LOI telah dibaca, klausul disepakati melalui negosiasi asinkron nyata, dan Proforma Invoice (PI) telah ditandatangani secara bilateral oleh ${shipment.buyerCompany} dan PT Multi Raksa Madani.`
       });
@@ -540,7 +611,7 @@ export default function CommercialNegotiationGateway({
       notes: 'Kadar air biji kopi tervalidasi maksimal 12%, pengemasan menggunakan karung goni berlapis GrainPro.',
       proposer: 'Trader',
       buyerAgreed: false,
-      traderAgreed: true,
+      traderAgreed: false,
       timestamp: new Date().toISOString()
     };
     setOfficialProposal(defaultProposal);
@@ -554,9 +625,9 @@ export default function CommercialNegotiationGateway({
     const initialMsg: ChatMessage = {
       id: '1',
       sender: 'Buyer',
-      senderName: 'Hans Mueller (Buyer)',
-      avatar: '🇩🇪',
-      message: `Halo Pak Hendry. Kami dari EuroFoods Import GmbH sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
+      senderName: 'Kenji Sato (Importir)',
+      avatar: '🇯🇵',
+      message: `Halo Pak Hendry. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
       timestamp: '10:15'
     };
     setChatMessages([initialMsg]);
@@ -824,7 +895,7 @@ export default function CommercialNegotiationGateway({
                   : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
               }`}
             >
-              <span>🇩🇪 Importir</span>
+              <span>🇯🇵 Importir {activeSimulatedRole === 'Buyer' && '(Anda)'}</span>
               {activeSimulatedRole === 'Trader' && (
                 <span className="text-[8px] bg-indigo-100 text-indigo-700 px-1 py-0.1 rounded-full font-mono font-black uppercase tracking-tight">Lawan</span>
               )}
@@ -837,7 +908,7 @@ export default function CommercialNegotiationGateway({
                   : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
               }`}
             >
-              <span>🇮🇩 Eksportir</span>
+              <span>🇮🇩 Eksportir {activeSimulatedRole === 'Trader' && '(Anda)'}</span>
               {activeSimulatedRole === 'Buyer' && (
                 <span className="text-[8px] bg-emerald-100 text-emerald-700 px-1 py-0.1 rounded-full font-mono font-black uppercase tracking-tight">Lawan</span>
               )}
@@ -868,69 +939,158 @@ export default function CommercialNegotiationGateway({
       )}
 
       {/* Top Banner & Title */}
-      <div className="relative z-10 border-b border-slate-250 pb-6">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 text-xs font-mono font-black tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-150 rounded-full uppercase animate-pulse">
-            Fase I: Komersial &amp; Kontrak
-          </span>
-          <span className="text-slate-400 font-mono text-xs">•</span>
-          <span className="text-slate-500 text-xs sm:text-sm flex items-center gap-1 font-mono">
-            <Lock className="w-3.5 h-3.5 text-amber-500" /> Gerbang Pabean Terkunci
-          </span>
+      <div className="relative z-10 border-b border-slate-200 pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-black tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-150 rounded-full uppercase animate-pulse">
+              Fase I: Komersial &amp; Kontrak
+            </span>
+            <span className="text-slate-400 font-mono text-xs">•</span>
+            <span className="text-slate-500 text-[10px] sm:text-xs flex items-center gap-1 font-mono">
+              <Lock className="w-3 h-3 text-amber-500" /> Gerbang Pabean Terkunci
+            </span>
+          </div>
         </div>
-        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mt-1.5 flex items-center gap-2.5">
-          <Coffee className="w-6 h-6 text-indigo-500 shrink-0" />
-          <span>Gerbang Negosiasi Komersial &amp; Pengesahan PI</span>
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed max-w-2xl">
-          Sebelum memulai alur logistik maritim, importir Jerman dan eksportir Indonesia wajib melakukan perundingan legalitas komersial demi menerbitkan draf Proforma Invoice (PI) yang sah.
-        </p>
+        <div className="flex items-center justify-between mt-1.5">
+          <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+            <Coffee className="w-5 h-5 text-indigo-500 shrink-0" />
+            <span>Gerbang Negosiasi Komersial &amp; Pengesahan PI</span>
+          </h2>
+          <p className="text-[10px] sm:text-xs text-slate-500 max-w-md text-right hidden md:block">
+            Sebelum memulai logistik maritim, importir &amp; eksportir merundingkan legalitas komersial demi draf PI yang sah.
+          </p>
+        </div>
+      </div>
+
+      {/* LOI Details Accordion */}
+      <div className="relative z-10 border-b border-slate-200 py-2">
+        <button
+          onClick={() => setIsLoiDetailOpen(!isLoiDetailOpen)}
+          className="w-full flex items-center justify-between bg-slate-50/50 hover:bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="text-xs font-black text-slate-800 uppercase tracking-tight">Data Referensi Permintaan/LOI</span>
+          </div>
+          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-300 ${isLoiDetailOpen ? 'rotate-180' : ''}`} />
+        </button>
+        
+        {isLoiDetailOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 mt-3 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Kontrak</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.contractNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Komoditas</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.productName}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kode HS</p>
+                    <p className="text-xs font-mono font-semibold text-slate-800">{shipment.hsCode}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kuantitas Permintaan</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.quantity} {shipment.unit}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Eksportir</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.supplierName}</p>
+                    <p className="text-[10px] text-slate-500">{shipment.supplierCompany}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Importir</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.buyerName}</p>
+                    <p className="text-[10px] text-slate-500">{shipment.buyerCompany}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelabuhan Muat</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.portOfLoading}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelabuhan Bongkar</p>
+                    <p className="text-xs font-semibold text-slate-800">{shipment.portOfDischarge}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100 bg-slate-50 p-4 rounded-xl">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ketentuan Penyerahan</p>
+                    <p className="text-xs font-semibold text-slate-800">{officialProposal.incoterm}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
+                    <p className="text-xs font-semibold text-slate-800">{officialProposal.payment}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Harga Satuan (FOB)</p>
+                    <p className="text-xs font-semibold text-slate-800">${officialProposal.price} / Ton</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Nilai (FOB)</p>
+                    <p className="text-xs font-semibold text-slate-800">${(officialProposal.quantity * officialProposal.price).toLocaleString('en-US')}</p>
+                  </div>
+                  <div className="sm:col-span-2 lg:col-span-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Catatan Tambahan</p>
+                    <p className="text-xs font-semibold text-slate-800 leading-relaxed">{officialProposal.notes}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
       </div>
 
       {/* Interactive Sub-Stage Stepper Track */}
-      <div className="relative z-10 py-6">
+      <div className="relative z-10 py-3">
         <div className="grid grid-cols-3 gap-2 relative">
           {/* Progress bar background line */}
-          <div className="absolute left-[15%] right-[15%] top-[18px] h-0.5 bg-slate-100 -z-10" />
-          <div 
-            className="absolute left-[15%] top-[18px] h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700 -z-10"
-            style={{
-              width: 
-                subStage === 'buyer-sending' ? '0%' :
-                subStage === 'negotiating' ? '50%' : '100%'
-            }}
-          />
+          <div className="absolute left-[16%] right-[16%] top-[14px] h-0.5 bg-slate-100 -z-10">
+            <div 
+              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700"
+              style={{
+                width: 
+                  subStage === 'buyer-sending' ? '0%' : '100%'
+              }}
+            />
+          </div>
 
           {/* Stepper items */}
           {[
-            { id: 'buyer-sending', label: '1. Kirim LOI', icon: FileText, desc: 'Buyer mengirim minat impor' },
-            { id: 'negotiating', label: '2. Negosiasi & Sepakat', icon: MessageSquare, desc: 'Bilateral chat, draf & tanda tangan' },
-            { id: 'signed', label: 'Selesai', icon: CheckCircle2, desc: 'PI Disahkan bilateral' }
+            { id: 'buyer-sending', label: '1. Detail Pesanan', icon: FileText, desc: 'Tinjauan Order' },
+            { id: 'signed', label: '2. Proforma Invoice', icon: CheckCircle2, desc: 'PI Disahkan' }
           ].map((st, idx) => {
             const isCompleted = 
-              (subStage === 'negotiating' && idx < 1) ||
-              (subStage === 'signed' && idx < 2) ||
-              subStage === 'signed';
+              (subStage === 'signed');
 
             const isActive = subStage === st.id;
 
             return (
               <div key={st.id} className="text-center flex flex-col items-center">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 border ${
                   isCompleted 
-                    ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-100' 
+                    ? 'bg-emerald-600 border-emerald-500 text-white shadow-xs shadow-emerald-100' 
                     : isActive
-                      ? 'bg-indigo-600 border-indigo-400 text-white ring-4 ring-indigo-50 scale-110 shadow-md shadow-indigo-100 font-bold'
+                      ? 'bg-indigo-600 border-indigo-400 text-white ring-2 ring-indigo-50 scale-105 shadow-xs shadow-indigo-100 font-bold'
                       : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}>
-                  {isCompleted ? <Check className="w-4 h-4" /> : <st.icon className="w-4 h-4" />}
+                  {isCompleted ? <Check className="w-3.5 h-3.5" /> : <st.icon className="w-3.5 h-3.5" />}
                 </div>
-                <span className={`text-[11.5px] sm:text-xs font-black uppercase tracking-tight mt-2.5 transition-colors ${
+                <span className={`text-[10px] sm:text-xs font-black uppercase tracking-tight mt-1.5 transition-colors ${
                   isActive ? 'text-indigo-600 font-extrabold' : isCompleted ? 'text-emerald-600 font-bold' : 'text-slate-400'
                 }`}>
                   {st.label}
                 </span>
-                <span className="text-[10px] sm:text-[11px] text-slate-500 font-sans hidden sm:block mt-1 max-w-[130px] mx-auto leading-tight">
+                <span className="text-[9px] sm:text-[10px] text-slate-500 font-sans hidden sm:block mt-0.5 max-w-[130px] mx-auto leading-tight">
                   {st.desc}
                 </span>
               </div>
@@ -943,12 +1103,13 @@ export default function CommercialNegotiationGateway({
       <div className="relative z-10 pt-4">
         
         {/* Main Workspace Column */}
-        <div className="w-full bg-slate-900/60 rounded-2xl border border-slate-800/80 p-5 sm:p-6 flex flex-col justify-between">
+        <div className={`w-full rounded-2xl p-5 sm:p-6 flex flex-col justify-between ${
+          subStage === 'buyer-sending'
+            ? 'bg-slate-900/60 border border-slate-800/80'
+            : 'bg-transparent'
+        }`}>
           
-          <AnimatePresence mode="wait">
-            
-            {/* SUB-STAGE 1: BUYER SENDING LOI */}
-            {subStage === 'buyer-sending' && (
+            {subStage === 'buyer-sending' ? (
               <motion.div
                 key="buyer-sending"
                 initial={{ opacity: 0, y: 10 }}
@@ -961,8 +1122,8 @@ export default function CommercialNegotiationGateway({
                     <FileText className="w-5 h-5 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base tracking-tight text-white">Langkah 1: Pengajuan Surat Minat Impor Resmi (Letter of Intent)</h3>
-                    <p className="text-xs sm:text-sm text-slate-400 font-mono mt-0.5">Pengirim: EuroFoods Import GmbH • Penerima: PT Multi Raksa Madani</p>
+                    <h3 className="font-extrabold text-base tracking-tight text-white">Langkah 1: Tinjauan Pesanan (Purchase Order / LOI)</h3>
+                    <p className="text-xs sm:text-sm text-slate-400 font-mono mt-0.5">Pengirim: Tokyo Coffee Trading Co. • Penerima: PT Multi Raksa Madani</p>
                   </div>
                 </div>
 
@@ -972,8 +1133,8 @@ export default function CommercialNegotiationGateway({
                     <div>
                       <div className="border-b border-slate-800 pb-3 mb-3 flex items-start justify-between text-slate-400 text-xs sm:text-sm">
                         <div>
-                          <p className="font-bold text-white uppercase text-xs tracking-wide">EUROFOODS IMPORT GMBH</p>
-                          <p>Hafenstrasse 12, 20457 Hamburg, Germany</p>
+                          <p className="font-bold text-white uppercase text-xs tracking-wide">TOKYO COFFEE TRADING CO.</p>
+                          <p>Shibuya, 150-0002 Tokyo, Japan</p>
                         </div>
                         <div className="text-right">
                           <p>DOKUMEN: LETTER OF INTENT (LOI)</p>
@@ -1019,12 +1180,6 @@ export default function CommercialNegotiationGateway({
 
                   {/* Right Column: File Attachment Upload Area + Action */}
                   <div className="lg:col-span-4 flex flex-col gap-4">
-                    {activeSimulatedRole !== 'Buyer' && (
-                      <div className="bg-amber-950/40 border border-amber-900/50 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-300 leading-normal w-full">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5 animate-pulse" />
-                        <span>Aksi ini hanya dapat dilakukan oleh peran <strong>Buyer (Jerman)</strong>.</span>
-                      </div>
-                    )}
 
                     {/* File Attachment Upload Area (Limit 2 MB) */}
                     <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-3 flex flex-col">
@@ -1040,8 +1195,7 @@ export default function CommercialNegotiationGateway({
                         )}
                       </div>
 
-                      {activeSimulatedRole === 'Buyer' ? (
-                        <div
+                      <div
                           onDragOver={(e) => {
                             e.preventDefault();
                             setIsDragging(true);
@@ -1111,35 +1265,6 @@ export default function CommercialNegotiationGateway({
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div className="border border-dashed border-slate-800 rounded-xl py-6 px-4 text-center bg-slate-950/10 text-slate-500 text-xs flex items-center justify-center">
-                          {attachedFile ? (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-slate-900/60 p-2.5 rounded-lg border border-slate-850 w-full">
-                              <div className="flex items-center gap-2.5 text-left">
-                                <Paperclip className="w-4 h-4 text-slate-400" />
-                                <div>
-                                  <p className="text-xs font-bold text-slate-300">{attachedFile.name}</p>
-                                  <p className="text-xs text-slate-400">{(attachedFile.size / 1024).toFixed(1)} KB</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {attachedFile.url && (
-                                  <a
-                                    href={attachedFile.url}
-                                    download={attachedFile.name}
-                                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded flex items-center gap-1 transition-colors cursor-pointer"
-                                  >
-                                    <Download className="w-3 h-3" /> Unduh
-                                  </a>
-                                )}
-                                <span className="text-xs text-emerald-400 font-bold">Terlampir</span>
-                              </div>
-                            </div>
-                          ) : (
-                            "Belum ada dokumen pendukung terlampir"
-                          )}
-                        </div>
-                      )}
 
                       {uploadError && (
                         <div className="text-[11px] text-rose-400 font-semibold bg-rose-950/20 border border-rose-900/30 p-2.5 rounded-lg flex items-start gap-1.5 animate-pulse">
@@ -1150,24 +1275,19 @@ export default function CommercialNegotiationGateway({
                     </div>
 
                     {/* Contextual Action */}
-                    {activeSimulatedRole === 'Buyer' && (
-                      <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-slate-800/80">
-                        <button
-                          onClick={handleSendLoi}
-                          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-blue-950/50 hover:-translate-y-0.5"
-                        >
-                          <span>Kirim LOI Resmi ke Eksportir</span>
-                          <Send className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex flex-col items-stretch gap-3 pt-4 border-t border-slate-800/80 mt-4">
+                      <button
+                        onClick={handleSendLoi}
+                        className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-blue-950/50 hover:-translate-y-0.5"
+                      >
+                        <span>Setujui Pesanan & Terbitkan Proforma Invoice</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            )}
-
-            {/* SUB-STAGE 2: NEGOTIATING & AGREEMENT (UNIFIED STEP 2) */}
-            {subStage === 'negotiating' && (
+            ) : subStage === 'negotiating' ? (
               <motion.div
                 key="negotiating"
                 initial={{ opacity: 0, y: 10 }}
@@ -1183,20 +1303,20 @@ export default function CommercialNegotiationGateway({
                     {/* Active Draft Customization */}
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs space-y-3">
                       <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                           <Sliders className="w-3.5 h-3.5 text-indigo-500" />
-                          WORKSPACE USULAN DRAF KOMERSIAL ({activeSimulatedRole})
+                          WORKSPACE USULAN DRAF KOMERSIAL
                         </h4>
-                        <div className="text-[9px] text-slate-400 font-mono">
-                          Live Editor • {activeSimulatedRole === 'Buyer' ? 'EuroFoods GmbH' : 'PT Multi Raksa Madani'}
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          Live Editor • PT Multi Raksa Madani
                         </div>
                       </div>
 
                       {/* Sliders Grid - Spacious 2 columns */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Cargo Volume */}
-                        <div className="space-y-0.5">
-                          <label className="text-[11px] font-bold text-slate-600 flex justify-between items-center">
+                        <div className="space-y-0.5 relative pb-4">
+                          <label className="text-xs font-bold text-slate-600 flex justify-between items-center">
                             <span>{t.volumeCargo}:</span>
                             <div className="flex items-center gap-1 font-mono text-indigo-600">
                               <input
@@ -1212,16 +1332,15 @@ export default function CommercialNegotiationGateway({
                                   if (val < 1) val = 1;
                                   if (val > 10000) val = 10000;
                                   setNegotiatedQty(val);
-                                  handleSubmitCounterOffer();
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.currentTarget.blur();
                                   }
                                 }}
-                                className="w-14 bg-slate-100 hover:bg-slate-200 focus:bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-right font-black text-indigo-700 text-[11px] focus:outline-none transition-all"
+                                className="w-14 bg-slate-100 hover:bg-slate-200 focus:bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-right font-black text-indigo-700 text-xs focus:outline-none transition-all"
                               />
-                              <span className="text-[10px] font-bold">MT</span>
+                              <span className="text-xs font-bold">MT</span>
                             </div>
                           </label>
                           <input 
@@ -1232,18 +1351,17 @@ export default function CommercialNegotiationGateway({
                             onChange={(e) => {
                               setNegotiatedQty(Number(e.target.value));
                             }}
-                            onMouseUp={handleSubmitCounterOffer}
-                            onTouchEnd={handleSubmitCounterOffer}
                             className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                           />
+                          <p className="text-[9px] text-slate-500 absolute bottom-0 left-0 font-medium">Permintaan Awal: {shipment.quantity || 20} MT</p>
                         </div>
 
                         {/* Unit Price */}
-                        <div className="space-y-0.5">
-                          <label className="text-[11px] font-bold text-slate-600 flex justify-between items-center">
+                        <div className="space-y-0.5 relative pb-4">
+                          <label className="text-xs font-bold text-slate-600 flex justify-between items-center">
                             <span>{t.unitPrice}:</span>
                             <div className="flex items-center gap-1 font-mono text-emerald-600">
-                              <span className="text-[10px] font-bold">$</span>
+                              <span className="text-xs font-bold">$</span>
                               <input
                                 type="number"
                                 min="100"
@@ -1257,16 +1375,15 @@ export default function CommercialNegotiationGateway({
                                   if (val < 100) val = 100;
                                   if (val > 50000) val = 50000;
                                   setNegotiatedPrice(val);
-                                  handleSubmitCounterOffer();
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.currentTarget.blur();
                                   }
                                 }}
-                                className="w-16 bg-slate-100 hover:bg-slate-200 focus:bg-white border border-slate-200 focus:border-emerald-500 rounded px-1.5 py-0.5 text-right font-black text-emerald-700 text-[11px] focus:outline-none transition-all"
+                                className="w-16 bg-slate-100 hover:bg-slate-200 focus:bg-white border border-slate-200 focus:border-emerald-500 rounded px-1.5 py-0.5 text-right font-black text-emerald-700 text-xs focus:outline-none transition-all"
                               />
-                              <span className="text-[10px] font-bold">USD</span>
+                              <span className="text-xs font-bold">USD</span>
                             </div>
                           </label>
                           <input 
@@ -1277,97 +1394,137 @@ export default function CommercialNegotiationGateway({
                             onChange={(e) => {
                               setNegotiatedPrice(Number(e.target.value));
                             }}
-                            onMouseUp={handleSubmitCounterOffer}
-                            onTouchEnd={handleSubmitCounterOffer}
+                            onMouseUp={() => handleSubmitCounterOffer()}
+                            onTouchEnd={() => handleSubmitCounterOffer()}
                             className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                           />
+                          <p className="text-[9px] text-slate-500 absolute bottom-0 left-0 font-medium">Permintaan Awal: $1450 / Ton</p>
                         </div>
 
                         {/* Incoterms Select */}
                         <div className="space-y-0.5">
-                          <label className="text-[11px] font-bold text-slate-600 block">{t.deliveryTerms}:</label>
+                          <label className="text-xs font-bold text-slate-600 block">{t.deliveryTerms}:</label>
                           <select
                             value={selectedIncoterm}
                             onChange={(e) => {
                               setSelectedIncoterm(e.target.value);
-                              handleSubmitCounterOffer();
                             }}
-                            className="w-full bg-white border border-slate-250 text-[11px] text-slate-800 rounded-lg p-1.5 focus:outline-none focus:border-indigo-500"
+                            className="w-full bg-white border border-slate-250 text-xs text-slate-800 rounded-lg p-1.5 focus:outline-none focus:border-indigo-500"
                           >
                             <option value="FOB Belawan Port (Incoterms 2020)">FOB Belawan Port, Sumatra (Incoterms 2020)</option>
-                            <option value="CIF Hamburg Port (Incoterms 2020)">CIF Hamburg Port, Germany (Incoterms 2020)</option>
+                            <option value="CIF Tokyo Port (Incoterms 2020)">CIF Tokyo Port, Japan (Incoterms 2020)</option>
                           </select>
+                          <p className="text-[9px] text-slate-500 font-medium mt-0.5 mb-1 block">Permintaan Awal: FOB Belawan Port (Incoterms 2020)</p>
+                          {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
+                            <p className="text-[10px] text-slate-500 italic mt-1 leading-tight">
+                              {selectedIncoterm.includes('FOB') 
+                                ? "FOB (Free on Board): Penjual (Eksportir) hanya bertanggung jawab sampai barang naik ke kapal. Biaya asuransi dan pengiriman laut (freight) ditanggung pembeli."
+                                : "CIF (Cost, Insurance, and Freight): Penjual (Eksportir) menanggung biaya barang, asuransi, dan pengiriman laut sampai pelabuhan tujuan."}
+                            </p>
+                          )}
                         </div>
 
                         {/* Payment Select */}
                         <div className="space-y-0.5">
-                          <label className="text-[11px] font-bold text-slate-600 block">{t.paymentMethod}:</label>
+                          <label className="text-xs font-bold text-slate-600 block">{t.paymentMethod}:</label>
                           <select
                             value={selectedPayment}
                             onChange={(e) => {
                               setSelectedPayment(e.target.value);
-                              handleSubmitCounterOffer();
                             }}
-                            className="w-full bg-white border border-slate-250 text-[11px] text-slate-800 rounded-lg p-1.5 focus:outline-none focus:border-indigo-500"
+                            className="w-full bg-white border border-slate-250 text-xs text-slate-800 rounded-lg p-1.5 focus:outline-none focus:border-indigo-500"
                           >
                             <option value="Letter of Credit (L/C) at Sight">Irrevocable Letter of Credit (L/C) at Sight</option>
                             <option value="30% Down Payment, 70% L/C Sight">30% Down Payment, 70% L/C</option>
                             <option value="Telegraphic Transfer (T/T) 100%">Telegraphic Transfer (T/T) 100%</option>
                           </select>
+                          <p className="text-[9px] text-slate-500 font-medium mt-0.5 mb-1 block">Permintaan Awal: Letter of Credit (L/C) at Sight</p>
+                          {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
+                            <p className="text-[10px] text-slate-500 italic mt-1 leading-tight">
+                              {selectedPayment.includes('Letter of Credit') || selectedPayment === 'Letter of Credit (L/C) at Sight'
+                                ? "L/C at Sight: Bank importir menjamin pembayaran ke eksportir segera setelah menyerahkan dokumen pengiriman yang valid."
+                                : selectedPayment.includes('30% Down Payment')
+                                ? "30% DP, 70% L/C: Pembeli membayar deposit tunai 30% di awal (untuk modal produksi), sisanya 70% dijamin dengan L/C."
+                                : "T/T 100%: Pembayaran tunai transfer bank 100%. Risiko tinggi bagi pembeli jika barang belum dikirim."}
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      <div className="space-y-0.5 pt-1">
-                        <label className="text-[11px] font-bold text-slate-600 block">Catatan / Spesifikasi Teknis Tambahan:</label>
+                      <div className="flex flex-col py-2 px-3 bg-slate-100/50 rounded-lg border border-slate-200 mt-2 mb-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-slate-700">Estimasi Total Nilai (FOB):</span>
+                          <span className="text-sm font-black text-emerald-700 font-mono tracking-tight">
+                            ${(negotiatedQty * negotiatedPrice).toLocaleString('en-US')} USD
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-slate-500 font-medium mt-1">
+                          Permintaan Awal: ${((shipment.quantity || 20) * 1450).toLocaleString('en-US')} USD
+                        </p>
+                      </div>
+
+                      <div className="space-y-0.5 pt-1 relative pb-6">
+                        <label className="text-xs font-bold text-slate-600 block">Catatan / Spesifikasi Teknis Tambahan:</label>
                         <textarea
-                          rows={1}
+                          rows={2}
                           value={negotiationNotes}
                           onChange={(e) => {
                             setNegotiationNotes(e.target.value);
-                            handleSubmitCounterOffer();
                           }}
                           placeholder="Spesifikasi kopi Gayo premium, kadar air maks 12%..."
-                          className="w-full bg-white border border-slate-250 text-[11px] text-slate-800 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500 font-sans"
+                          className="w-full bg-white border border-slate-250 text-xs text-slate-800 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500 font-sans leading-normal"
                         />
+                        <p className="text-[9px] text-slate-500 absolute bottom-0 left-0 font-medium leading-tight">Permintaan Awal: Kadar air biji kopi tervalidasi maksimal 12%, pengemasan menggunakan karung goni berlapis GrainPro.</p>
+                      </div>
+                      
+                      {/* Submit Button */}
+                      <div className="pt-2 border-t border-slate-200 mt-3">
+                        <button
+                          onClick={() => handleSubmitCounterOffer()}
+                          className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-lg shadow-blue-200 hover:-translate-y-0.5 active:scale-95"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Kirim Draf Penawaran ke Importir</span>
+                        </button>
                       </div>
                     </div>
 
                     {/* Real-time PI Specimen Document */}
-                    <div className="w-full bg-white text-slate-900 border border-slate-250 rounded-xl p-4 font-mono text-[8.5px] sm:text-[9px] leading-relaxed relative shadow-md">
-                      <div className="absolute top-2 right-2 bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded text-[7.5px] font-bold font-mono">
+                    <div className="w-full bg-white text-slate-900 border border-slate-250 rounded-xl p-4 font-mono text-[10px] sm:text-[11px] leading-relaxed relative shadow-md">
+                      <div className="absolute top-2 right-2 bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono">
                         DRAFT PI
                       </div>
 
-                      <div className="flex justify-between items-start border-b border-slate-200 pb-2 mb-2 text-[7.5px] text-slate-500">
+                      <div className="flex justify-between items-start border-b border-slate-200 pb-2 mb-2 text-[9px] text-slate-500">
                         <div>
-                          <p className="font-extrabold text-slate-900 text-[8px] tracking-wide">PT MULTI RAKSA MADANI</p>
+                          <p className="font-extrabold text-slate-900 text-[10px] tracking-wide">PT MULTI RAKSA MADANI</p>
                           <p>Komp. Ruko Harmoni Mas, Jakarta, Indonesia</p>
                         </div>
                         <div className="text-right font-bold">
-                          <p className="text-slate-900 text-[8px]">PROFORMA INVOICE (PI)</p>
+                          <p className="text-slate-900 text-[10px]">PROFORMA INVOICE (PI)</p>
                           <p>NOMOR: PI/MRM-DEUTSCH/2026/419</p>
                           <p>TANGGAL: 25 JUNI 2026</p>
                         </div>
                       </div>
 
-                      <p className="text-center font-black text-slate-950 text-[9.5px] tracking-wider border-b border-slate-100 py-0.5 mb-2">
+                      <p className="text-center font-black text-slate-950 text-xs tracking-wider border-b border-slate-100 py-0.5 mb-2">
                         DRAFT PROFORMA INVOICE / EKSPOR KOPI
                       </p>
 
-                      <div className="grid grid-cols-2 gap-2 text-[8px] mb-2 leading-tight">
+                      <div className="grid grid-cols-2 gap-2 text-[9px] mb-2 leading-tight">
                         <div>
-                          <span className="text-slate-400 uppercase tracking-wider block text-[7px] font-bold">IMPORTIR (BUYER):</span>
-                          <strong className="text-slate-900">{shipment.buyerCompany || 'EuroFoods Import GmbH'}</strong>
-                          <p className="text-slate-500">Hafenstrasse 12, Hamburg, Germany</p>
+                          <span className="text-slate-400 uppercase tracking-wider block text-[8px] font-bold">IMPORTIR (BUYER):</span>
+                          <strong className="text-slate-900">{shipment.buyerCompany || 'Tokyo Coffee Trading Co.'}</strong>
+                          <p className="text-slate-500">Shibuya, Tokyo, Japan</p>
                         </div>
                         <div>
-                          <span className="text-slate-400 uppercase tracking-wider block text-[7px] font-bold">EKSPORTIR (SELLER):</span>
+                          <span className="text-slate-400 uppercase tracking-wider block text-[8px] font-bold">EKSPORTIR (SELLER):</span>
                           <strong className="text-slate-900">PT Multi Raksa Madani</strong>
                           <p className="text-slate-500">Komp. Ruko Harmoni Mas, Jakarta, Indonesia</p>
                         </div>
                       </div>
 
-                      <table className="w-full border-t border-b border-slate-200 text-left mb-2 text-[8px]">
+                      <table className="w-full border-t border-b border-slate-200 text-left mb-2 text-[10px]">
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                             <th className="py-0.5 px-1">Komoditas &amp; Spesifikasi</th>
@@ -1380,7 +1537,7 @@ export default function CommercialNegotiationGateway({
                           <tr className="border-b border-slate-100">
                             <td className="py-0.5 px-1 leading-tight">
                               <strong className="text-slate-950">{shipment.productName || 'Biji Kopi Gayo Organik'}</strong>
-                              <p className="text-[7.5px] text-slate-400">Premium Arabika, Moisture Max 12%</p>
+                              <p className="text-[9px] text-slate-400">Premium Arabika, Moisture Max 12%</p>
                             </td>
                             <td className="py-0.5 px-1 text-right font-bold">{negotiatedQty} MT</td>
                             <td className="py-0.5 px-1 text-right font-bold">${negotiatedPrice}</td>
@@ -1389,7 +1546,7 @@ export default function CommercialNegotiationGateway({
                         </tbody>
                       </table>
 
-                      <div className="grid grid-cols-2 gap-1 text-[8px] text-slate-600 border-b border-slate-100 pb-1.5 mb-1.5">
+                      <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-600 border-b border-slate-100 pb-1.5 mb-1.5">
                         <p><strong>Ketentuan Kirim:</strong> {selectedIncoterm.split(' ')[0]}</p>
                         <p><strong>Ketentuan Bayar:</strong> {selectedPayment.split(' ')[0]}</p>
                       </div>
@@ -1397,31 +1554,31 @@ export default function CommercialNegotiationGateway({
                       {/* Signatures Specimen Fields */}
                       <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
                         <div className="text-center flex flex-col items-center">
-                          <span className="text-[7px] text-slate-400 uppercase font-bold">Buyer Jerman:</span>
+                          <span className="text-[8px] text-slate-400 uppercase font-bold">Importir Jepang:</span>
                           <div className="w-full h-8 border border-slate-200 rounded-lg flex items-center justify-center bg-slate-50 relative mt-0.5">
                             {buyerSigned ? (
                               <span className="font-serif italic text-sm text-blue-700 font-bold tracking-tighter select-none rotate-2">
-                                Hans Mueller
+                                Kenji Sato
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-[7.5px] animate-pulse">Belum TTD</span>
+                              <span className="text-slate-400 text-[9px] animate-pulse">Belum TTD</span>
                             )}
                           </div>
-                          <p className="text-[7.5px] text-slate-600 mt-0.5 font-bold">EuroFoods Import GmbH</p>
+                          <p className="text-[9px] text-slate-600 mt-0.5 font-bold">Tokyo Coffee Trading Co.</p>
                         </div>
 
                         <div className="text-center flex flex-col items-center">
-                          <span className="text-[7px] text-slate-400 uppercase font-bold">Eksportir Indo:</span>
+                          <span className="text-[8px] text-slate-400 uppercase font-bold">Eksportir Indo:</span>
                           <div className="w-full h-8 border border-slate-200 rounded-lg flex items-center justify-center bg-slate-50 relative mt-0.5">
                             {traderSigned ? (
                               <span className="font-serif italic text-sm text-indigo-700 font-bold tracking-tighter select-none -rotate-2">
                                 Hendry Kurniawan
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-[7.5px] animate-pulse">Belum TTD</span>
+                              <span className="text-slate-400 text-[9px] animate-pulse">Belum TTD</span>
                             )}
                           </div>
-                          <p className="text-[7.5px] text-slate-600 mt-0.5 font-bold">PT Multi Raksa Madani</p>
+                          <p className="text-[9px] text-slate-600 mt-0.5 font-bold">PT Multi Raksa Madani</p>
                         </div>
                       </div>
                     </div>
@@ -1429,97 +1586,19 @@ export default function CommercialNegotiationGateway({
 
                   {/* COLUMN 2: LIVE CHAT & AGREEMENT BOARD (lg:col-span-5) */}
                   <div className="lg:col-span-5 space-y-4">
-                    {/* Live Chat */}
-                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs flex flex-col justify-between h-[280px]">
-                      <div className="flex flex-col h-full space-y-2">
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                          <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                            <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
-                            Ruang Obrolan Bilateral (Live Chat)
-                          </h4>
-                          <span className="flex items-center gap-1 text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-mono font-bold animate-pulse">
-                            Terkoneksi
-                          </span>
-                        </div>
-
-                        {/* Messages Container */}
-                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto bg-slate-100 rounded-lg p-2 space-y-2 scrollbar-thin">
-                          {chatMessages.map((msg) => {
-                            const isSystem = msg.sender === 'System';
-                            const isMe = msg.sender === activeSimulatedRole;
-
-                            if (isSystem) {
-                              return (
-                                <div key={msg.id} className="flex justify-center my-0.5">
-                                  <div className="bg-slate-200/80 border border-slate-300 rounded px-2 py-0.5 text-[9px] text-slate-600 font-mono text-center max-w-[90%]">
-                                    {msg.message}
-                                  </div>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div key={msg.id} className={`flex gap-1.5 max-w-[90%] ${isMe ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}>
-                                <span className="text-sm select-none mt-0.5 shrink-0">{msg.avatar}</span>
-                                <div>
-                                  <div className={`px-2.5 py-1.5 rounded-xl text-[11px] shadow-xs leading-tight ${
-                                    isMe 
-                                      ? 'bg-indigo-600 text-white rounded-tr-none' 
-                                      : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
-                                  }`}>
-                                    <p className="font-bold text-[9px] opacity-80 mb-0.5">{msg.senderName}</p>
-                                    <p className="font-sans whitespace-pre-line">{msg.message}</p>
-                                  </div>
-                                  <p className={`text-[8px] text-slate-400 font-mono mt-0.5 ${isMe ? 'text-right' : 'text-left'}`}>{msg.timestamp}</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {isTyping && (
-                            <div className="flex gap-1.5 mr-auto items-center animate-pulse">
-                              <span className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-full text-slate-400 font-bold flex items-center gap-1 font-mono">
-                                Sedang mengetik...
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Chat Input */}
-                        <div className="flex gap-1.5">
-                          <input
-                            type="text"
-                            placeholder="Kirim pesan..."
-                            value={typedMessage}
-                            onChange={(e) => setTypedMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSendMessage();
-                            }}
-                            className="flex-1 bg-white border border-slate-250 text-[11px] text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-sans"
-                          />
-                          <button
-                            onClick={() => handleSendMessage()}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs shadow-emerald-100"
-                          >
-                            <span>Kirim</span>
-                            <Send className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Bilateral Agreement & Signature Board */}
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs space-y-3">
-                      <div className="flex justify-between items-center text-[11px] border-b border-slate-200 pb-1.5">
-                        <span className="font-extrabold text-slate-700 uppercase tracking-wider text-[9.5px]">Persetujuan Bilateral:</span>
+                      <div className="flex justify-between items-center text-xs border-b border-slate-200 pb-1.5">
+                        <span className="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] sm:text-xs">Persetujuan Bilateral:</span>
                         <div className="flex gap-1.5">
-                          <span className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold ${
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                             officialProposal.buyerAgreed 
                               ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                               : 'bg-rose-100 text-rose-700 border border-rose-200'
                           }`}>
                             BUYER: {officialProposal.buyerAgreed ? 'SEPAKAT' : 'BELUM'}
                           </span>
-                          <span className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold ${
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                             officialProposal.traderAgreed 
                               ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                               : 'bg-rose-100 text-rose-700 border border-rose-200'
@@ -1532,19 +1611,19 @@ export default function CommercialNegotiationGateway({
                       {/* Accept / Reject actions */}
                       {!officialProposal.buyerAgreed || !officialProposal.traderAgreed ? (
                         <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg space-y-2">
-                          <p className="text-[10.5px] text-indigo-700 leading-normal font-sans font-medium">
+                          <p className="text-xs text-indigo-700 leading-normal font-sans font-medium">
                             Silakan setujui draf komersial saat ini agar lembar tanda tangan Proforma Invoice dapat dibuka.
                           </p>
                           <div className="flex gap-1.5">
                             <button
                               onClick={handleAcceptProposal}
-                              className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] uppercase rounded-lg transition-all cursor-pointer shadow-xs shadow-emerald-100"
+                              className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] uppercase rounded-lg transition-all cursor-pointer shadow-xs shadow-emerald-100"
                             >
                               Sepakati Draf
                             </button>
                             <button
                               onClick={handleRejectProposal}
-                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] uppercase rounded-lg border border-rose-200 transition-colors cursor-pointer"
+                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] uppercase rounded-lg border border-rose-200 transition-colors cursor-pointer"
                             >
                               Tolak
                             </button>
@@ -1555,51 +1634,32 @@ export default function CommercialNegotiationGateway({
                         <div className="space-y-2">
                           {(!buyerSigned || !traderSigned) ? (
                             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg space-y-2">
-                              <p className="text-[10.5px] text-emerald-800 leading-normal font-sans font-medium">
+                              <p className="text-xs text-emerald-800 leading-normal font-sans font-medium">
                                 ✓ Draf telah disepakati bilateral! Silakan bubuhkan tanda tangan di bawah sesuai peran aktif Anda.
                               </p>
                               
                               <div className="flex flex-col gap-1.5">
-                                {activeSimulatedRole === 'Buyer' && !buyerSigned && (
+                                {!traderSigned && (
                                   <button
-                                    onClick={handleSignAsBuyer}
-                                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs shadow-blue-100"
+                                    onClick={() => {
+                                      handleSignAsTrader();
+                                      handleSignAsBuyer(); // Auto-sign buyer for demo simplicity
+                                    }}
+                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs shadow-indigo-100"
                                   >
                                     <PenTool className="w-3 h-3" />
-                                    <span>Tanda Tangani sebagai Buyer</span>
+                                    <span>Tanda Tangani Proforma Invoice</span>
                                   </button>
-                                )}
-
-                                {activeSimulatedRole === 'Trader' && !traderSigned && (
-                                  <button
-                                    onClick={handleSignAsTrader}
-                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs shadow-indigo-100"
-                                  >
-                                    <PenTool className="w-3 h-3" />
-                                    <span>Tanda Tangani sebagai Trader</span>
-                                  </button>
-                                )}
-
-                                {activeSimulatedRole === 'Trader' && !buyerSigned && (
-                                  <div className="text-[9.5px] text-slate-500 text-center leading-normal py-1 bg-white border border-slate-100 rounded p-1.5 font-medium">
-                                    Menunggu Tanda Tangan Buyer. Ubah peran ke <strong>🇩🇪 Importir</strong>.
-                                  </div>
-                                )}
-
-                                {activeSimulatedRole === 'Buyer' && !traderSigned && (
-                                  <div className="text-[9.5px] text-slate-500 text-center leading-normal py-1 bg-white border border-slate-100 rounded p-1.5 font-medium">
-                                    Menunggu Tanda Tangan Trader. Ubah peran ke <strong>🇮🇩 Eksportir</strong>.
-                                  </div>
                                 )}
                               </div>
                             </div>
                           ) : (
                             <div className="p-3 bg-emerald-600 text-white rounded-lg shadow-md shadow-emerald-100 border border-emerald-500 space-y-2 text-center">
-                              <p className="text-[10px] font-black leading-tight uppercase flex items-center justify-center gap-1">
+                              <p className="text-[11px] font-black leading-tight uppercase flex items-center justify-center gap-1">
                                 <Check className="w-3.5 h-3.5 text-white shrink-0 animate-bounce" />
                                 Proforma Invoice Disahkan!
                               </p>
-                              <p className="text-[9.5px] opacity-90 leading-normal font-sans">
+                              <p className="text-[10px] opacity-90 leading-normal font-sans">
                                 Kontrak kopi senilai ${(negotiatedQty * negotiatedPrice).toLocaleString('en-US')} USD resmi dikunci bilateral.
                               </p>
                               <button
@@ -1623,10 +1683,7 @@ export default function CommercialNegotiationGateway({
                   </div>
                 </div>
               </motion.div>
-            )}
-
-            {/* SUB-STAGE 5: SIGNED & READY FOR LOGISTICS */}
-            {subStage === 'signed' && (
+            ) : subStage === 'signed' ? (
               <motion.div
                 key="signed"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -1706,7 +1763,7 @@ export default function CommercialNegotiationGateway({
                     <div>
                       <h3 className="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">Fase I Berhasil Diselesaikan!</h3>
                       <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                        Surat Minat Impor (LOI) telah berhasil ditinjau, dinegosiasikan, dan draf Proforma Invoice telah ditandatangani secara bilateral oleh kedua belah pihak secara legal.
+                        Surat Minat Impor (LOI) telah berhasil ditinjau dan disetujui, dan draf Proforma Invoice resmi (PI) telah diterbitkan.
                       </p>
                     </div>
 
@@ -1749,7 +1806,7 @@ export default function CommercialNegotiationGateway({
                           <button
                             disabled
                             className="w-full sm:w-auto px-8 py-3 bg-slate-100 text-slate-400 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-65 border border-slate-200"
-                            title="Hanya Trader / Direktur (Eksportir) yang memiliki hak wewenang untuk meluncurkan alur logistik ekspor."
+                            title="Hanya Trader / Superadmin (Eksportir) yang memiliki hak wewenang untuk meluncurkan alur logistik ekspor."
                           >
                             <span>Luncurkan Alur Logistik Ekspor</span>
                             <Lock className="w-4 h-4 text-rose-500" />
@@ -1787,7 +1844,7 @@ export default function CommercialNegotiationGateway({
                           <Paperclip className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="font-extrabold text-sm text-slate-900">Lampiran Dokumen LOI Asli dari Buyer</h4>
+                          <h4 className="font-extrabold text-sm text-slate-900">Lampiran Dokumen LOI Asli dari Importir</h4>
                           {attachedFile ? (
                             <div className="mt-1">
                               <span className="text-xs font-bold text-slate-700">{attachedFile.name}</span>
@@ -1795,11 +1852,11 @@ export default function CommercialNegotiationGateway({
                             </div>
                           ) : (
                             <div className="mt-1">
-                              <span className="text-xs font-bold text-slate-700">LOI_EuroFoods_Germany_Gayo_Green_Beans.pdf</span>
+                              <span className="text-xs font-bold text-slate-700">LOI_TokyoCoffee_Japan_Gayo_Green_Beans.pdf</span>
                               <span className="text-xs text-slate-500 font-mono ml-2">(421.5 KB)</span>
                             </div>
                           )}
-                          <p className="text-[10px] text-indigo-700 font-medium mt-0.5">Dokumen ini dilampirkan langsung oleh EuroFoods Import GmbH dan terkunci secara permanen di sistem.</p>
+                          <p className="text-[10px] text-indigo-700 font-medium mt-0.5">Dokumen ini dilampirkan langsung oleh Tokyo Coffee Trading Co. dan terkunci secara permanen di sistem.</p>
                         </div>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
@@ -1814,12 +1871,12 @@ export default function CommercialNegotiationGateway({
                         ) : (
                           <button
                             onClick={() => {
-                              const text = `EUROFOODS IMPORT GMBH\nHafenstrasse 12, 20457 Hamburg, Germany\n\nOFFICIAL LETTER OF INTENT (LOI)\n\nCommodity: ${shipment.productName || 'Biji Kopi Gayo Organik Arabika (Green Beans)'}\nTarget Quantity: ${negotiatedQty} Metric Tons\nTarget Price: $${negotiatedPrice} USD / MT\n\nSigned off bilaterally. Verified & Authenticated under MRM Portal.`;
+                              const text = `TOKYO COFFEE TRADING CO.\nShibuya, 150-0002 Tokyo, Japan\n\nOFFICIAL LETTER OF INTENT (LOI)\n\nCommodity: ${shipment.productName || 'Biji Kopi Gayo Organik Arabika (Green Beans)'}\nTarget Quantity: ${negotiatedQty} Metric Tons\nTarget Price: $${negotiatedPrice} USD / MT\n\nSigned off bilaterally. Verified & Authenticated under MRM Portal.`;
                               const blob = new Blob([text], { type: 'text/plain' });
                               const url = URL.createObjectURL(blob);
                               const a = document.createElement('a');
                               a.href = url;
-                              a.download = 'LOI_EuroFoods_Germany_Gayo_Green_Beans.pdf';
+                              a.download = 'LOI_TokyoCoffee_Japan_Gayo_Green_Beans.pdf';
                               a.click();
                               URL.revokeObjectURL(url);
                             }}
@@ -1837,8 +1894,8 @@ export default function CommercialNegotiationGateway({
                     <div id="commercial-loi-paper" className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 font-mono text-xs text-slate-800 leading-relaxed max-w-full overflow-x-auto shadow-md space-y-5">
                       <div className="border-b border-slate-200 pb-4 mb-4 flex items-start justify-between text-slate-500 text-xs">
                         <div>
-                          <p className="font-extrabold text-slate-900 uppercase text-sm tracking-wide">EUROFOODS IMPORT GMBH</p>
-                          <p>Hafenstrasse 12, 20457 Hamburg, Germany</p>
+                          <p className="font-extrabold text-slate-900 uppercase text-sm tracking-wide">TOKYO COFFEE TRADING CO.</p>
+                          <p>Shibuya, 150-0002 Tokyo, Japan</p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-slate-900">DOKUMEN: LETTER OF INTENT (LOI)</p>
@@ -1921,8 +1978,8 @@ export default function CommercialNegotiationGateway({
                       <div className="grid grid-cols-2 gap-4 text-xs mb-4">
                         <div>
                           <span className="text-slate-400 uppercase tracking-wider block font-bold text-[11px]">IMPORTIR (BUYER):</span>
-                          <strong className="text-slate-900">{shipment.buyerCompany || 'EuroFoods Import GmbH'}</strong>
-                          <p className="text-slate-600">Hafenstrasse 12, Hamburg, Germany</p>
+                          <strong className="text-slate-900">{shipment.buyerCompany || 'Tokyo Coffee Trading Co.'}</strong>
+                          <p className="text-slate-600">Shibuya, Tokyo, Japan</p>
                         </div>
                         <div>
                           <span className="text-slate-400 uppercase tracking-wider block font-bold text-[11px]">EKSPORTIR (SELLER):</span>
@@ -1961,13 +2018,13 @@ export default function CommercialNegotiationGateway({
                       {/* Signatures Specimen Fields */}
                       <div className="grid grid-cols-2 gap-4 pt-2">
                         <div className="text-center flex flex-col items-center">
-                          <span className="text-xs text-slate-400 uppercase font-semibold">Disahkan oleh Buyer Jerman:</span>
+                          <span className="text-xs text-slate-400 uppercase font-semibold">Disahkan oleh Importir Jepang:</span>
                           <div className="w-full h-11 border border-slate-100 rounded-lg flex items-center justify-center bg-slate-50 relative mt-1">
                             <span className="font-serif italic text-base text-blue-700 font-bold tracking-tighter select-none">
-                              Hans Mueller
+                              Kenji Sato
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1 font-bold">EuroFoods Import GmbH</p>
+                          <p className="text-xs text-slate-500 mt-1 font-bold">Tokyo Coffee Trading Co.</p>
                         </div>
 
                         <div className="text-center flex flex-col items-center">
@@ -1984,15 +2041,12 @@ export default function CommercialNegotiationGateway({
                   </div>
                 )}
               </motion.div>
-            )}
-
-          </AnimatePresence>
+            ) : null}
         </div>
 
       </div>
 
       {/* Profile Counterpart Modal */}
-      <AnimatePresence>
         {selectedProfile && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
             <motion.div
@@ -2000,86 +2054,86 @@ export default function CommercialNegotiationGateway({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative text-white max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl relative text-slate-900 max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setSelectedProfile(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-1.5 rounded-full transition-colors cursor-pointer"
+                className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
               {selectedProfile === 'buyer' ? (
                 <div>
-                  <div className="flex items-center gap-4 border-b border-slate-800 pb-4 mb-5">
-                    <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-lg font-mono shrink-0">
+                  <div className="flex items-center gap-4 border-b border-slate-200 pb-4 mb-5">
+                    <div className="w-12 h-12 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-500 font-bold text-lg font-mono shrink-0">
                       HM
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="text-base font-black text-white">Hans Mueller</h3>
-                        <span className="px-2 py-0.5 text-[8.5px] bg-indigo-500/20 text-indigo-300 font-mono font-black rounded-full uppercase tracking-wider">🇩🇪 Buyer</span>
+                        <h3 className="text-base font-black text-slate-900">Kenji Sato</h3>
+                        <span className="px-2 py-0.5 text-[8.5px] bg-indigo-50 text-indigo-700 font-mono font-black rounded-full uppercase tracking-wider">🇯🇵 Importir</span>
                       </div>
-                      <p className="text-xs text-indigo-400 font-semibold mt-0.5">EuroFoods Import GmbH</p>
+                      <p className="text-xs text-indigo-600 font-semibold mt-0.5">Tokyo Coffee Trading Co.</p>
                     </div>
                   </div>
 
                   <div className="space-y-4 text-xs">
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl space-y-3">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <Building className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                        <Building className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Perusahaan / Kantor</span>
-                          <span className="text-slate-300 font-bold">EuroFoods Import GmbH</span>
-                          <span className="text-slate-400 block mt-1 leading-relaxed text-[11px]">Kaiserstraße 12, 60311 Frankfurt am Main, Germany</span>
+                          <span className="text-slate-800 font-bold">Tokyo Coffee Trading Co.</span>
+                          <span className="text-slate-600 block mt-1 leading-relaxed text-[11px]">Kaiserstraße 12, 60311 Frankfurt am Main, Japan</span>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/50">
-                        <User className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2.5 pt-2 border-t border-slate-200">
+                        <User className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Perwakilan Hukum / Jabatan</span>
-                          <span className="text-slate-300 font-bold">Hans Mueller</span>
-                          <span className="text-slate-400 block text-[11px] mt-0.5">Chief Purchasing Officer / Importir Utama</span>
+                          <span className="text-slate-800 font-bold">Kenji Sato</span>
+                          <span className="text-slate-600 block text-[11px] mt-0.5">Chief Purchasing Officer / Importir Utama</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex items-start gap-2.5">
-                          <Mail className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <Mail className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Email Resmi</span>
-                            <a href="mailto:hans.m@eurofoods-import.de" className="text-indigo-400 hover:underline font-medium break-all text-[11px]">hans.m@eurofoods-import.de</a>
+                            <a href="mailto:kenji.s@tokyocoffee.co.jp" className="text-indigo-600 hover:underline font-medium break-all text-[11px]">kenji.s@tokyocoffee.co.jp</a>
                           </div>
                         </div>
 
                         <div className="flex items-start gap-2.5">
-                          <Phone className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <Phone className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Nomor Telepon</span>
-                            <span className="text-slate-300 font-medium text-[11px]">+49 170 1234567</span>
+                            <span className="text-slate-800 font-medium text-[11px]">+49 170 1234567</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl space-y-3">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <CreditCard className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                        <CreditCard className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Informasi Bank Pembayaran</span>
-                          <span className="text-slate-300 font-bold">Deutsche Bank AG, Frankfurt</span>
-                          <span className="text-slate-400 block font-mono mt-1 text-[10.5px]">IBAN: DE89 5007 0010 0123 4567 89</span>
+                          <span className="text-slate-800 font-bold">Deutsche Bank AG, Frankfurt</span>
+                          <span className="text-slate-600 block font-mono mt-1 text-[10.5px]">IBAN: DE89 5007 0010 0123 4567 89</span>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-800/50">
-                        <Globe className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-200">
+                        <Globe className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Registrasi Bea Cukai (EORI)</span>
-                          <span className="text-slate-300 font-mono font-medium">DE12345678901234</span>
+                          <span className="text-slate-800 font-mono font-medium">DE12345678901234</span>
                         </div>
                       </div>
                     </div>
@@ -2087,75 +2141,75 @@ export default function CommercialNegotiationGateway({
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center gap-4 border-b border-slate-800 pb-4 mb-5">
-                    <div className="w-12 h-12 rounded-full bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg font-mono shrink-0">
+                  <div className="flex items-center gap-4 border-b border-slate-200 pb-4 mb-5">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-500 font-bold text-lg font-mono shrink-0">
                       HK
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="text-base font-black text-white">Hendry Kurniawan</h3>
-                        <span className="px-2 py-0.5 text-[8.5px] bg-emerald-500/20 text-emerald-300 font-mono font-black rounded-full uppercase tracking-wider">🇮🇩 Trader</span>
+                        <h3 className="text-base font-black text-slate-900">Hendry Kurniawan</h3>
+                        <span className="px-2 py-0.5 text-[8.5px] bg-emerald-50 text-emerald-700 font-mono font-black rounded-full uppercase tracking-wider">🇮🇩 Eksportir</span>
                       </div>
-                      <p className="text-xs text-emerald-400 font-semibold mt-0.5">PT Multi Raksa Madani</p>
+                      <p className="text-xs text-emerald-700 font-semibold mt-0.5">PT Multi Raksa Madani</p>
                     </div>
                   </div>
 
                   <div className="space-y-4 text-xs">
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl space-y-3">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <Building className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <Building className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Perusahaan / Kantor</span>
-                          <span className="text-slate-300 font-bold">PT Multi Raksa Madani</span>
-                          <span className="text-slate-400 block mt-1 leading-relaxed text-[11px]">Menara Sudirman, Lt. 18, CBD Jl. Jend. Sudirman Kav 60, Jakarta</span>
+                          <span className="text-slate-800 font-bold">PT Multi Raksa Madani</span>
+                          <span className="text-slate-600 block mt-1 leading-relaxed text-[11px]">Menara Sudirman, Lt. 18, CBD Jl. Jend. Sudirman Kav 60, Jakarta</span>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/50">
-                        <User className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2.5 pt-2 border-t border-slate-200">
+                        <User className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Perwakilan Hukum / Jabatan</span>
-                          <span className="text-slate-300 font-bold">Hendry Kurniawan</span>
-                          <span className="text-slate-400 block text-[11px] mt-0.5">Senior Export-Import Specialist</span>
+                          <span className="text-slate-800 font-bold">Hendry Kurniawan</span>
+                          <span className="text-slate-600 block text-[11px] mt-0.5">Senior Export-Import Specialist</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex items-start gap-2.5">
-                          <Mail className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <Mail className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Email Resmi</span>
-                            <a href="mailto:hendry@nusantara-traders.com" className="text-emerald-400 hover:underline font-medium break-all text-[11px]">hendry@nusantara-traders.com</a>
+                            <a href="mailto:hendry@nusantara-traders.com" className="text-emerald-600 hover:underline font-medium break-all text-[11px]">hendry@nusantara-traders.com</a>
                           </div>
                         </div>
 
                         <div className="flex items-start gap-2.5">
-                          <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <Phone className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                           <div>
                             <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Nomor Telepon</span>
-                            <span className="text-slate-300 font-medium text-[11px]">+62 811-2233-4455</span>
+                            <span className="text-slate-800 font-medium text-[11px]">+62 811-2233-4455</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-2xl space-y-3">
+                    <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <CreditCard className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <CreditCard className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Informasi Bank Penerima</span>
-                          <span className="text-slate-300 font-bold">Bank Mandiri (Persero) Tbk, Cabang SBD Jakarta</span>
-                          <span className="text-slate-400 block font-mono mt-1 text-[10.5px]">No. Rekening: 124-00-998877-6</span>
+                          <span className="text-slate-800 font-bold">Bank Mandiri (Persero) Tbk, Cabang SBD Jakarta</span>
+                          <span className="text-slate-600 block font-mono mt-1 text-[10.5px]">No. Rekening: 124-00-998877-6</span>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-800/50">
-                        <Globe className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2.5 pt-2.5 border-t border-slate-200">
+                        <Globe className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Nomor Induk Berusaha (NIB)</span>
-                          <span className="text-slate-300 font-mono font-medium">912010998877</span>
+                          <span className="text-slate-800 font-mono font-medium">912010998877</span>
                         </div>
                       </div>
                     </div>
@@ -2166,7 +2220,7 @@ export default function CommercialNegotiationGateway({
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setSelectedProfile(null)}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer w-full text-center"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer w-full text-center"
                 >
                   Tutup Profil
                 </button>
@@ -2174,7 +2228,105 @@ export default function CommercialNegotiationGateway({
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      {/* Floating Live Chat Widget */}
+      <motion.div 
+        drag
+        dragMomentum={false}
+        className={`fixed z-50 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${isChatMinimized ? 'w-[300px] h-12 bottom-6 right-6' : 'w-[350px] h-[450px] bottom-6 right-6'}`}
+      >
+        {/* Chat Header (Draggable Handle) */}
+        <div className="bg-emerald-600 text-white px-4 py-3 flex items-center justify-between cursor-move shrink-0">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-emerald-100" />
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider leading-none mb-0.5">
+                Live Chat
+              </h4>
+              <span className="text-[9px] font-bold text-emerald-200 flex items-center gap-1 animate-pulse leading-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>
+                Terkoneksi
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => setIsChatMinimized(!isChatMinimized)}
+              className="p-1 hover:bg-emerald-500 rounded transition-colors cursor-pointer"
+            >
+              {isChatMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Chat Body */}
+        {!isChatMinimized && (
+          <div className="flex flex-col flex-1 overflow-hidden bg-slate-50">
+            {/* Messages Container */}
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin">
+              {chatMessages.map((msg) => {
+                const isSystem = msg.sender === 'System';
+                const isMe = msg.sender === activeSimulatedRole;
+
+                if (isSystem) {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-1">
+                      <div className="bg-slate-200/80 border border-slate-300 rounded px-2 py-0.5 text-[10px] text-slate-600 font-mono text-center max-w-[90%]">
+                        {msg.message}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={msg.id} className={`flex gap-2 max-w-[90%] ${isMe ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}>
+                    <span className="text-base select-none mt-1 shrink-0">{msg.avatar}</span>
+                    <div>
+                      <div className={`px-3 py-2 rounded-xl text-xs shadow-xs leading-relaxed ${
+                        isMe 
+                          ? 'bg-indigo-600 text-white rounded-tr-none' 
+                          : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+                      }`}>
+                        <p className="font-bold text-[10px] opacity-80 mb-0.5">{msg.senderName}</p>
+                        <p className="font-sans whitespace-pre-line">{msg.message}</p>
+                      </div>
+                      <p className={`text-[9px] text-slate-400 font-mono mt-1 ${isMe ? 'text-right' : 'text-left'}`}>{msg.timestamp}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {isTyping && (
+                <div className="flex gap-2 mr-auto items-center animate-pulse">
+                  <span className="text-[11px] bg-white border border-slate-200 px-3 py-1.5 rounded-full text-slate-400 font-bold flex items-center gap-1 font-mono">
+                    Sedang mengetik...
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-3 bg-white border-t border-slate-200 shrink-0">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Kirim pesan..."
+                  value={typedMessage}
+                  onChange={(e) => setTypedMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSendMessage();
+                  }}
+                  className="flex-1 bg-slate-50 border border-slate-200 text-xs text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                />
+                <button
+                  onClick={() => handleSendMessage()}
+                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs shadow-emerald-100 shrink-0"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }

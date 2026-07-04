@@ -19,39 +19,18 @@ interface LoginModalProps {
 // In-memory mapping of credentials
 const demoCredentials = [
   {
-    role: 'Owner/Direktur' as UserRole,
-    email: 'admin@exportflow.com',
-    password: 'admin123',
-    name: 'Budi Raharjo',
-    company: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)'
-  },
-  {
     role: 'Trader' as UserRole,
-    email: 'hendry@nusantara-traders.com',
-    password: 'trader123',
-    name: 'Hendry Kurniawan',
+    email: 'lis@exportflow.com',
+    password: 'Aisyah10',
+    name: 'lis',
     company: 'PT Multi Raksa Madani'
   },
   {
-    role: 'Buyer' as UserRole,
-    email: 'hans.m@eurofoods-import.de',
-    password: 'buyer123',
-    name: 'Hans Mueller',
-    company: 'EuroFoods Import GmbH'
-  },
-  {
-    role: 'Forwarder' as UserRole,
-    email: 'siti.aminah@samuderatrans.co.id',
-    password: 'forwarder123',
-    name: 'Siti Aminah',
-    company: 'PT Samudera Logistik Internasional'
-  },
-  {
-    role: 'Supplier' as UserRole,
-    email: 'wayan@organic-bali-spices.com',
-    password: 'supplier123',
-    name: 'Wayan Karang',
-    company: 'Koperasi Tani rempah Organik Bali'
+    role: 'Superadmin' as UserRole,
+    email: 'joko@exportflow.com',
+    password: 'Fauzan03',
+    name: 'joko',
+    company: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)'
   }
 ];
 
@@ -86,11 +65,46 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
   // Load dynamic lists on open
   useEffect(() => {
     if (isOpen) {
+      const isSandboxToRemove = (emailStr: string) => {
+        const e = (emailStr || '').trim().toLowerCase();
+        return [
+          'admin@exportflow.com',
+          'hendry@nusantara-traders.com',
+          'hans.m@tokyocoffee-import.de',
+          'siti.aminah@samuderatrans.co.id',
+          'wayan@organic-bali-spices.com'
+        ].includes(e);
+      };
+
       const storedCreds = localStorage.getItem('exportflow_credentials');
       let creds = demoCredentials;
       if (storedCreds) {
         try {
           creds = JSON.parse(storedCreds);
+          creds = creds.map((c: any) => c.role === 'Owner/Direktur' ? { ...c, role: 'Superadmin' } : c);
+          creds = creds.filter((c: any) => !isSandboxToRemove(c.email));
+          
+          // Ensure joko is present in credentials
+          if (!creds.some((c: any) => c.name.toLowerCase() === 'joko')) {
+            creds.unshift({
+              role: 'Superadmin',
+              email: 'joko@exportflow.com',
+              password: 'Fauzan03',
+              name: 'joko',
+              company: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)'
+            });
+          }
+          // Ensure lis is present in credentials
+          if (!creds.some((c: any) => c.name.toLowerCase() === 'lis')) {
+            creds.unshift({
+              role: 'Trader',
+              email: 'lis@exportflow.com',
+              password: 'Aisyah10',
+              name: 'lis',
+              company: 'PT Multi Raksa Madani'
+            });
+          }
+          localStorage.setItem('exportflow_credentials', JSON.stringify(creds));
         } catch (e) {}
       } else {
         localStorage.setItem('exportflow_credentials', JSON.stringify(demoCredentials));
@@ -102,6 +116,36 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
       if (storedUsers) {
         try {
           us = JSON.parse(storedUsers);
+          us = us.map((u: any) => u.role === 'Owner/Direktur' ? { ...u, role: 'Superadmin' } : u);
+          us = us.filter((u: any) => !isSandboxToRemove(u.email));
+          
+          // Ensure joko is present in users
+          if (!us.some((u: any) => u.name.toLowerCase() === 'joko')) {
+            us.unshift({
+              id: 'usr-joko',
+              name: 'joko',
+              role: 'Superadmin',
+              email: 'joko@exportflow.com',
+              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+              companyName: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)',
+              phone: '0822-1832-2672',
+              isApproved: true
+            } as any);
+          }
+          // Ensure lis is present in users
+          if (!us.some((u: any) => u.name.toLowerCase() === 'lis')) {
+            us.unshift({
+              id: 'usr-lis',
+              name: 'lis',
+              role: 'Trader',
+              email: 'lis@exportflow.com',
+              avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+              companyName: 'PT Multi Raksa Madani',
+              phone: '0857-2045-21691',
+              isApproved: true
+            } as any);
+          }
+          localStorage.setItem('exportflow_users', JSON.stringify(us));
         } catch (e) {}
       } else {
         localStorage.setItem('exportflow_users', JSON.stringify(us));
@@ -126,7 +170,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     if (currentUser) {
       setEmail(currentUser.email);
     } else {
-      setEmail('hendry@nusantara-traders.com'); // Default to Trader
+      setEmail('lis@exportflow.com'); // Default to Trader
     }
     setPassword('');
     setErrorMsg('');
@@ -135,7 +179,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
 
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
-      case 'Owner/Direktur':
+      case 'Superadmin':
         return <Shield className="w-4 h-4 text-purple-600" />;
       case 'Trader':
         return <Briefcase className="w-4 h-4 text-blue-600" />;
@@ -150,7 +194,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
 
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
-      case 'Owner/Direktur': return 'bg-purple-100/80 text-purple-800 border-purple-200';
+      case 'Superadmin': return 'bg-purple-100/80 text-purple-800 border-purple-200';
       case 'Trader': return 'bg-blue-100/80 text-blue-800 border-blue-200';
       case 'Buyer': return 'bg-emerald-100/80 text-emerald-800 border-emerald-200';
       case 'Forwarder': return 'bg-amber-100/80 text-amber-800 border-amber-200';
@@ -163,10 +207,13 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Check against credentials list
-    const cred = localCredentials.find(c => c.email.trim().toLowerCase() === email.trim().toLowerCase());
+    // Check against credentials list (support both email and username)
+    const cred = localCredentials.find(c => 
+      c.email.trim().toLowerCase() === email.trim().toLowerCase() ||
+      c.name.trim().toLowerCase() === email.trim().toLowerCase()
+    );
     if (!cred) {
-      setErrorMsg('Surel (Email) tidak terdaftar dalam sistem.');
+      setErrorMsg('Surel (Email) atau Username tidak terdaftar dalam sistem.');
       return;
     }
 
@@ -176,7 +223,10 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     }
 
     // Success login
-    const userToLogin = localUsers.find(u => u.email === cred.email);
+    const userToLogin = localUsers.find(u => 
+      u.email === cred.email || 
+      u.name.trim().toLowerCase() === cred.name.trim().toLowerCase()
+    );
     if (userToLogin) {
       setSuccessMsg(`Berhasil masuk sebagai ${userToLogin.name}!`);
       setTimeout(() => {
@@ -269,7 +319,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     setLocalCredentials(updatedCreds);
 
     if (needsApproval) {
-      setSuccessMsg(`Pendaftaran Berhasil! Akun "${newProfile.name}" didaftarkan. Hubungi Owner/Direktur Bea Cukai RI untuk mensahkan status akun Anda.`);
+      setSuccessMsg(`Pendaftaran Berhasil! Akun "${newProfile.name}" didaftarkan. Hubungi Superadmin Bea Cukai RI untuk mensahkan status akun Anda.`);
     } else {
       setSuccessMsg(`Pendaftaran Berhasil! Masuk otomatis sebagai ${newProfile.name} (${newProfile.role})...`);
     }
@@ -310,24 +360,34 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-150 flex flex-col md:flex-row my-4 sm:my-8 text-left max-h-[90vh] md:max-h-[85vh] overflow-y-auto md:overflow-hidden"
+          className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-150 my-4 sm:my-8 text-left overflow-hidden"
         >
-          {/* LEFT SIDE: FORM LOGIN */}
-          <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6 md:overflow-y-auto md:max-h-[85vh]">
+          {/* CLOSE BUTTON */}
+          <button 
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors z-10 cursor-pointer"
+          >
+            <X className="w-4 h-4 font-bold" />
+          </button>
+
+          {/* FORM LOGIN */}
+          <div className="p-6 sm:p-8 flex flex-col justify-between text-left space-y-6">
             <div className="space-y-4">
               {/* Brand and titles */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pr-8">
                 <div className="p-2 bg-indigo-600 rounded-xl text-white">
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight">Otentikasi Portal</h3>
-                  <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Garuda Indonesia Export Hub</p>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight">
+                    {mode === 'login' ? 'Masuk ke Sistem' : 'Daftar Akun Baru'}
+                  </h3>
                 </div>
               </div>
 
               {/* TABS SELECTOR */}
-              <div className="flex border-b border-slate-100 p-0.5 bg-slate-50 rounded-lg">
+              <div className="flex border border-slate-200 p-1 bg-slate-50 rounded-xl">
                 <button 
                   type="button"
                   onClick={() => {
@@ -335,10 +395,10 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     setErrorMsg('');
                     setSuccessMsg('');
                   }}
-                  className={`flex-1 py-2 text-center text-[10.5px] font-black uppercase tracking-wider transition-all rounded-md ${
+                  className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
                     mode === 'login' 
-                      ? 'bg-white text-indigo-650 shadow-3xs border border-slate-150 font-black' 
-                      : 'text-slate-500 hover:text-slate-800 font-bold font-sans'
+                      ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                      : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   Masuk (Login)
@@ -350,10 +410,10 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     setErrorMsg('');
                     setSuccessMsg('');
                   }}
-                  className={`flex-1 py-2 text-center text-[10.5px] font-black uppercase tracking-wider transition-all rounded-md ${
+                  className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
                     mode === 'register' 
-                      ? 'bg-white text-indigo-650 shadow-3xs border border-slate-150 font-black' 
-                      : 'text-slate-500 hover:text-slate-800 font-bold font-sans'
+                      ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                      : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   Daftar Akun
@@ -361,305 +421,276 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
               </div>
 
               {mode === 'login' ? (
-                <>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-slate-800">Masuk ke Ruang Kerja Anda</h4>
-                    <p className="text-xs text-slate-500">Gunakan kata sandi terdaftar untuk mengakses peran khusus dalam mengelola rantai pasok ekspor komoditi.</p>
+                <form onSubmit={handleFormSubmit} className="space-y-4 pt-1">
+                  {/* Email Selector */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>User/Email</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrorMsg('');
+                      }}
+                      placeholder="Masukkan username atau email..."
+                      className="w-full text-sm font-semibold p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                      required
+                    />
                   </div>
 
-                  <form onSubmit={handleFormSubmit} className="space-y-4 pt-1">
-                    {/* Email Selector */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        <span>Surel Aktor (Email)</span>
+                  {/* Password Input */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <Key className="w-3.5 h-3.5" />
+                        <span>Kata Sandi (Password)</span>
                       </label>
-                      <select
-                        value={email}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
                         onChange={(e) => {
-                          setEmail(e.target.value);
+                          setPassword(e.target.value);
                           setErrorMsg('');
                         }}
-                        className="w-full text-xs font-semibold p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600 cursor-pointer"
+                        placeholder="Masukkan kata sandi peran..."
+                        className="w-full text-sm font-mono p-3 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
                       >
-                        <option value="" disabled>--- Pilih Surel / Peran ---</option>
-                        {localCredentials.map((c, idx) => (
-                          <option key={idx} value={c.email}>
-                            {c.role} — {c.name} ({c.email})
-                          </option>
-                        ))}
-                      </select>
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
+                  </div>
 
-                    {/* Password Input */}
+                  {/* Feedbacks */}
+                  {errorMsg && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-950 text-xs rounded-xl flex items-start gap-2 animate-shake">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                      <span className="font-semibold">{errorMsg}</span>
+                    </div>
+                  )}
+
+                  {successMsg && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs rounded-xl flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                      <span className="font-semibold">{successMsg}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <span>Verifikasi & Masuk Ruang Kerja</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegisterSubmit} className="space-y-3 pt-1 max-h-[380px] overflow-y-auto pr-1">
+                  {/* Full Name */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>Nama Lengkap *</span>
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">Maks 50</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={regName}
+                      onChange={(e) => {
+                        setRegName(e.target.value);
+                        setErrorMsg('');
+                      }}
+                      maxLength={50}
+                      placeholder="Contoh: Kenji Sato"
+                      className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Surel (Email) *</span>
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">Maks 100</span>
+                    </div>
+                    <input
+                      type="email"
+                      value={regEmail}
+                      onChange={(e) => {
+                        setRegEmail(e.target.value);
+                        setErrorMsg('');
+                      }}
+                      maxLength={100}
+                      placeholder="nama@perusahaan.com"
+                      className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                      required
+                    />
+                  </div>
+
+                  {/* Password & Confirm Password */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                           <Key className="w-3.5 h-3.5" />
-                          <span>Kata Sandi (Password)</span>
+                          <span>Sandi *</span>
                         </label>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase">Uji Coba Gampang</span>
                       </div>
                       <div className="relative">
                         <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
+                          type={showRegPassword ? 'text' : 'password'}
+                          value={regPassword}
                           onChange={(e) => {
-                            setPassword(e.target.value);
+                            setRegPassword(e.target.value);
                             setErrorMsg('');
                           }}
-                          placeholder="Masukkan kata sandi peran..."
-                          className="w-full text-xs font-mono p-3 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                          minLength={6}
+                          maxLength={32}
+                          placeholder="Min 6 karakter"
+                          className="w-full text-xs sm:text-sm font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                           required
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
                         >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
 
-                    {/* Feedbacks */}
-                    {errorMsg && (
-                      <div className="p-3 bg-red-50 border border-red-200 text-red-900 text-xs rounded-xl flex items-start gap-2 animate-shake">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                        <span className="font-semibold">{errorMsg}</span>
-                      </div>
-                    )}
-
-                    {successMsg && (
-                      <div className="p-3 bg-emerald-50 border border-emerald-250 text-emerald-900 text-xs rounded-xl flex items-start gap-2">
-                        <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-                        <span className="font-semibold">{successMsg}</span>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
-                    >
-                      <span>Verifikasi & Masuk Ruang Kerja</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-slate-800 font-sans">Daftar Akun Baru</h4>
-                    <p className="text-xs text-slate-500 font-sans">Mulai langkah bisnis ekspor dengan mendaftarkan identitas serta peran instansi Anda secara mandiri.</p>
-                  </div>
-
-                  <form onSubmit={handleRegisterSubmit} className="space-y-3 pt-1">
-                    {/* Full Name */}
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                          <UserCheck className="w-3.5 h-3.5" />
-                          <span>Nama Lengkap / Deskripsi</span>
+                        <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                          <Shield className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Konfirmasi *</span>
                         </label>
-                        <span className="text-[8px] text-slate-400 font-bold uppercase">Maks 50 Karakter</span>
                       </div>
+                      <div className="relative">
+                        <input
+                          type={showRegConfirmPassword ? 'text' : 'password'}
+                          value={regConfirmPassword}
+                          onChange={(e) => {
+                            setRegConfirmPassword(e.target.value);
+                            setErrorMsg('');
+                          }}
+                          maxLength={32}
+                          placeholder="Ketik ulang"
+                          className="w-full text-xs sm:text-sm font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                          className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                        >
+                          {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Company & Role */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <Building className="w-3.5 h-3.5" />
+                        <span>Instansi *</span>
+                      </label>
                       <input
                         type="text"
-                        value={regName}
+                        value={regCompany}
                         onChange={(e) => {
-                          setRegName(e.target.value);
+                          setRegCompany(e.target.value);
                           setErrorMsg('');
                         }}
                         maxLength={50}
-                        placeholder="Contoh: Hans Mueller"
-                        className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                        placeholder="Nama perusahaan"
+                        className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                         required
                       />
                     </div>
 
-                    {/* Email */}
                     <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5" />
-                          <span>Email</span>
-                        </label>
-                        <span className="text-[8px] text-slate-400 font-bold uppercase">Maks 100 Karakter</span>
-                      </div>
-                      <input
-                        type="email"
-                        value={regEmail}
+                      <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <Briefcase className="w-3.5 h-3.5" />
+                        <span>Peran Ekosistem</span>
+                      </label>
+                      <select
+                        value={regRole}
                         onChange={(e) => {
-                          setRegEmail(e.target.value);
+                          setRegRole(e.target.value as UserRole);
                           setErrorMsg('');
                         }}
-                        maxLength={100}
-                        placeholder="nama@perusahaan.com"
-                        className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                        required
-                      />
+                        className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600 cursor-pointer"
+                      >
+                        <option value="Buyer">Buyer (Pembeli Luar Negeri)</option>
+                        <option value="Trader">Trader / Eksportir RI</option>
+                        <option value="Supplier">Supplier / UMKM Penyedia</option>
+                        <option value="Forwarder">Forwarder / Logistik</option>
+                        <option value="Superadmin">Superadmin</option>
+                      </select>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Password */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                            <Key className="w-3.5 h-3.5" />
-                            <span>Kata Sandi</span>
-                          </label>
-                          <span className="text-[8px] text-slate-400 font-bold uppercase">Min 6 - Maks 32</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type={showRegPassword ? 'text' : 'password'}
-                            value={regPassword}
-                            onChange={(e) => {
-                              setRegPassword(e.target.value);
-                              setErrorMsg('');
-                            }}
-                            minLength={6}
-                            maxLength={32}
-                            placeholder="Buat sandi baru..."
-                            className="w-full text-xs font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowRegPassword(!showRegPassword)}
-                            className="absolute right-3 top-2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-                          >
-                            {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
+                  {/* Nomor Telepon */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Nomor Telepon / WhatsApp *</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={regPhone}
+                      onChange={(e) => {
+                        setRegPhone(e.target.value);
+                        setErrorMsg('');
+                      }}
+                      placeholder="Contoh: +6281234567890"
+                      className="w-full text-xs sm:text-sm font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                      required
+                    />
+                  </div>
 
-                      {/* Confirm Password */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                            <Shield className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Konfirmasi Kata Sandi</span>
-                          </label>
-                          <span className="text-[8px] text-slate-400 font-bold uppercase">Maks 32</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type={showRegConfirmPassword ? 'text' : 'password'}
-                            value={regConfirmPassword}
-                            onChange={(e) => {
-                              setRegConfirmPassword(e.target.value);
-                              setErrorMsg('');
-                            }}
-                            maxLength={32}
-                            placeholder="Tulis ulang sandi..."
-                            className="w-full text-xs font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                            className="absolute right-3 top-2 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-                          >
-                            {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
+                  {/* Feedbacks */}
+                  {errorMsg && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-950 text-xs rounded-xl flex items-start gap-2 animate-shake">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                      <span className="font-semibold">{errorMsg}</span>
                     </div>
+                  )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Company Name */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                            <Building className="w-3.5 h-3.5" />
-                            <span>Instansi / Perusahaan</span>
-                          </label>
-                          <span className="text-[8px] text-slate-400 font-bold uppercase">Maks 50 Karakter</span>
-                        </div>
-                        <input
-                          type="text"
-                          value={regCompany}
-                          onChange={(e) => {
-                            setRegCompany(e.target.value);
-                            setErrorMsg('');
-                          }}
-                          maxLength={50}
-                          placeholder="Contoh: EuroFoods GmbH"
-                          className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                          required
-                        />
-                      </div>
-
-                      {/* Role */}
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                          <Briefcase className="w-3.5 h-3.5" />
-                          <span>Peran Ekosistem</span>
-                        </label>
-                        <select
-                          value={regRole}
-                          onChange={(e) => {
-                            setRegRole(e.target.value as UserRole);
-                            setErrorMsg('');
-                          }}
-                          className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600 cursor-pointer"
-                        >
-                          <option value="Buyer">Buyer (Pembeli Luar Negeri)</option>
-                          <option value="Trader">Trader / Eksportir RI</option>
-                          <option value="Supplier">Supplier / UMKM Penyedia</option>
-                          <option value="Forwarder">Forwarder / Logistik</option>
-                          <option value="Owner/Direktur">Direktur / Bea Cukai</option>
-                        </select>
-                      </div>
+                  {successMsg && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs rounded-xl flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                      <span className="font-semibold">{successMsg}</span>
                     </div>
+                  )}
 
-                    {/* Nomor Telepon / WA */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>Nomor Telepon / WhatsApp</span>
-                        </label>
-                        <span className="text-[8px] text-slate-400 font-bold uppercase">Wajib Diisi</span>
-                      </div>
-                      <input
-                        type="tel"
-                        value={regPhone}
-                        onChange={(e) => {
-                          setRegPhone(e.target.value);
-                          setErrorMsg('');
-                        }}
-                        placeholder="Contoh: +6281234567890"
-                        className="w-full text-xs font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                        required
-                      />
-                    </div>
-
-                    {/* Feedbacks */}
-                    {errorMsg && (
-                      <div className="p-2.5 bg-red-50 border border-red-200 text-red-900 text-xs rounded-xl flex items-start gap-2 animate-shake">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-600 mt-0.5" />
-                        <span className="font-semibold">{errorMsg}</span>
-                      </div>
-                    )}
-
-                    {successMsg && (
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs rounded-xl flex items-start gap-2">
-                        <CheckCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600 mt-0.5" />
-                        <span className="font-semibold">{successMsg}</span>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
-                    >
-                      <UserPlus className="w-4 h-4 text-indigo-200" />
-                      <span>Buat Akun & Masuk Otomatis</span>
-                    </button>
-                  </form>
-                </>
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <UserPlus className="w-4 h-4 text-indigo-200" />
+                    <span>Buat Akun Baru</span>
+                  </button>
+                </form>
               )}
 
               {currentUser && (
@@ -670,102 +701,14 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                     setSuccessMsg('Berhasil keluar! Beralih ke Akses Umum (Tamu)...');
                     setTimeout(() => onClose(), 600);
                   }}
-                  className="w-full py-2.5 bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-700 text-xs font-black uppercase rounded-xl border border-slate-200 hover:border-red-200 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-700 text-xs font-black uppercase rounded-xl border border-slate-200 hover:border-red-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Keluar Peran & Jadikan Tamu (Akses Umum)</span>
                 </button>
               )}
             </div>
 
-            {/* Current user badge info */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-              <span className="font-semibold">Aktor Aktif Sekarang:</span>
-              {currentUser ? (
-                <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{currentUser.name} ({currentUser.role})</span>
-                </div>
-              ) : (
-                <span className="font-bold text-amber-600">Terputus (Akses Umum / Tamu)</span>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT SIDE: EASY TESTING CREDENTIALS BAR */}
-          <div className="md:w-1/2 bg-slate-50 border-t md:border-t-0 md:border-l border-gray-150 p-6 sm:p-8 flex flex-col justify-between text-left space-y-6 md:overflow-y-auto md:max-h-[85vh]">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1.5 p-1.5 px-3 bg-indigo-100 border border-indigo-200 rounded-lg text-[10px] text-indigo-800 font-extrabold uppercase shrink-0">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Kredensial Uji Coba (Sandbox)</span>
-                </div>
-                <button 
-                  onClick={onClose}
-                  className="p-1 px-2.5 bg-slate-201 hover:bg-slate-200 rounded-lg text-slate-405 hover:text-slate-800 transition-colors shrink-0 font-bold"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-extrabold text-slate-900 uppercase">Akses Instan Pemeragaan</h4>
-                <p className="text-[11px] text-slate-500">
-                  Klik tombol <strong>"Masuk Instan ➔"</strong> di bawah untuk langsung beralih peran tanpa perlu mengetik email & password secara manual.
-                </p>
-              </div>
-
-              <div className="space-y-2 max-h-[42vh] overflow-y-auto pr-1">
-                {localCredentials.map((cred, idx) => {
-                  const isMatch = currentUser?.email === cred.email;
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`p-3 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-all ${
-                        isMatch 
-                          ? 'bg-indigo-50/70 border-indigo-250 border-indigo-300 ring-2 ring-indigo-50' 
-                          : 'bg-white border-slate-200 hover:border-slate-300 shadow-3xs'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border ${getRoleBadgeColor(cred.role)}`}>
-                              <span className="flex items-center gap-1">
-                                {getRoleIcon(cred.role)}
-                                {cred.role}
-                              </span>
-                            </span>
-                          </div>
-                          <span className="text-xs font-extrabold text-slate-900 block">{cred.name}</span>
-                          <span className="text-[10px] text-slate-405 text-slate-500 font-medium block leading-none">{cred.company}</span>
-                        </div>
-                        
-                        <button
-                          onClick={() => handleAutofillAndLogin(cred)}
-                          className="px-2.5 py-1.5 bg-slate-900 hover:bg-indigo-600 hover:text-white text-white font-extrabold rounded-lg text-[9px] uppercase tracking-wider transition-all"
-                        >
-                          Masuk Instan ➔
-                        </button>
-                      </div>
-
-                      <div className="border-t border-slate-100 pt-1.5 flex flex-wrap items-center justify-between text-[10px] gap-2 font-mono">
-                        <span className="text-[9px] text-slate-400">
-                          ID: <strong className="text-slate-700 font-semibold">{cred.email}</strong>
-                        </span>
-                        <span className="text-[9px] text-slate-400">
-                          Pass: <strong className="text-indigo-600 font-extrabold">{cred.password}</strong>
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-955 text-[10px] font-medium rounded-xl leading-relaxed flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Semua data modifikasi dokumen dan persetujuan Pabean akan diperbarui secara langsung sesuai status perwakilan yang sedang aktif!</span>
-            </div>
+            
           </div>
         </motion.div>
       </div>

@@ -58,7 +58,7 @@ export default function VesselGPSMap({ shipment }: VesselGPSProps) {
     { x: 280, y: 130, name: 'Samudra Hindia Tengah', lat: '5.2918', lng: '80.2015' },
     { x: 190, y: 90, name: 'Teluk Aden', lat: '12.4215', lng: '48.9102' },
     { x: 120, y: 70, name: 'Terusan Suez, Egypt', lat: '29.9752', lng: '32.5312' },
-    { x: 50, y: 45, name: 'Port of Hamburg, Germany', lat: '53.5352', lng: '9.9872' },
+    { x: 50, y: 45, name: 'Port of Tokyo, Germany', lat: '53.5352', lng: '9.9872' },
   ];
 
   // Map progress to route points

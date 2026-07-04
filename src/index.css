@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+html {
+  font-size: 125%; /* Scales up all rem-based typography across the app by 25% for high-accessibility readability */
+}
+
+/* Enforce absolute minimum font size of 12px for any elements using smaller arbitrary or micro utility classes */
+[class*="text-[7px]"],
+[class*="text-[8px]"],
+[class*="text-[9px]"],
+[class*="text-[9.5px]"],
+[class*="text-[10px]"],
+[class*="text-[11px]"],
+[class*="text-[11.5px]"],
+[class*="text-3xs"],
+[class*="text-2xs"] {
+  font-size: 12px !important;
+}

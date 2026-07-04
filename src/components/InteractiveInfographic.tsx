@@ -49,7 +49,7 @@ const UNIFIED_STEPS: UnifiedStepInfo[] = [
     stepId: 'completed',
     step: 'Completed',
     label: 'Selesai & Serah Terima',
-    description: 'Bongkar muat kargo berhasil di pelabuhan Hamburg Jerman, serah terima kargo, dan penutupan transaksi.',
+    description: 'Bongkar muat kargo berhasil di pelabuhan Tokyo Jerman, serah terima kargo, dan penutupan transaksi.',
     actor: 'Buyer',
     expectedDuration: '1-2 Hari',
     stepIcon: 'Completed',
@@ -332,7 +332,7 @@ export default function InteractiveInfographic({
       } else if (activeLogisticsSubStep === 2) {
         defaultFields.siNo = 'SI/SAMUDERA/2026/099';
         defaultFields.shipper = 'PT Multi Raksa Madani';
-        defaultFields.consignee = shipment.buyerCompany || 'EuroFoods Import GmbH (Hans Mueller)';
+        defaultFields.consignee = shipment.buyerCompany || 'Tokyo Coffee Trading Co. (Kenji Sato)';
         defaultFields.vesselName = shipment.vesselName;
         defaultFields.destination = shipment.portOfDischarge;
         defaultFields.freightCharges = 'Freight Prepaid (Sistem CIF)';
@@ -401,8 +401,8 @@ export default function InteractiveInfographic({
       case 2:
       default:
         return {
-          name: (shipment.buyerCompany || 'EUROFOODS IMPORT GMBH').toUpperCase(),
-          address: 'Speicherstadt Sandtorkai 37, 20457 Hamburg, Germany • Telp: +49 40 3344-0',
+          name: (shipment.buyerCompany || 'TokyoCoffee IMPORT GMBH').toUpperCase(),
+          address: 'Speicherstadt Sandtorkai 37, 20457 Tokyo, Germany • Telp: +49 40 3344-0',
           subtitle: 'IMPORTIR & DISTRIBUTOR RESMI KOMODITAS PANGAN EROPA'
         };
     }
@@ -481,7 +481,7 @@ export default function InteractiveInfographic({
 
   const getRoleTheme = (role: UserRole) => {
     switch (role) {
-      case 'Owner/Direktur': return {
+      case 'Superadmin': return {
         primary: 'text-purple-600',
         bg: 'bg-purple-50',
         border: 'border-purple-200',
@@ -531,7 +531,7 @@ export default function InteractiveInfographic({
 
   const getRoleIcon = (role: UserRole, className: string = "w-4 h-4") => {
     switch (role) {
-      case 'Owner/Direktur': return <Shield className={className} />;
+      case 'Superadmin': return <Shield className={className} />;
       case 'Trader': return <Briefcase className={className} />;
       case 'Buyer': return <ShoppingBag className={className} />;
       case 'Forwarder': return <Truck className={className} />;
@@ -595,7 +595,7 @@ export default function InteractiveInfographic({
           ],
           steps: ['Draft']
         };
-      case 'Owner/Direktur':
+      case 'Superadmin':
         return {
           title: 'Kepabeanan (Bea Cukai & Otoritas Pemerintah RI)',
           company: 'Direktorat Jenderal Bea dan Cukai Kemenkeu RI',
@@ -630,7 +630,7 @@ export default function InteractiveInfographic({
       case 'Buyer':
         return {
           title: 'Buyer (Mitra Importir Internasional)',
-          company: 'EuroFoods Import GmbH & Co. KG (Munich, Germany)',
+          company: 'Tokyo Coffee Trading Co. & Co. KG (Munich, Germany)',
           hak: [
             'Meneri komoditas pangan/agro premium dalam kondisi prima tanpa cacat laut di pelabuhan tujuan.',
             'Meminta draf salinan berkas komersial ekspor asli guna tebus dokumen clearance pelabuhan eropa.',
@@ -639,7 +639,7 @@ export default function InteractiveInfographic({
           kewajiban: [
             'Melakukan pembayaran penuh secara aman.',
             'Membayar penuh sisa pelunasan barang setelah menerima draf konfirmasi manifest laut.',
-            'Mengurus bea cukai impor clearance lokal di Pelabuhan Hamburg Jerman tepat waktu.'
+            'Mengurus bea cukai impor clearance lokal di Pelabuhan Tokyo Jerman tepat waktu.'
           ],
           steps: ['Completed']
         };
@@ -658,11 +658,11 @@ export default function InteractiveInfographic({
         break;
       case 'Shipping':
         nextStep = 'Completed';
-        defaultComments = 'Seluruh rangkaian logistik terpadu selesai, L/C dicairkan oleh Bank, dan kapal berlabuh di Hamburg Jerman.';
+        defaultComments = 'Seluruh rangkaian logistik terpadu selesai, L/C dicairkan oleh Bank, dan kapal berlabuh di Tokyo Jerman.';
         break;
       case 'Completed':
         nextStep = 'Completed';
-        defaultComments = 'Penerimaan kargo dikonfirmasi resmi oleh Buyer di pelabuhan Hamburg Jerman. Pembayaran ekspor tuntas sempurna!';
+        defaultComments = 'Penerimaan kargo dikonfirmasi resmi oleh Buyer di pelabuhan Tokyo Jerman. Pembayaran ekspor tuntas sempurna!';
         break;
     }
     
@@ -678,11 +678,11 @@ export default function InteractiveInfographic({
   const isStepCompleted = inspectedStepIndex < actualStepIndex || isFullyCompleted;
   const isStepFuture = inspectedStepIndex > actualStepIndex && !isFullyCompleted;
   const activeInspectedStep = UNIFIED_STEPS[inspectedStepIndex];
-  const isEmergencyTakeover = activeInspectedStep.actor === 'Trader' && currentUser?.role === 'Owner/Direktur';
+  const isEmergencyTakeover = activeInspectedStep.actor === 'Trader' && currentUser?.role === 'Superadmin';
   const isLogisticsSimulationFullyCompleted = completedLogisticsSubSteps.length === 4;
   const isAuthorizedToClickCurrentInspected = 
     inspectedStepIndex === 1
-      ? (isLogisticsSimulationFullyCompleted && (currentUser?.role === 'Trader' || currentUser?.role === 'Owner/Direktur'))
+      ? (isLogisticsSimulationFullyCompleted && (currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin'))
       : (currentUser?.role === activeInspectedStep.actor || isEmergencyTakeover);
 
   const getStepGuide = (index: number) => {
@@ -720,9 +720,9 @@ export default function InteractiveInfographic({
         return {
           title: 'Fase III: Selesai & Serah Terima',
           subtitle: 'Bongkar Muat Kargo & Konfirmasi Penerimaan Komoditas',
-          laymanAnalogy: 'Bagaikan menerima paket kiriman barang di depan rumah Anda lalu menandatangani resi penerimaan kurir. Setelah berlayar ribuan mil, kapal berlabuh di Pelabuhan Hamburg, Jerman. Kargo diturunkan, dibongkar pabean setempat, dan diserahkan secara resmi kepada Buyer Jerman dalam kondisi prima.',
+          laymanAnalogy: 'Bagaikan menerima paket kiriman barang di depan rumah Anda lalu menandatangani resi penerimaan kurir. Setelah berlayar ribuan mil, kapal berlabuh di Pelabuhan Tokyo, Jerman. Kargo diturunkan, dibongkar pabean setempat, dan diserahkan secara resmi kepada Buyer Jerman dalam kondisi prima.',
           purpose: 'Menyelesaikan siklus transaksi dagang internasional secara paripurna dengan penyerahan kargo fisik dan pencatatan riwayat sukses di sistem ekspor.',
-          actors: ['Buyer Jerman', 'Pelabuhan Hamburg'],
+          actors: ['Buyer Jerman', 'Pelabuhan Tokyo'],
           badge: 'SELESAI',
           docs: [
             { name: 'Proof of Delivery (POD)', desc: 'Berita acara serah terima kargo resmi di pelabuhan tujuan yang ditandatangani Buyer.' }
@@ -1034,8 +1034,8 @@ export default function InteractiveInfographic({
               HM
             </span>
           </div>
-          <p class="authorized-name">Hans Mueller</p>
-          <p class="authorized-details">Procurement Director (EuroFoods Import GmbH)</p>
+          <p class="authorized-name">Kenji Sato</p>
+          <p class="authorized-details">Procurement Director (Tokyo Coffee Trading Co.)</p>
         </div>
         
         <div class="left-stamp-box" style="text-align: center; align-self: center; margin-bottom: 10px;">
@@ -1302,7 +1302,7 @@ export default function InteractiveInfographic({
                               ? 'bg-slate-300'
                               : isBuyerRestricted
                                 ? 'bg-amber-500'
-                                : st.actor === 'Owner/Direktur' 
+                                : st.actor === 'Superadmin' 
                                   ? 'bg-purple-600' 
                                   : st.actor === 'Trader'
                                     ? 'bg-indigo-600'
@@ -1314,7 +1314,7 @@ export default function InteractiveInfographic({
                                           ? 'bg-teal-600'
                                           : 'bg-slate-800'
                           }`}>
-                            {isBuyerRestricted ? 'LOCK' : st.actor === 'Owner/Direktur' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
+                            {isBuyerRestricted ? 'LOCK' : st.actor === 'Superadmin' ? 'BC' : st.actor.substring(0, 3).toUpperCase()}
                           </span>
                         </div>
 
@@ -1380,34 +1380,24 @@ export default function InteractiveInfographic({
               className="relative w-full max-w-7xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]"
             >
               {/* Modal Header */}
-              <div className={`px-4 py-3 flex items-center justify-between shrink-0 select-none border-b ${
-                inspectedStepIndex === 0 
-                  ? 'bg-white text-slate-900 border-slate-200' 
-                  : 'bg-slate-900 text-white border-slate-800'
-              }`}>
+              <div className="px-4 py-3 flex items-center justify-between shrink-0 select-none border-b bg-white text-slate-900 border-slate-200">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2 py-1 text-xs font-mono font-black uppercase tracking-wider rounded bg-indigo-600 text-white shrink-0">
                     LANGKAH {inspectedStepIndex + 1} / 3
                   </span>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <h3 className={`font-bold text-sm sm:text-base tracking-tight leading-tight ${
-                      inspectedStepIndex === 0 ? 'text-slate-900' : 'text-white'
-                    }`}>
+                    <h3 className="font-black text-2xl sm:text-3xl tracking-tight leading-tight text-slate-900">
                       {UNIFIED_STEPS[inspectedStepIndex].label}
                     </h3>
                     {inspectedStepIndex === 0 ? (
                       <div id="nego-header-addon" className="flex items-center gap-3 flex-wrap ml-3" />
                     ) : (
                       <>
-                        <span className={`text-xs font-sans ${
-                          inspectedStepIndex === 0 ? 'text-slate-500' : 'text-slate-400'
-                        }`}>
-                          • Penanggung Jawab: <strong className={inspectedStepIndex === 0 ? 'text-slate-800 font-semibold' : 'text-slate-200 font-semibold'}>{UNIFIED_STEPS[inspectedStepIndex].actor}</strong>
+                        <span className="text-xs font-sans text-slate-500">
+                          • Penanggung Jawab: <strong className="text-slate-800 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].actor}</strong>
                         </span>
-                        <span className={`text-xs font-sans hidden sm:inline ${
-                          inspectedStepIndex === 0 ? 'text-slate-500' : 'text-slate-400'
-                        }`}>
-                          • Durasi: <strong className={inspectedStepIndex === 0 ? 'text-slate-800 font-semibold' : 'text-slate-200 font-semibold'}>{UNIFIED_STEPS[inspectedStepIndex].expectedDuration}</strong>
+                        <span className="text-xs font-sans hidden sm:inline text-slate-500">
+                          • Durasi: <strong className="text-slate-800 font-semibold">{UNIFIED_STEPS[inspectedStepIndex].expectedDuration}</strong>
                         </span>
                       </>
                     )}
@@ -1415,20 +1405,14 @@ export default function InteractiveInfographic({
                 </div>
                 <button 
                   onClick={() => setIsStepPopupOpen(false)}
-                  className={`p-1 rounded-lg transition-all focus:outline-none cursor-pointer shrink-0 ml-2 ${
-                    inspectedStepIndex === 0
-                      ? 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
-                      : 'hover:bg-slate-800 text-slate-400 hover:text-white'
-                  }`}
+                  className="p-1 rounded-lg transition-all focus:outline-none cursor-pointer shrink-0 ml-2 hover:bg-slate-100 text-slate-500 hover:text-slate-800"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className={`p-6 overflow-y-auto flex-1 ${
-                inspectedStepIndex === 0 ? 'bg-white' : 'bg-slate-950'
-              }`}>
+              <div className="p-6 overflow-y-auto flex-1 bg-white">
                 {inspectedStepIndex === 0 ? (
                   <div className="w-full animate-fadeIn max-w-5xl mx-auto py-2">
                     <CommercialNegotiationGateway
@@ -1471,7 +1455,7 @@ export default function InteractiveInfographic({
                               {
                                 title: 'Fase Pelayaran: Stuffing Kontainer & Penerbitan Bill of Lading (B/L)',
                                 role: 'Forwarder (Logistik & Agen Pelayaran Laut)',
-                                desc: 'Sebagai Forwarder, Anda bertanggung jawab mengemas kargo laut (stuffing) ke dalam kontainer baja berstandar internasional, menempelkan segel pabean resmi, dan mengoordinasikan jadwal pelayaran rute lintas benua menuju Port of Hamburg Jerman. Isi manifes draf Bill of Lading (B/L) pelayaran di bawah ini.',
+                                desc: 'Sebagai Forwarder, Anda bertanggung jawab mengemas kargo laut (stuffing) ke dalam kontainer baja berstandar internasional, menempelkan segel pabean resmi, dan mengoordinasikan jadwal pelayaran rute lintas benua menuju Port of Tokyo Jerman. Isi manifes draf Bill of Lading (B/L) pelayaran di bawah ini.',
                                 btnText: 'Terbitkan Bill of Lading & Berangkatkan Kapal',
                                 event: 'ship-movement' as const,
                                 successMsg: 'Kapal Kargo Berangkat! Bill of Lading (B/L) resmi pelayaran samudera berhasil diterbitkan.'
@@ -1490,9 +1474,9 @@ export default function InteractiveInfographic({
                             const isPreviousStepsDone = Array.from({ length: activeLogisticsSubStep }, (_, i) => i).every(i => completedLogisticsSubSteps.includes(i));
                             
                             return (
-                              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
                                 {/* Compact Linear Progress Step Indicator */}
-                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pb-2.5 border-b border-slate-900 mb-1">
+                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pb-2.5 border-b border-slate-200 mb-1">
                                   {[
                                     { label: 'Sourcing Tani', role: 'Supplier' },
                                     { label: 'Bea Cukai PEB', role: 'Trader' },
@@ -1511,10 +1495,10 @@ export default function InteractiveInfographic({
                                         }}
                                         className={`flex-1 min-w-[100px] py-1.5 px-2 rounded-lg border text-center transition-all cursor-pointer ${
                                           isActive
-                                            ? 'bg-indigo-500/15 border-indigo-550 text-indigo-400 shadow-xs'
+                                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-xs'
                                             : isDone
-                                              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10'
-                                              : 'bg-slate-900 border-slate-850/70 text-slate-500 hover:bg-slate-900/60'
+                                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                         }`}
                                       >
                                         <div className="text-[11px] sm:text-xs font-black uppercase tracking-wider font-mono">
@@ -1525,43 +1509,43 @@ export default function InteractiveInfographic({
                                   })}
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                                   <div>
-                                    <h5 className="font-black text-sm sm:text-base text-slate-100 tracking-tight">
+                                    <h5 className="font-black text-sm sm:text-base text-slate-900 tracking-tight">
                                       {subDetails.title}
                                     </h5>
-                                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                                      Bertindak Sebagai: <strong className="text-indigo-400 font-bold">{subDetails.role}</strong>
+                                    <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                                      Bertindak Sebagai: <strong className="text-indigo-600 font-bold">{subDetails.role}</strong>
                                     </p>
                                   </div>
                                   <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
                                     isCurrentSubDone 
-                                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                                       : isPreviousStepsDone 
-                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse'
-                                        : 'bg-slate-800 text-slate-500 border border-slate-750'
+                                        ? 'bg-indigo-100 text-indigo-700 border border-indigo-200 animate-pulse'
+                                        : 'bg-slate-100 text-slate-500 border border-slate-200'
                                   }`}>
                                     {isCurrentSubDone ? 'SELESAI' : isPreviousStepsDone ? 'AKTIF' : 'MENUNGGU'}
                                   </span>
                                 </div>
 
-                                <p className="text-sm text-slate-200 leading-relaxed font-sans">
+                                <p className="text-sm text-slate-700 leading-relaxed font-sans">
                                   {subDetails.desc}
                                 </p>
 
                                 {/* Section: Lampiran Dokumen Sub-Tahap */}
-                                <div className="border-t border-slate-800/80 pt-3.5 mt-3.5 space-y-3">
+                                <div className="border-t border-slate-200 pt-3.5 mt-3.5 space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-200">
-                                      <Paperclip className="w-4 h-4 text-indigo-400" />
+                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-900">
+                                      <Paperclip className="w-4 h-4 text-indigo-500" />
                                       <span>Dokumen Lampiran ({uploadedSubStepFiles[activeLogisticsSubStep]?.length || 0})</span>
                                     </div>
-                                    <span className="text-[11px] sm:text-xs text-slate-300 font-mono">Maks: 1 Berkas / 2MB</span>
+                                    <span className="text-[11px] sm:text-xs text-slate-500 font-mono">Maks: 1 Berkas / 2MB</span>
                                   </div>
 
                                   {/* Error message if file is too large */}
                                   {subStepUploadError[activeLogisticsSubStep] && (
-                                    <div className="p-2.5 bg-rose-950/40 border border-rose-500/20 text-rose-400 text-xs rounded-lg font-semibold mt-2 text-left">
+                                    <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg font-semibold mt-2 text-left">
                                       {subStepUploadError[activeLogisticsSubStep]}
                                     </div>
                                   )}
@@ -1572,30 +1556,30 @@ export default function InteractiveInfographic({
                                       {uploadedSubStepFiles[activeLogisticsSubStep].map(file => (
                                         <div 
                                           key={file.id} 
-                                          className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs"
+                                          className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs"
                                         >
                                           <button 
                                             onClick={() => downloadFile(file)}
-                                            className="flex items-center gap-3 min-w-0 text-left hover:text-indigo-400 transition-colors group cursor-pointer flex-1"
+                                            className="flex items-center gap-3 min-w-0 text-left hover:text-indigo-600 transition-colors group cursor-pointer flex-1"
                                             title="Unduh Berkas"
                                           >
-                                            <FileText className="w-4.5 h-4.5 text-slate-400 group-hover:text-indigo-400 shrink-0" />
+                                            <FileText className="w-4.5 h-4.5 text-slate-500 group-hover:text-indigo-600 shrink-0" />
                                             <div className="truncate">
-                                              <p className="font-bold text-slate-200 group-hover:underline truncate">{file.name}</p>
-                                              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{file.size} • Diunggah {file.date}</p>
+                                              <p className="font-bold text-slate-900 group-hover:underline truncate">{file.name}</p>
+                                              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">{file.size} • Diunggah {file.date}</p>
                                             </div>
                                           </button>
                                           <div className="flex items-center gap-1.5">
                                             <button
                                               onClick={() => downloadFile(file)}
-                                              className="p-1.5 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 rounded transition-all cursor-pointer"
+                                              className="p-1.5 hover:bg-slate-200 text-indigo-600 hover:text-indigo-700 rounded transition-all cursor-pointer"
                                               title="Unduh Dokumen"
                                             >
                                               <FileDown className="w-4 h-4" />
                                             </button>
                                             <button
                                               onClick={() => handleDeleteFile(activeLogisticsSubStep, file.id)}
-                                              className="p-1.5 hover:bg-slate-850 text-rose-400 hover:text-rose-300 rounded transition-all cursor-pointer"
+                                              className="p-1.5 hover:bg-slate-200 text-rose-600 hover:text-rose-700 rounded transition-all cursor-pointer"
                                               title="Hapus Dokumen"
                                             >
                                               <Trash2 className="w-4 h-4" />
@@ -1605,7 +1589,7 @@ export default function InteractiveInfographic({
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="text-xs text-slate-400 italic text-center py-2 bg-slate-900/10 rounded-xl border border-dashed border-slate-800/40">
+                                    <div className="text-xs text-slate-500 italic text-center py-2 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                                       Belum ada dokumen yang diunggah.
                                     </div>
                                   )}
@@ -1630,8 +1614,8 @@ export default function InteractiveInfographic({
                                       }}
                                       className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${
                                         dragActive[activeLogisticsSubStep]
-                                          ? 'border-indigo-500 bg-indigo-500/10 text-white'
-                                          : 'border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60'
+                                          ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
+                                          : 'border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100'
                                       }`}
                                       onClick={() => {
                                         const input = document.getElementById(`substep-file-input-${activeLogisticsSubStep}`);
@@ -1649,11 +1633,11 @@ export default function InteractiveInfographic({
                                         }}
                                       />
                                       <div className="flex flex-col items-center gap-1.5">
-                                        <Upload className="w-6 h-6 text-indigo-400 animate-pulse" />
-                                        <p className="text-xs sm:text-sm font-black text-slate-200">
-                                          Tarik & letakkan berkas di sini, atau <span className="text-indigo-400 hover:underline">cari berkas</span>
+                                        <Upload className="w-6 h-6 text-indigo-500 animate-pulse" />
+                                        <p className="text-xs sm:text-sm font-black text-slate-800">
+                                          Tarik & letakkan berkas di sini, atau <span className="text-indigo-600 hover:underline">cari berkas</span>
                                         </p>
-                                        <p className="text-[11px] sm:text-xs text-slate-400">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
+                                        <p className="text-[11px] sm:text-xs text-slate-500">Maksimum 2MB, hanya satu berkas (akan menggantikan berkas lama)</p>
                                       </div>
                                     </div>
                                   )}
@@ -1662,19 +1646,19 @@ export default function InteractiveInfographic({
                                 <div className="pt-1">
                                   {isCurrentSubDone ? (
                                     <div className="space-y-3">
-                                      <div className="bg-emerald-950/40 border border-emerald-500/20 text-emerald-400 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                                         <span>{subDetails.successMsg}</span>
                                       </div>
                                       {isLogisticsSimulationFullyCompleted && (
-                                        <div className="mt-3 pt-2.5 border-t border-emerald-500/10 flex justify-end">
+                                        <div className="mt-3 pt-2.5 border-t border-emerald-100 flex justify-end">
                                           <button
                                             onClick={() => executeStepProgression(inspectedStepIndex)}
                                             disabled={!isAuthorizedToClickCurrentInspected}
                                             className={`px-4 py-2 rounded-lg text-xs font-black tracking-wide shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                                               isAuthorizedToClickCurrentInspected
-                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white hover:scale-[1.02]'
-                                                : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
+                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-[1.02]'
+                                                : 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed'
                                             }`}
                                           >
                                             <UserCheck className="w-3.5 h-3.5" />
@@ -1684,8 +1668,8 @@ export default function InteractiveInfographic({
                                       )}
                                     </div>
                                   ) : !isPreviousStepsDone ? (
-                                    <div className="bg-slate-900 border border-slate-850 text-slate-500 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
-                                      <Lock className="w-4 h-4 text-slate-600 shrink-0" />
+                                    <div className="bg-slate-50 border border-slate-200 text-slate-500 p-3 rounded-lg text-xs font-semibold flex items-center gap-2">
+                                      <Lock className="w-4 h-4 text-slate-400 shrink-0" />
                                       <span>Selesaikan sub-tahap sebelumnya terlebih dahulu untuk membuka kunci simulasi peran ini.</span>
                                     </div>
                                   ) : (
@@ -1967,11 +1951,11 @@ export default function InteractiveInfographic({
                       Aktor Penanggung Jawab
                     </span>
                     <span className="font-extrabold text-slate-800 text-xs">
-                      {activeInspectedStep.actor === 'Owner/Direktur' ? 'Bea Cukai' : activeInspectedStep.actor}
+                      {activeInspectedStep.actor === 'Superadmin' ? 'Bea Cukai' : activeInspectedStep.actor}
                     </span>
                   </div>
                   <span className="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded">
-                    {activeInspectedStep.actor === 'Owner/Direktur' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
+                    {activeInspectedStep.actor === 'Superadmin' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
                   </span>
                 </div>
 
@@ -1995,7 +1979,7 @@ export default function InteractiveInfographic({
 
                 {isEmergencyTakeover && (
                   <p className="text-[10px] text-amber-600 font-semibold italic mt-2">
-                    ✓ Mode Darurat: Peran Owner/Direktur diizinkan mengambil alih &amp; menandatangani tugas Trader.
+                    ✓ Mode Darurat: Peran Superadmin diizinkan mengambil alih &amp; menandatangani tugas Trader.
                   </p>
                 )}
 
@@ -2233,11 +2217,11 @@ export default function InteractiveInfographic({
                               Pihak Penanggung Jawab
                             </span>
                             <span className="font-bold text-white text-xs">
-                              {activeInspectedStep.actor === 'Owner/Direktur' ? 'Bea Cukai' : activeInspectedStep.actor}
+                              {activeInspectedStep.actor === 'Superadmin' ? 'Bea Cukai' : activeInspectedStep.actor}
                             </span>
                           </div>
                           <span className="text-[9.5px] font-black bg-blue-900/40 text-blue-300 border border-blue-800 px-2 py-1 rounded">
-                            {activeInspectedStep.actor === 'Owner/Direktur' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
+                            {activeInspectedStep.actor === 'Superadmin' ? 'BC' : activeInspectedStep.actor.substring(0, 3).toUpperCase()}
                           </span>
                         </div>
 
@@ -2263,7 +2247,7 @@ export default function InteractiveInfographic({
                            {isEmergencyTakeover && (
                             <div className="pt-2 border-t border-slate-800/60 flex flex-col gap-1.5">
                               <p className="text-[10px] text-amber-300 font-semibold italic">
-                                ✓ Mode Darurat: Peran Owner/Direktur diizinkan mengambil alih &amp; menandatangani tugas Trader.
+                                ✓ Mode Darurat: Peran Superadmin diizinkan mengambil alih &amp; menandatangani tugas Trader.
                               </p>
                             </div>
                           )}
@@ -2283,17 +2267,17 @@ export default function InteractiveInfographic({
 
                     <div className="pt-2 space-y-2.5">
                       {isFullyCompleted && inspectedStepIndex === 2 ? (
-                        <div className="bg-emerald-950/90 border border-emerald-500/40 p-4 rounded-xl text-center space-y-3.5 shadow-lg">
+                        <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center space-y-3.5 shadow-lg">
                           <div className="flex justify-center">
                             <span className="p-2 bg-emerald-500 text-white rounded-full block animate-bounce">
                               <CheckCircle className="w-5 h-5" />
                             </span>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs text-white font-black uppercase tracking-wider">
+                            <p className="text-xs text-emerald-900 font-black uppercase tracking-wider">
                               🎉 Transaksi Sukses!
                             </p>
-                            <p className="text-[11px] text-emerald-300 leading-relaxed">
+                            <p className="text-[11px] text-emerald-700 leading-relaxed">
                               Dana Letter of Credit (L/C) berhasil dicairkan penuh ke rekening Eksportir. Seluruh riwayat transaksi &amp; berkas dokumen resmi telah diarsipkan dengan aman.
                             </p>
                           </div>
@@ -2309,41 +2293,41 @@ export default function InteractiveInfographic({
                           </button>
                         </div>
                       ) : shipment.currentStep === 'Draft' ? (
-                        <div className="space-y-2 text-left bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <div className="space-y-2 text-left bg-slate-50 p-4 rounded-xl border border-slate-200">
                           <button
                             disabled
-                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-amber-950/20 text-amber-500 border border-amber-900/40 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs animate-pulse"
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs animate-pulse"
                           >
-                            <Lock className="w-4 h-4 text-amber-500" />
+                            <Lock className="w-4 h-4 text-amber-600" />
                             Alur Logistik Ekspor Terkunci
                           </button>
-                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                          <p className="text-[10px] text-slate-500 text-center leading-normal">
                             Selesaikan <strong>Fase I: Negosiasi Komersial &amp; Kontrak Bilateral</strong> terlebih dahulu pada dasbor halaman utama untuk membuka dan memulai alur eksekusi logistik ini.
                           </p>
                         </div>
                       ) : isStepCompleted ? (
-                        <div className="space-y-2 text-left bg-emerald-950/15 p-3 rounded-xl border border-emerald-500/10">
+                        <div className="space-y-2 text-left bg-emerald-50/80 p-3 rounded-xl border border-emerald-100">
                           <button
                             disabled
-                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-emerald-900/10 text-emerald-600 border border-emerald-200/30 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-emerald-100/50 text-emerald-700 border border-emerald-200 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
                           >
-                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
                             Tahap ini Sudah Selesai Dilaksanakan
                           </button>
-                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                          <p className="text-[10px] text-slate-500 text-center leading-normal">
                             Langkah ini telah berhasil divalidasi dan ditandatangani secara digital oleh aktor penanggung jawab. Data riwayat terkunci.
                           </p>
                         </div>
                       ) : isStepFuture ? (
-                        <div className="space-y-2 text-left bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+                        <div className="space-y-2 text-left bg-slate-50 p-3 rounded-xl border border-slate-200">
                           <button
                             disabled
-                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-slate-800/40 text-slate-500 border border-slate-700/50 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
+                            className="w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide bg-slate-100 text-slate-600 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs"
                           >
                             <AlertCircle className="w-4 h-4 text-slate-500" />
                             Tahap Belum Aktif
                           </button>
-                          <p className="text-[10px] text-slate-400 text-center leading-normal">
+                          <p className="text-[10px] text-slate-500 text-center leading-normal">
                             Selesaikan langkah-langkah sebelumnya terlebih dahulu agar tahap ini dapat diaktifkan dan diproses.
                           </p>
                         </div>
@@ -2354,7 +2338,7 @@ export default function InteractiveInfographic({
                           className={`w-full py-3 px-4 rounded-xl text-xs font-black tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
                             isAuthorizedToClickCurrentInspected
                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg hover:-translate-y-0.5'
-                              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                              : 'bg-slate-100 text-slate-500 cursor-not-allowed border border-slate-200'
                           }`}
                         >
                           <UserCheck className="w-4 h-4" />
@@ -2370,12 +2354,12 @@ export default function InteractiveInfographic({
 
               </div>
 
-              <div className="bg-indigo-950/80 border-t border-slate-800 px-6 py-3 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <div className="bg-indigo-50 border-t border-indigo-100 px-6 py-3 flex items-center justify-between text-[11px] text-indigo-700 font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                   <span>Kepatuhan Internasional Republik Indonesia</span>
                 </div>
-                <span>*Status Aktif</span>
+                <span className="text-indigo-600">*Status Aktif</span>
               </div>
 
             </div>

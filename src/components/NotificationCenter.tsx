@@ -36,8 +36,8 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
           shipmentId: s.id,
           contractNumber: s.contractNumber,
           productName: s.productName,
-          title: 'Urus Bea Masuk & Rilis Impor Hamburg',
-          description: `Kargo tuntas dikirim! Selesaikan bea pabean impor clearance lokal di Pelabuhan Hamburg, Jerman untuk melepas barang.`,
+          title: 'Urus Bea Masuk & Rilis Impor Tokyo',
+          description: `Kargo tuntas dikirim! Selesaikan bea pabean impor clearance lokal di Pelabuhan Tokyo, Jerman untuk melepas barang.`,
           priority: 'medium',
           actionLabel: 'Tinjau Arsip Transaksi',
           category: 'logistics',
@@ -53,7 +53,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
       const docStatus = salesContractDoc?.status || 'Draft';
 
       if (docStatus === 'Draft') {
-        if (currentUser.role === 'Trader' || currentUser.role === 'Owner/Direktur') {
+        if (currentUser.role === 'Trader' || currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-sc-draft-${s.id}`,
             shipmentId: s.id,
@@ -94,7 +94,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
             category: 'contract',
             targetStepIndex: 0
           });
-        } else if (currentUser.role === 'Trader' || currentUser.role === 'Owner/Direktur') {
+        } else if (currentUser.role === 'Trader' || currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-sc-wait-${s.id}`,
             shipmentId: s.id,
@@ -139,7 +139,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
             targetStepIndex: 1,
             targetSubStepIndex: 0
           });
-        } else if (currentUser.role === 'Trader' || currentUser.role === 'Owner/Direktur') {
+        } else if (currentUser.role === 'Trader' || currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-source-trader-${s.id}`,
             shipmentId: s.id,
@@ -170,7 +170,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
             targetStepIndex: 1,
             targetSubStepIndex: 1
           });
-        } else if (currentUser.role === 'Owner/Direktur') {
+        } else if (currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-customs-officer-${s.id}`,
             shipmentId: s.id,
@@ -201,7 +201,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
             targetStepIndex: 1,
             targetSubStepIndex: 2
           });
-        } else if (currentUser.role === 'Trader' || currentUser.role === 'Owner/Direktur') {
+        } else if (currentUser.role === 'Trader' || currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-shipping-trader-${s.id}`,
             shipmentId: s.id,
@@ -218,7 +218,7 @@ export function getPendingTasks(currentUser: UserProfile | null, shipments: Expo
         }
       } else if (completedCount === 3) {
         // Substep 3: Pencairan L/C
-        if (currentUser.role === 'Trader' || currentUser.role === 'Owner/Direktur') {
+        if (currentUser.role === 'Trader' || currentUser.role === 'Superadmin') {
           tasks.push({
             id: `task-lc-trader-${s.id}`,
             shipmentId: s.id,
