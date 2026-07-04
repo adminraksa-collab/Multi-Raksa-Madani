@@ -324,7 +324,7 @@ export default function InteractiveInfographic({
         defaultFields.condition = 'Kadar air tervalidasi 12% max, bebas jamur & hama parasit';
       } else if (activeLogisticsSubStep === 1) {
         defaultFields.pebNo = 'PEB-REG/BEACUKAI-TJP/2026/778';
-        defaultFields.declarant = 'Hendry Kurniawan (PT Multi Raksa Madani)';
+        defaultFields.declarant = 'Dwi Rokhdialisa (PT Multi Raksa Madani)';
         defaultFields.hsCode = shipment.hsCode || '0901.11.10';
         defaultFields.fobValue = `$${shipment.totalValue.toLocaleString('id-ID')} USD`;
         defaultFields.currency = 'USD';
@@ -1055,10 +1055,10 @@ export default function InteractiveInfographic({
               </div>
             </div>
             <span style="font-family: 'Cinzel', serif; font-size: 24px; color: #1e3a8a; font-style: italic; font-weight: bold; transform: rotate(-5deg); opacity: 0.85; margin-right: 15px; letter-spacing: -1.5px;">
-              ${currentUser?.name ? currentUser.name.split(' ').map(n => n.charAt(0)).join('') : 'HK'}
+              ${currentUser?.name ? currentUser.name.split(' ').map(n => n.charAt(0)).join('') : 'DR'}
             </span>
           </div>
-          <p class="authorized-name">${currentUser?.name || 'Hendry Kurniawan'}</p>
+          <p class="authorized-name">${currentUser?.name || 'Dwi Rokhdialisa'}</p>
           <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Multi Raksa Madani'})</p>
         </div>
       ` : `
@@ -1079,10 +1079,10 @@ export default function InteractiveInfographic({
               </div>
             </div>
             <span style="font-family: 'Cinzel', serif; font-size: 24px; color: #1e3a8a; font-style: italic; font-weight: bold; transform: rotate(-5deg); opacity: 0.85; margin-right: 15px; letter-spacing: -1.5px;">
-              ${currentUser?.name ? currentUser.name.split(' ').map(n => n.charAt(0)).join('') : 'HK'}
+              ${currentUser?.name ? currentUser.name.split(' ').map(n => n.charAt(0)).join('') : 'DR'}
             </span>
           </div>
-          <p class="authorized-name">${currentUser?.name || 'Hendry Kurniawan'}</p>
+          <p class="authorized-name">${currentUser?.name || 'Dwi Rokhdialisa'}</p>
           <p class="authorized-details">${currentUser?.role || 'Trader'} (${currentUser?.companyName || 'PT Multi Raksa Madani'})</p>
         </div>
       `}
@@ -1907,7 +1907,7 @@ export default function InteractiveInfographic({
 
                       <div className="space-y-0.5">
                         <p className="text-[9.5px] font-serif font-black text-slate-900 underline">
-                          {currentUser?.name || 'Hendry Kurniawan'}
+                          {currentUser?.name || 'Dwi Rokhdialisa'}
                         </p>
                         <p className="text-[7px] font-mono text-slate-400 uppercase font-black">
                           Authorized Signer for {currentUser?.role || 'Trader'}

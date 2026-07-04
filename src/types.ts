@@ -10,6 +10,8 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   country?: string;
+  preferredPortOfDischarge?: string;
+  preferredPortOfLoading?: string;
   isApproved?: boolean;
 }
 

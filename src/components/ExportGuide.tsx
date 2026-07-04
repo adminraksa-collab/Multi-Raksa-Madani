@@ -18,7 +18,11 @@ interface GuideStep {
   keyActors: string[];
 }
 
-export default function ExportGuide() {
+interface ExportGuideProps {
+  currentLanguage?: string;
+}
+
+export default function ExportGuide({ currentLanguage = 'id' }: ExportGuideProps) {
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<{ name: string; issuer: string } | null>(null);
@@ -456,115 +460,233 @@ export default function ExportGuide() {
     );
   };
 
-  const guideSteps: GuideStep[] = [
-    {
-      id: 'step-1',
-      title: 'Penyusunan Kontrak (Sales Contract / SC)',
-      subtitle: 'Inisiasi Transaksi & Kesepakatan Dagang',
-      badge: 'Langkah 1: Draft & Kontrak',
-      badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      description: 'Ini adalah gerbang masuk seluruh transaksi ekspor. Importir (pembeli luar negeri) dan Eksportir menyepakati harga produk, spesifikasi, kuantitas, mekanisme pembayaran (misal Letter of Credit - L/C atau Transfer), serta metode pengiriman barang.',
-      laymanAnalogy: 'Bagaikan ijab qabul atau nota kesepakatan tertulis saat Anda membeli barang pesanan khusus. Isinya komitmen: "Saya jual kelapa ini seharga $1,000 per ton, dikirim lewat laut, dibayar saat barang siap kapal".',
-      keyActors: ['Eksportir (Trader/Koperasi)', 'Importir Global (Buyer)'],
-      documents: [
-        { name: 'Sales Contract (SC)', desc: 'Dokumen induk kesepakatan jual beli barang ekspor.', issuer: 'Trader & Buyer' },
-        { name: 'Proforma Invoice', desc: 'Faktur awal/penawaran formal yang dikirimkan ke pembeli sebelum barang diproduksi.', issuer: 'Eksportir/Trader' }
-      ]
-    },
-    {
-      id: 'step-2',
-      title: 'Verifikasi Komoditas (Produksi & QC)',
-      subtitle: 'Memastikan Mutu di Gudang Produsen',
-      badge: 'Langkah 2: Terverifikasi',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      description: 'Eksportir berkoordinasi dengan Supplier/Mitra Petani di daerah untuk mengemas barang sesuai standar ekspor nasional dan permintaan eksklusif negara tujuan. Pada tahap ini dilakukan pemeriksaan kualitas (Quality Control) dan penentuan HS Code (Sistem Klasifikasi Tarif).',
-      laymanAnalogy: 'Proses memasak barang di dapur dan membungkusnya dengan rapi. Kita pastikan arang kelapa tidak basah, atau kopi tidak berjamur. Petugas verifikator menyortir agar mutunya lolos standar.',
-      keyActors: ['Supplier/Sektor Hulu (Koperasi)', 'Surveyor Independen', 'Tim QC'],
-      documents: [
-        { name: 'Invoice & Packing List (Awal)', desc: 'Rincian jumlah barang, berat kotor/bersih, serta dimensi kemasan kargo.', issuer: 'Supplier (ke Trader)' },
-        { name: 'Certificate of Analysis (COA)', desc: 'Hasil uji laboratorium independen yang melampirkan hasil kandungan materi kargo.', issuer: 'Laboratorium Penguji / Surveyor' }
-      ]
-    },
-    {
-      id: 'step-3',
-      title: 'Sertifikasi Karantina & Asal barang',
-      subtitle: 'Pintu Gerbang Kelayakan Hukum Internasional',
-      badge: 'Langkah 3: Dalam Proses / Sertifikasi',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
-      description: 'Barang hasil alam wajib melewati karantina pertanian atau instansi berwenang demi memastikan bebas dari hama penyakit (Sertifikat Fitosanitari). Disamping itu, Eksportir memproses Surat Keterangan Asal (SKA) di Dinas Perindustrian dan Perdagangan agar pembeli mendapat fasilitas pemotongan pajak di negaranya.',
-      laymanAnalogy: 'Seperti mengurus "paspor kesehatan" bagi tumbuhan/arang kelapa dan membuat "Akte Kelahiran" yang membuktikan barang tersebut adalah hasil bumi asli Indonesia asli (bukan selundupan).',
-      keyActors: ['Badan Karantina Indonesia', 'Kementerian Perdagangan (Disperindag)', 'Eksportir'],
-      documents: [
-        { name: 'Phytosanitary Certificate', desc: 'Sertifikat kesehatan komoditas pertanian/kehutanan dari Badan Karantina.', issuer: 'Instansi Karantina Pertanian' },
-        { name: 'Certificate of Origin (Form COO / SKA)', desc: 'Bukti sah hukum bahwa barang diproduksi di Indonesia guna klaim tarif bea masuk murah.', issuer: 'Disperindag Kabupaten/Kota' },
-        { name: 'Fumigation Certificate', desc: 'Bukti kontainer telah disemprot gas pembasmi hama/serangga sebelum berangkat.', issuer: 'Perusahaan Fumigasi Berizin' }
-      ]
-    },
-    {
-      id: 'step-4',
-      title: 'Izin Kepabeanan Eskpor (Customs Approval)',
-      subtitle: 'Pendaftaran Ekspor ke Bea Cukai RI',
-      badge: 'Langkah 4: Disetujui Bea Cukai',
-      badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
-      description: 'Eksportir mendaftarkan rencana ekspor ke sistem Bea Cukai melalui pengajuan PEB (Pemberitahuan Ekspor Barang). Bea cukai memeriksa keabsahan dokumen ekspor, meneliti HS Code pengelompokan barang, kemudian menerbitkan NPE (Nota Pelayanan Ekspor) jika kargo clean and clear.',
-      laymanAnalogy: 'Melaporkan barang bawaan Anda ke pos penjagaan bandara sebelum masuk ke pesawat kargo. Bea Cukai memberi cap stempel "OK, barang ini legal dan boleh dilepas ke luar negeri".',
-      keyActors: ['Direktorat Jenderal Bea dan Cukai (DJBC)', 'Customs Broker / Forwarder'],
-      documents: [
-        { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Dokumen pendaftaran perincian barang ekspor ke Kantor Bea Cukai.', issuer: 'Eksportir / Forwarder' },
-        { name: 'Nota Pelayanan Ekspor (NPE)', desc: 'Surat persetujuan Bea Cukai yang mengizinkan kargo masuk ke dalam kapal eksportir.', issuer: 'Bea Cukai Republik Indonesia' }
-      ]
-    },
-    {
-      id: 'step-5',
-      title: 'Pengapalan & Logistik Port-to-Port',
-      subtitle: 'Pemuatan Barang & Pelepasan Dokumen Angkutan laut',
-      badge: 'Langkah 5: Berlayar (Shipped)',
-      badgeColor: 'bg-teal-100 text-teal-800 border-teal-250',
-      description: 'Barang ditata dalam kontainer baja di gudang, ditarik truk kontainer ke pelabuhan muat (Port of Loading), dan dimuat ke atas kapal kargo besar (vessel). Operator pelayaran menerbitkan Bill of Lading (B/L) sebagai bukti serah terima barang sekaligus tanda kepemilikan kargo selama di laut lepas.',
-      laymanAnalogy: 'Saat Anda menitipkan paket berharga lewat cargo kurir terpercaya. Anda diberi selembar resi pengiriman sebagai jaminan bahwa paket sedang berlayar mengarungi samudra menuju kota seberang.',
-      keyActors: ['Perusahaan Pelayaran (Carrier)', 'Freight Forwarder Nusantara', 'Operator Pelabuhan'],
-      documents: [
-        { name: 'Bill of Lading (B/L) / Waybill', desc: 'Tanda terima barang kapal samudera sekaligus bukti kepemilikan mutlak kargo ekspor.', issuer: 'Perusahaan Pelayaran Global' },
-        { name: 'Commercial Invoice & Packing List (Final)', desc: 'Penagihan final sesuai dengan volume aktual yang termuat di dalam kapal pengapalan.', issuer: 'Eksportir/Trader' }
-      ]
-    },
-    {
-      id: 'step-6',
-      title: 'Penyelesaian Ekspor (Pelepasan Dokumen & Pembayaran)',
-      subtitle: 'Pelepasan Dokumen Asli ke Pembeli Global',
-      badge: 'Langkah 5: Selesai / Terbit',
-      badgeColor: 'bg-neutral-100 text-neutral-800 border-neutral-200',
-      description: 'Setelah kapal berangkat, Eksportir mengumpulkan seluruh dokumen asli (B/L, Invoice Final, COO/SKA, Karantina) untuk diserahkan ke bank eksportir. Bank eksportir meneruskannya ke bank importir untuk ditukar dengan dana pembayaran transfer internasional.',
-      laymanAnalogy: 'Proses serah terima kunci properti secara aman. Pembeli mentransfer sisa uang pembayaran penuh melalui sistem perbankan global, kemudian kurir bank memberikan seluruh surat-surat asli agar pembeli bisa menebus kontainer di negara tujuan.',
-      keyActors: ['Bank Eksportir & Bank Importir', 'Importir Global (Buyer)'],
-      documents: [
-        { name: 'Telegraphic Transfer (T/T) / L/C Settlement', desc: 'Bukti transfer devisa hasil ekspor yang masuk ke rekening koran rupiah eksportir.', issuer: 'Korespondensi Perbankan Swasta/BUMN' }
-      ]
+  // Set up localized steps based on currentLanguage
+  const getLocalizedSteps = (lang: string): GuideStep[] => {
+    if (lang === 'id') {
+      return [
+        {
+          id: 'step-1',
+          title: 'Penyusunan Kontrak (Sales Contract / SC)',
+          subtitle: 'Inisiasi Transaksi & Kesepakatan Dagang',
+          badge: 'Langkah 1: Draft & Kontrak',
+          badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+          description: 'Ini adalah gerbang masuk seluruh transaksi ekspor. Importir (pembeli luar negeri) dan Eksportir menyepakati harga produk, spesifikasi, kuantitas, mekanisme pembayaran (misal Letter of Credit - L/C atau Transfer), serta metode pengiriman barang.',
+          laymanAnalogy: 'Bagaikan ijab qabul atau nota kesepakatan tertulis saat Anda membeli barang pesanan khusus. Isinya komitmen: "Saya jual kelapa ini seharga $1,000 per ton, dikirim lewat laut, dibayar saat barang siap kapal".',
+          keyActors: ['Eksportir (Trader/Koperasi)', 'Importir Global (Buyer)'],
+          documents: [
+            { name: 'Sales Contract (SC)', desc: 'Dokumen induk kesepakatan jual beli barang ekspor.', issuer: 'Trader & Buyer' },
+            { name: 'Proforma Invoice', desc: 'Faktur awal/penawaran formal yang dikirimkan ke pembeli sebelum barang diproduksi.', issuer: 'Eksportir/Trader' }
+          ]
+        },
+        {
+          id: 'step-2',
+          title: 'Verifikasi Komoditas (Produksi & QC)',
+          subtitle: 'Memastikan Mutu di Gudang Produsen',
+          badge: 'Langkah 2: Terverifikasi',
+          badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          description: 'Eksportir berkoordinasi dengan Supplier/Mitra Petani di daerah untuk mengemas barang sesuai standar ekspor nasional dan permintaan eksklusif negara tujuan. Pada tahap ini dilakukan pemeriksaan kualitas (Quality Control) dan penentuan HS Code (Sistem Klasifikasi Tarif).',
+          laymanAnalogy: 'Proses memasak barang di dapur dan membungkusnya dengan rapi. Kita pastikan arang kelapa tidak basah, atau kopi tidak berjamur. Petugas verifikator menyortir agar mutunya lolos standar.',
+          keyActors: ['Supplier/Sektor Hulu (Koperasi)', 'Surveyor Independen', 'Tim QC'],
+          documents: [
+            { name: 'Invoice & Packing List (Awal)', desc: 'Rincian jumlah barang, berat kotor/bersih, serta dimensi kemasan kargo.', issuer: 'Supplier (ke Trader)' },
+            { name: 'Certificate of Analysis (COA)', desc: 'Hasil uji laboratorium independen yang melampirkan hasil kandungan materi kargo.', issuer: 'Laboratorium Penguji / Surveyor' }
+          ]
+        },
+        {
+          id: 'step-3',
+          title: 'Sertifikasi Karantina & Asal barang',
+          subtitle: 'Pintu Gerbang Kelayakan Hukum Internasional',
+          badge: 'Langkah 3: Dalam Proses / Sertifikasi',
+          badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+          description: 'Barang hasil alam wajib melewati karantina pertanian atau instansi berwenang demi memastikan bebas dari hama penyakit (Sertifikat Fitosanitari). Disamping itu, Eksportir memproses Surat Keterangan Asal (SKA) di Dinas Perindustrian dan Perdagangan agar pembeli mendapat fasilitas pemotongan pajak di negaranya.',
+          laymanAnalogy: 'Seperti mengurus "paspor kesehatan" bagi tumbuhan/arang kelapa dan membuat "Akte Kelahiran" yang membuktikan barang tersebut adalah hasil bumi asli Indonesia asli (bukan selundupan).',
+          keyActors: ['Badan Karantina Indonesia', 'Kementerian Perdagangan (Disperindag)', 'Eksportir'],
+          documents: [
+            { name: 'Phytosanitary Certificate', desc: 'Sertifikat kesehatan komoditas pertanian/kehutanan dari Badan Karantina.', issuer: 'Instansi Karantina Pertanian' },
+            { name: 'Certificate of Origin (Form COO / SKA)', desc: 'Bukti sah hukum bahwa barang diproduksi di Indonesia guna klaim tarif bea masuk murah.', issuer: 'Disperindag Kabupaten/Kota' },
+            { name: 'Fumigation Certificate', desc: 'Bukti kontainer telah disemprot gas pembasmi hama/serangga sebelum berangkat.', issuer: 'Perusahaan Fumigasi Berizin' }
+          ]
+        },
+        {
+          id: 'step-4',
+          title: 'Izin Kepabeanan Eskpor (Customs Approval)',
+          subtitle: 'Pendaftaran Ekspor ke Bea Cukai RI',
+          badge: 'Langkah 4: Disetujui Bea Cukai',
+          badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
+          description: 'Eksportir mendaftarkan rencana ekspor ke sistem Bea Cukai melalui pengajuan PEB (Pemberitahuan Ekspor Barang). Bea cukai memeriksa keabsahan dokumen ekspor, meneliti HS Code pengelompokan barang, kemudian menerbitkan NPE (Nota Pelayanan Ekspor) jika kargo clean and clear.',
+          laymanAnalogy: 'Melaporkan barang bawaan Anda ke pos penjagaan bandara sebelum masuk ke pesawat kargo. Bea Cukai memberi cap stempel "OK, barang ini legal dan boleh dilepas ke luar negeri".',
+          keyActors: ['Direktorat Jenderal Bea dan Cukai (DJBC)', 'Customs Broker / Forwarder'],
+          documents: [
+            { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Dokumen pendaftaran perincian barang ekspor ke Kantor Bea Cukai.', issuer: 'Eksportir / Forwarder' },
+            { name: 'Nota Pelayanan Ekspor (NPE)', desc: 'Surat persetujuan Bea Cukai yang mengizinkan kargo masuk ke dalam kapal eksportir.', issuer: 'Bea Cukai Republik Indonesia' }
+          ]
+        },
+        {
+          id: 'step-5',
+          title: 'Pengapalan & Logistik Port-to-Port',
+          subtitle: 'Pemuatan Barang & Pelepasan Dokumen Angkutan laut',
+          badge: 'Langkah 5: Berlayar (Shipped)',
+          badgeColor: 'bg-teal-100 text-teal-800 border-teal-250',
+          description: 'Barang ditata dalam kontainer baja di gudang, ditarik truk kontainer ke pelabuhan muat (Port of Loading), dan dimuat ke atas kapal kargo besar (vessel). Operator pelayaran menerbitkan Bill of Lading (B/L) sebagai bukti serah terima barang sekaligus tanda kepemilikan kargo selama di laut lepas.',
+          laymanAnalogy: 'Saat Anda menitipkan paket berharga lewat cargo kurir terpercaya. Anda diberi selembar resi pengiriman sebagai jaminan bahwa paket sedang berlayar mengarungi samudra menuju kota seberang.',
+          keyActors: ['Perusahaan Pelayaran (Carrier)', 'Freight Forwarder Nusantara', 'Operator Pelabuhan'],
+          documents: [
+            { name: 'Bill of Lading (B/L) / Waybill', desc: 'Tanda terima barang kapal samudera sekaligus bukti kepemilikan mutlak kargo ekspor.', issuer: 'Perusahaan Pelayaran Global' },
+            { name: 'Commercial Invoice & Packing List (Final)', desc: 'Penagihan final sesuai dengan volume aktual yang termuat di dalam kapal pengapalan.', issuer: 'Eksportir/Trader' }
+          ]
+        },
+        {
+          id: 'step-6',
+          title: 'Penyelesaian Ekspor (Pelepasan Dokumen & Pembayaran)',
+          subtitle: 'Pelepasan Dokumen Asli ke Pembeli Global',
+          badge: 'Langkah 5: Selesai / Terbit',
+          badgeColor: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+          description: 'Setelah kapal berangkat, Eksportir mengumpulkan seluruh dokumen asli (B/L, Invoice Final, COO/SKA, Karantina) untuk diserahkan ke bank eksportir. Bank eksportir meneruskannya ke bank importir untuk ditukar dengan dana pembayaran transfer internasional.',
+          laymanAnalogy: 'Proses serah terima kunci properti secara aman. Pembeli mentransfer sisa uang pembayaran penuh melalui sistem perbankan global, kemudian kurir bank memberikan seluruh surat-surat asli agar pembeli bisa menebus kontainer di negara tujuan.',
+          keyActors: ['Bank Eksportir & Bank Importir', 'Importir Global (Buyer)'],
+          documents: [
+            { name: 'Telegraphic Transfer (T/T) / L/C Settlement', desc: 'Bukti transfer devisa hasil ekspor yang masuk ke rekening koran rupiah eksportir.', issuer: 'Korespondensi Perbankan Swasta/BUMN' }
+          ]
+        }
+      ];
     }
-  ];
 
-  const faqs = [
-    {
-      q: 'Apa itu HS Code (Sistem Harmonisasi) dalam ekspor?',
-      a: 'HS Code adalah sistem klasifikasi barang internasional berupa deretan angka unik (biasanya 8 digit di Indonesia). Tujuannya agar seluruh pabean bea cukai di dunia sepakat mendefinisikan suatu komoditas tanpa terhalang kendala bahasa. Contoh: Cocopeat memiliki kode HS 4402.90.00 di seluruh belahan dunia.'
-    },
-    {
-      q: 'Dari mana dokumen Sertifikat Kepatuhan ekspor diterbitkan?',
-      a: 'Dokumen ekspor diterbitkan oleh berbagai instansi resmi yang berbeda sesuai kompetensinya. Untuk Karantina ditangani Badan Karantina Indonesia (Barantin). Untuk asal barang (COO) diterbitkan oleh Kementerian Perdagangan RI melalui dinas Disperindag daerah setempat. Surat Kontrak Penjualan dibuat mandiri oleh eksportir (trader) dan disepakati oleh pembeli luar negeri.'
-    },
-    {
-      q: 'Bagaimana cara menggunakan Simulator Transaksi di aplikasi ini?',
-      a: 'Sangat mudah! Buka tab "Transaksi", Anda dapat memilih transaksi ekspor aktif di dropdown atas. Klik tombol bulat "Ganti Langkah Alur Kerja" pada infografis interaktif atau klik tombol interaktif di dalam langkah alur kerja untuk menguji, menelusuri, dan memperbarui seluruh tahapan transaksi terpadu.'
-    },
-    {
-      q: 'Bagaimana dasar penomoran dokumen di aplikasi ini (contoh: "SC/NGL/PROD-2-2026-NEGO" atau "SC/NGL/PL-2026-001")?',
-      a: 'Penomoran dokumen ekspor (seperti Sales Contract / Kontrak Penjualan) mengikuti format kode standar bisnis internasional terstruktur berikut:\n\n• SC: Singkatan dari jenis dokumen utama, yaitu Sales Contract (Kontrak Penjualan).\n• NGL: Kode identitas dari pihak eksportir, yaitu Multi Raksa Madani (PT Multi Raksa Madani).\n• PROD-2 / PL: Kode komoditas/produk ekspor yang diperdagangkan (misal: PROD-2 untuk spesifikasi produk tertentu, PL untuk Cocopeat/Coir Pith, COF untuk Coffee, CHR untuk Charcoal, dst).\n• 2026: Tahun pembuatan dokumen atau tahun transaksi berjalan.\n• NEGO / 001: Keterangan status atau nomor urut (NEGO menandakan draf negosiasi kesepakatan awal, sedangkan angka seperti 001/002 menunjukkan nomor urut transaksi pada tahun berjalan).'
-    },
-    {
-      q: 'Apakah aplikasi ini benar-benar terhubung ke portal Bea Cukai atau Bea Cukai INSW?',
-      a: 'Aplikasi ini adalah simulator instrumen ekspor interaktif berteknologi tinggi untuk visualisasi operasional. Seluruh draft dokumen (PEB, Invoice, Bill of Lading, COO) yang Anda sunting dirancang menyerupai format aslinya yang berlaku di Indonesia untuk tujuan simulasi, edukasi rincian, dan tata kelola internal perusahaan.'
+    // Default or other languages translated to english
+    return [
+      {
+        id: 'step-1',
+        title: lang === 'zh' ? '合同起草 (Sales Contract / SC)' : lang === 'ja' ? '契約書の作成 (Sales Contract / SC)' : lang === 'ru' ? 'Составление контракта (Sales Contract)' : lang === 'ar' ? 'صياغة العقد (Sales Contract)' : lang === 'th' ? 'การจัดทำสัญญา (Sales Contract)' : 'Contract Drafting (Sales Contract / SC)',
+        subtitle: lang === 'zh' ? '交易启动与贸易协定' : lang === 'ja' ? '取引開始と貿易協定' : lang === 'ru' ? 'Инициация сделки и торговое соглашение' : lang === 'ar' ? 'بدء المعاملة والاتفاقية التجارية' : lang === 'th' ? 'การเริ่มต้นธุรกรรมและข้อตกลงทางการค้า' : 'Transaction Initiation & Trade Agreement',
+        badge: lang === 'zh' ? '步骤 1：草案与合同' : lang === 'ja' ? 'ステップ1：ドラフトと契約' : lang === 'ru' ? 'Шаг 1: Черновик и контракт' : lang === 'ar' ? 'الخطوة 1: المسودة والعقد' : lang === 'th' ? 'ขั้นตอนที่ 1: ดราฟต์และสัญญา' : 'Step 1: Draft & Contract',
+        badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        description: 'This is the entry gate for all export transactions. Importer (global buyer) and Exporter agree on product price, specifications, quantity, payment mechanism (such as L/C or T/T), and shipping terms.',
+        laymanAnalogy: 'Like a written consensus when you buy custom-made goods. It states: "I sell this coconut charcoal for $1,450 per ton, shipped FOB Tanjung Priok, paid when the cargo is ready".',
+        keyActors: ['Exporter (Trader)', 'Global Importer (Buyer)'],
+        documents: [
+          { name: 'Sales Contract (SC)', desc: 'Master agreement of the export buy-sell transaction.', issuer: 'Trader & Buyer' },
+          { name: 'Proforma Invoice', desc: 'Initial invoice/formal quote sent to buyer before production starts.', issuer: 'Exporter/Trader' }
+        ]
+      },
+      {
+        id: 'step-2',
+        title: lang === 'zh' ? '商品核验 (生产与质量控制)' : lang === 'ja' ? '商品の検証 (生産と品質管理)' : lang === 'ru' ? 'Верификация товара (Производство и контроль качества)' : lang === 'ar' ? 'التحقق من السلع (الإنتاج ومراقبة الجودة)' : lang === 'th' ? 'การตรวจสอบสินค้า (การผลิตและควบคุมคุณภาพ)' : 'Commodity Verification (Production & QC)',
+        subtitle: lang === 'zh' ? '确保生产商仓库 of 质量标准' : lang === 'ja' ? 'メーカー倉庫での品質確保' : lang === 'ru' ? 'Обеспечение качества на складе производителя' : lang === 'ar' ? 'ضمان الجودة في مستودع الشركة المصنعة' : lang === 'th' ? 'การรับประกันคุณภาพที่คลังสินค้าของผู้ผลิต' : 'Ensuring Quality at Manufacturer Warehouse',
+        badge: lang === 'zh' ? '步骤 2：已核验' : lang === 'ja' ? 'ステップ2：検証済み' : lang === 'ru' ? 'Шаг 2: Верифицировано' : lang === 'ar' ? 'الخطوة 2: تم التحقق' : lang === 'th' ? 'ขั้นตอนที่ 2: ตรวจสอบแล้ว' : 'Step 2: Verified',
+        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        description: 'Exporter coordinates with regional suppliers to package goods according to national export standards and buyer requirements. Quality Control (QC) and HS Code classification are performed.',
+        laymanAnalogy: 'The process of preparing goods in the kitchen and wrapping them neatly. We ensure the charcoal is dry and coffee is mold-free. Independent surveyors sort to ensure it passes standards.',
+        keyActors: ['Supplier (Cooperative)', 'Independent Surveyor', 'QC Team'],
+        documents: [
+          { name: 'Invoice & Packing List (Awal)', desc: 'Breakdown of cargo quantities, weights, and packaging dimensions.', issuer: 'Supplier (to Trader)' },
+          { name: 'Certificate of Analysis (COA)', desc: 'Independent laboratory report detailing the physical/chemical composition of cargo.', issuer: 'Testing Lab / Surveyor' }
+        ]
+      },
+      {
+        id: 'step-3',
+        title: lang === 'zh' ? '检疫与原产地认证' : lang === 'ja' ? '検疫と原産地証明' : lang === 'ru' ? 'Карантинная сертификация и сертификация происхождения' : lang === 'ar' ? 'شهادة الحجر الصحي والمنشأ' : lang === 'th' ? 'การรับรองด่านกักกันและถิ่นกำเนิดสินค้า' : 'Quarantine & Origin Certification',
+        subtitle: lang === 'zh' ? '国际法律准入的关口' : lang === 'ja' ? '国際的適合性の関門' : lang === 'ru' ? 'Пропускной пункт международной легальности' : lang === 'ar' ? 'بوابة الأهلية القانونية الدولية' : lang === 'th' ? 'ประตูสู่ความถูกต้องตามกฎหมายระหว่างประเทศ' : 'Gateways to International Legal Eligibility',
+        badge: lang === 'zh' ? '步骤 3：认证中' : lang === 'ja' ? 'ステップ3：認証中' : lang === 'ru' ? 'Шаг 3: В процессе' : lang === 'ar' ? 'الخطوة 3: قيد الشهادة' : lang === 'th' ? 'ขั้นตอนที่ 3: อยู่ระหว่างการรับรอง' : 'Step 3: Certification',
+        badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+        description: 'Natural products must pass plant/animal quarantine to ensure pest-free status (Phytosanitary Certificate). Exporter also processes the Certificate of Origin (COO) for import tax exemptions in the buyer’s country.',
+        laymanAnalogy: 'Like obtaining a "health passport" for plants/charcoal and a "birth certificate" proving the cargo is an authentic product grown in Indonesia.',
+        keyActors: ['Quarantine Authority', 'Ministry of Trade (Disperindag)', 'Exporter'],
+        documents: [
+          { name: 'Phytosanitary Certificate', desc: 'Sertifikat kesehatan komoditas pertanian/kehutanan dari Badan Karantina.', issuer: 'Agricultural Quarantine Agency' },
+          { name: 'Certificate of Origin (Form COO / SKA)', desc: 'Proof that goods originated in Indonesia to claim preferential customs tariff rates.', issuer: 'Ministry of Trade' },
+          { name: 'Fumigation Certificate', desc: 'Proof that the container was treated with pest control gas prior to departure.', issuer: 'Licensed Fumigator' }
+        ]
+      },
+      {
+        id: 'step-4',
+        title: lang === 'zh' ? '出口海关清关' : lang === 'ja' ? '輸出通関手続き' : lang === 'ru' ? 'Таможенное оформление экспорта' : lang === 'ar' ? 'التخليص الجمركي للتصدير' : lang === 'th' ? 'การพิธีการศุลกากรขาออก' : 'Export Customs Clearance',
+        subtitle: lang === 'zh' ? '向海关进行出口登记' : lang === 'ja' ? '税関への輸出申告' : lang === 'ru' ? 'Регистрация экспорта в таможне' : lang === 'ar' ? 'التسجيل للتصدير مع الجمارك' : lang === 'th' ? 'การลงทะเบียนส่งออกกับกรมศุลกากร' : 'Export Registration with Customs',
+        badge: lang === 'zh' ? '步骤 4：海关已批准' : lang === 'ja' ? 'ステップ4：税関承認' : lang === 'ru' ? 'Шаг 4: Разрешено' : lang === 'ar' ? 'الخطوة 4: تم اعتماد الجمارك' : lang === 'th' ? 'ขั้นตอนที่ 4: ศุลกากรอนุมัติแล้ว' : 'Step 4: Customs Approved',
+        badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
+        description: 'Exporter registers the export plan with Customs (PEB). Customs inspects the documents, verifies HS codes, and issues NPE (Export Approval) once the cargo is deemed clean.',
+        laymanAnalogy: 'Reporting your luggage to airport security checkpoints before boarding a cargo flight. Customs stamps it "OK, this cargo is legal and is allowed to leave".',
+        keyActors: ['Directorate General of Customs and Excise', 'Customs Broker / Forwarder'],
+        documents: [
+          { name: 'Pemberitahuan Ekspor Barang (PEB)', desc: 'Formal export declaration containing detailed cargo info registered with Customs.', issuer: 'Exporter / Forwarder' },
+          { name: 'Nota Pelayanan Ekspor (NPE)', desc: 'Customs approval note allowing the cargo to enter the vessel for shipment.', issuer: 'Directorate of Customs' }
+        ]
+      },
+      {
+        id: 'step-5',
+        title: lang === 'zh' ? '运输与港到港物流' : lang === 'ja' ? '出荷と港湾間物流' : lang === 'ru' ? 'Отгрузка и логистика порт-порт' : lang === 'ar' ? 'الشحن والخدمات اللوجستية من ميناء إلى ميناء' : lang === 'th' ? 'การจัดส่งและโลจิสติกส์ระหว่างท่าเรือ' : 'Shipping & Port-to-Port Logistics',
+        subtitle: lang === 'zh' ? '货物装载与提单发布' : lang === 'ja' ? '貨物船積みと船荷証券の発行' : lang === 'ru' ? 'Погрузка груза и выпуск коносамента' : lang === 'ar' ? 'تحميل الشحنة وإصدار بوليصة الشحن' : lang === 'th' ? 'การโหลดสินค้าและการออกใบตราส่งสินค้า' : 'Cargo Loading & Shipping Document Release',
+        badge: lang === 'zh' ? '步骤 5：已装船' : lang === 'ja' ? 'ステップ5：船積み完了' : lang === 'ru' ? 'Шаг 5: Отгружено' : lang === 'ar' ? 'الخطوة 5: تم الشحن' : lang === 'th' ? 'ขั้นตอนที่ 5: จัดส่งแล้ว' : 'Step 5: Shipped',
+        badgeColor: 'bg-teal-100 text-teal-800 border-teal-250',
+        description: 'Goods are consolidated inside steel containers, trucked to the Port of Loading, and loaded onto the container vessel. The carrier issues a Bill of Lading (B/L) as cargo receipt and title document.',
+        laymanAnalogy: 'Like shipping a valuable package through a trusted courier. You are given a shipping receipt guaranteeing that your parcel is sailing across the ocean.',
+        keyActors: ['Shipping Carrier', 'Freight Forwarder', 'Port Operator'],
+        documents: [
+          { name: 'Bill of Lading (B/L) / Waybill', desc: 'Master sea carriage contract and absolute title document of the export cargo.', issuer: 'Global Shipping Carrier' },
+          { name: 'Commercial Invoice & Packing List (Final)', desc: 'Final financial billing based on actual volume loaded onto the vessel.', issuer: 'Exporter/Trader' }
+        ]
+      },
+      {
+        id: 'step-6',
+        title: lang === 'zh' ? '出口结汇' : lang === 'ja' ? '輸出決済' : lang === 'ru' ? 'Экспортный расчет' : lang === 'ar' ? 'التسوية التصديرية' : lang === 'th' ? 'การชำระเงินส่งออก' : 'Export Settlement',
+        subtitle: lang === 'zh' ? '正本单据交换与银行电汇' : lang === 'ja' ? '原本書類の引渡と銀行電信送金' : lang === 'ru' ? 'Обмен оригиналами документов и банковский перевод' : lang === 'ar' ? 'تبادل المستندات الأصلية والتحويل المصرفي' : lang === 'th' ? 'การแลกเปลี่ยนเอกสารต้นฉบับและการโอนเงินผ่านธนาคาร' : 'Original Document Exchange & Bank Transfer',
+        badge: lang === 'zh' ? '步骤 6：已完成' : lang === 'ja' ? 'ステップ6：完了' : lang === 'ru' ? 'Шаг 6: Завершено' : lang === 'ar' ? 'الخطوة 6: مكتمل' : lang === 'th' ? 'ขั้นตอนที่ 6: เสร็จสิ้น' : 'Step 6: Completed',
+        badgeColor: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+        description: 'Once the vessel departs, the exporter gathers all original documents (B/L, Final Invoice, COO, Phytosanitary) to submit to their bank, which forwards them to the importer’s bank in exchange for the payment wire.',
+        laymanAnalogy: 'The property key hand-over process. The buyer transfers the final payment through the global banking system, and the banks release the original papers so the buyer can reclaim the containers.',
+        keyActors: ['Exporter Bank & Importer Bank', 'Global Importer (Buyer)'],
+        documents: [
+          { name: 'Telegraphic Transfer (T/T) / L/C Settlement', desc: 'Proof of foreign exchange wire transfer landing in the exporter\'s bank account.', issuer: 'Correspondent Bank' }
+        ]
+      }
+    ];
+  };
+
+  const getLocalizedFaqs = (lang: string) => {
+    if (lang === 'id') {
+      return [
+        {
+          q: 'Apa itu HS Code (Sistem Harmonisasi) dalam ekspor?',
+          a: 'HS Code adalah sistem klasifikasi barang internasional berupa deretan angka unik (biasanya 8 digit di Indonesia). Tujuannya agar seluruh pabean bea cukai di dunia sepakat mendefinisikan suatu komoditas tanpa terhalang kendala bahasa. Contoh: Cocopeat memiliki kode HS 4402.90.00 di seluruh belahan dunia.'
+        },
+        {
+          q: 'Dari mana dokumen Sertifikat Kepatuhan ekspor diterbitkan?',
+          a: 'Dokumen ekspor diterbitkan oleh berbagai instansi resmi yang berbeda sesuai kompetensinya. Untuk Karantina ditangani Badan Karantina Indonesia (Barantin). Untuk asal barang (COO) diterbitkan oleh Kementerian Perdagangan RI melalui dinas Disperindag daerah setempat. Surat Kontrak Penjualan dibuat mandiri oleh eksportir (trader) dan disepakati oleh pembeli luar negeri.'
+        },
+        {
+          q: 'Bagaimana cara menggunakan Simulator Transaksi di aplikasi ini?',
+          a: 'Sangat mudah! Buka tab "Transaksi", Anda dapat memilih transaksi ekspor aktif di dropdown atas. Klik tombol bulat "Ganti Langkah Alur Kerja" pada infografis interaktif atau klik tombol interaktif di dalam langkah alur kerja untuk menguji, menelusuri, dan memperbarui seluruh tahapan transaksi terpadu.'
+        },
+        {
+          q: 'Bagaimana dasar penomoran dokumen di aplikasi ini (contoh: "SC/NGL/PROD-2-2026-NEGO" atau "SC/NGL/PL-2026-001")?',
+          a: 'Penomoran dokumen ekspor (seperti Sales Contract / Kontrak Penjualan) mengikuti format kode standar bisnis internasional terstruktur berikut:\n\n• SC: Singkatan dari jenis dokumen utama, yaitu Sales Contract (Kontrak Penjualan).\n• NGL: Kode identitas dari pihak eksportir, yaitu Multi Raksa Madani (PT Multi Raksa Madani).\n• PROD-2 / PL: Kode komoditas/produk ekspor yang diperdagangkan (misal: PROD-2 untuk spesifikasi produk tertentu, PL untuk Cocopeat/Coir Pith, COF untuk Coffee, CHR untuk Charcoal, dst).\n• 2026: Tahun pembuatan dokumen atau tahun transaksi berjalan.\n• NEGO / 001: Keterangan status atau nomor urut (NEGO menandakan draf negosiasi kesepakatan awal, sedangkan angka seperti 001/002 menunjukkan nomor urut transaksi pada tahun berjalan).'
+        },
+        {
+          q: 'Apakah aplikasi ini benar-benar terhubung ke portal Bea Cukai atau Bea Cukai INSW?',
+          a: 'Aplikasi ini adalah simulator instrumen ekspor interaktif berteknologi tinggi untuk visualisasi operasional. Seluruh draft dokumen (PEB, Invoice, Bill of Lading, COO) yang Anda sunting dirancang menyerupai format aslinya yang berlaku di Indonesia untuk tujuan simulasi, edukasi rincian, dan tata kelola internal perusahaan.'
+        }
+      ];
     }
-  ];
+    return [
+      {
+        q: 'What is an HS Code (Harmonized System) in export?',
+        a: 'The HS Code is a standardized numerical method of classifying traded products. It is used by customs authorities around the world to identify products for application of duties and taxes.'
+      },
+      {
+        q: 'Where are compliance certificates and documents issued?',
+        a: 'Documents are issued by respective authorized bodies. For quarantine, it is the Quarantine Agency. For Certificates of Origin, it is the Ministry of Trade or Chamber of Commerce. Sales Contracts are drafted directly between Exporters and Buyers.'
+      },
+      {
+        q: 'How do I use the transaction simulator in this app?',
+        a: 'Open the "Transactions" tab, select an active transaction, and use the interactive nodes or action buttons to advance steps from drafting to final payment, managing document drafts along the way.'
+      },
+      {
+        q: 'What is the logic behind document numbering?',
+        a: 'Document numbering follows standard international commercial formats: e.g. SC for Sales Contract, NGL for Multi Raksa Madani identifier, product code (e.g. COF, CHR, PL), the year 2026, and transaction sequence/state.'
+      }
+    ];
+  };
+
+  const guideSteps = getLocalizedSteps(currentLanguage);
+  const faqs = getLocalizedFaqs(currentLanguage);
 
   // Helper to obtain step-specific icon
   const getStepIcon = (index: number) => {
@@ -638,7 +760,7 @@ export default function ExportGuide() {
 
                   {/* Step ID Label */}
                   <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    Tahap 0{idx + 1}
+                    {currentLanguage === 'id' ? 'Tahap' : 'Step'} 0{idx + 1}
                   </span>
 
                   {/* Step Short Title */}
@@ -660,7 +782,7 @@ export default function ExportGuide() {
                 {guideSteps[activeStepIndex].badge}
               </span>
               <span className="text-xs font-mono font-bold text-slate-400 uppercase">
-                TAHAP {activeStepIndex + 1} DARI 6
+                {currentLanguage === 'id' ? 'TAHAP' : 'STEP'} {activeStepIndex + 1} {currentLanguage === 'id' ? 'DARI' : 'OF'} 6
               </span>
             </div>
 
@@ -681,7 +803,7 @@ export default function ExportGuide() {
             <div className="bg-emerald-50/75 border border-emerald-100 rounded-xl p-4 space-y-2">
               <span className="text-xs font-black uppercase tracking-widest text-emerald-800 flex items-center gap-1.5">
                 <HelpCircle className="w-3.5 h-3.5" />
-                Analogi Sederhana untuk Orang Awam :
+                {currentLanguage === 'id' ? 'Analogi Sederhana untuk Orang Awam :' : 'Simple Layman Analogy:'}
               </span>
               <p className="text-sm text-emerald-950 font-medium leading-relaxed">
                 {guideSteps[activeStepIndex].laymanAnalogy}
@@ -690,7 +812,9 @@ export default function ExportGuide() {
 
             {/* Key Actors */}
             <div className="space-y-2">
-              <span className="text-xs font-black uppercase text-slate-500 tracking-wider">Aktor / Pihak yang Terlibat :</span>
+              <span className="text-xs font-black uppercase text-slate-500 tracking-wider">
+                {currentLanguage === 'id' ? 'Aktor / Pihak yang Terlibat :' : 'Actors / Parties Involved:'}
+              </span>
               <div className="flex flex-wrap gap-2">
                 {guideSteps[activeStepIndex].keyActors.map((actor, i) => (
                   <span key={i} className="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
@@ -704,7 +828,7 @@ export default function ExportGuide() {
             <div className="space-y-3">
               <span className="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-slate-900" />
-                Rantai Dokumen yang Terbit di Tahap Ini :
+                {currentLanguage === 'id' ? 'Rantai Dokumen yang Terbit di Tahap Ini :' : 'Document Chain Issued at this Stage:'}
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {guideSteps[activeStepIndex].documents.map((doc, i) => (
@@ -719,12 +843,12 @@ export default function ExportGuide() {
                         <span className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{doc.name}</span>
                       </div>
                       <span className="text-[11px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                        BUKA / EDIT / CETAK ➔
+                        {currentLanguage === 'id' ? 'BUKA / EDIT / CETAK ➔' : 'OPEN / EDIT / PRINT ➔'}
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-slate-500 leading-normal">{doc.desc}</p>
                     <div className="pt-2 border-t border-slate-100 mt-1 flex justify-between items-center text-xs font-mono font-bold text-slate-400">
-                      <span>ORGANISASI:</span>
+                      <span>{currentLanguage === 'id' ? 'ORGANISASI:' : 'ORGANIZATION:'}</span>
                       <span className="text-slate-600 bg-slate-150 px-2 py-0.5 rounded">{doc.issuer}</span>
                     </div>
                   </button>
@@ -739,7 +863,7 @@ export default function ExportGuide() {
                 onClick={() => setActiveStepIndex(prev => prev - 1)}
                 className="text-xs font-bold text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5 py-2 px-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200"
               >
-                Kembali
+                {currentLanguage === 'id' ? 'Kembali' : 'Back'}
               </button>
               
               {activeStepIndex < 5 ? (
@@ -747,13 +871,13 @@ export default function ExportGuide() {
                   onClick={() => setActiveStepIndex(prev => prev + 1)}
                   className="text-xs font-black bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 py-2 px-4 rounded-xl shadow-xs transition-transform hover:-translate-y-0.5 active:scale-95"
                 >
-                  Tahap Selanjutnya
+                  {currentLanguage === 'id' ? 'Tahap Selanjutnya' : 'Next Step'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
                 <div className="text-xs font-black text-emerald-600 flex items-center gap-1.5 px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-200">
                   <CheckCircle className="w-4 h-4" />
-                  Rantai Ekspor Selesai!
+                  {currentLanguage === 'id' ? 'Rantai Ekspor Selesai!' : 'Export Chain Completed!'}
                 </div>
               )}
             </div>
@@ -765,14 +889,20 @@ export default function ExportGuide() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
         <div className="space-y-3">
           <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 inline-block">
-            BAGAIMANA CARA KERJA SISTEM REAL-TIME KAMI?
+            {currentLanguage === 'id' ? 'BAGAIMANA CARA KERJA SISTEM REAL-TIME KAMI?' : 'HOW DOES OUR REAL-TIME SYSTEM WORK?'}
           </span>
-          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Keterlibatan Rantai Pasok Digital</h3>
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+            {currentLanguage === 'id' ? 'Keterlibatan Rantai Pasok Digital' : 'Digital Supply Chain Engagement'}
+          </h3>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Dalam dunia nyata, dokumen tidak mengalir otomatis, melainkan harus diunggah, divalidasi oleh instansi masing-masing (Customs, Karantina, KPA), dan ditandatangani secara digital. 
+            {currentLanguage === 'id' 
+              ? 'Dalam dunia nyata, dokumen tidak mengalir otomatis, melainkan harus diunggah, divalidasi oleh instansi masing-masing (Customs, Karantina, KPA), dan ditandatangani secara digital.'
+              : 'In the real world, trade documents do not flow automatically. They must be drafted, validated by respective agencies (Customs, Quarantine, Authorities), and digitally signed.'}
           </p>
           <p className="text-xs text-slate-500 leading-relaxed font-sans">
-            Aplikasi <strong>ExportFlow</strong> mensimulasikan kepatuhan kepabeanan ini dengan menyediakan dasbor peninjau dokumen langsung, kontrol penerbitan sertifikat, serta log penandatanganan dinamis di mana setiap aktivitas direkam dengan penanda waktu riil demi kepatuhan sanksi logistik global.
+            {currentLanguage === 'id'
+              ? 'Aplikasi ExportFlow mensimulasikan kepatuhan kepabeanan ini dengan menyediakan dasbor peninjau dokumen langsung, kontrol penerbitan sertifikat, serta log penandatanganan dinamis di mana setiap aktivitas direkam dengan penanda waktu riil demi kepatuhan sanksi logistik global.'
+              : 'ExportFlow simulates custom clearance compliance by providing live document review dashboards, certificate issuance controls, and a dynamic signing log where every activity is recorded with a real-time timestamp.'}
           </p>
         </div>
 
@@ -782,23 +912,39 @@ export default function ExportGuide() {
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h4 className="text-xs font-black text-slate-900 uppercase">Simulasi Praktis Mandiri</h4>
-              <p className="text-[10px] text-slate-400">Asah kemampuan administrasi perdagangan internasional</p>
+              <h4 className="text-xs font-black text-slate-900 uppercase">
+                {currentLanguage === 'id' ? 'Simulasi Praktis Mandiri' : 'Self-Guided Practical Simulation'}
+              </h4>
+              <p className="text-[10px] text-slate-400">
+                {currentLanguage === 'id' ? 'Asah kemampuan administrasi perdagangan internasional' : 'Hone your international trade administration skills'}
+              </p>
             </div>
           </div>
           
           <ul className="space-y-2.5 text-xs text-slate-600 font-medium">
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 shrink-0" />
-              <span>Membuat transaksi baru dari awal menggunakan tombol <strong>"Mulai Kontrak Penjualan Baru"</strong> di Dashboard Alur Kerja.</span>
+              <span>
+                {currentLanguage === 'id' 
+                  ? <>Membuat transaksi baru dari awal menggunakan tombol <strong>"Mulai Kontrak Penjualan Baru"</strong> di Dashboard Alur Kerja.</>
+                  : <>Create a new transaction from scratch using the <strong>"Start New Sales Contract"</strong> button on the Workflow Dashboard.</>}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 shrink-0" />
-              <span>Mencoba memajukan langkah logistik dengan menekan <strong>"Draf" ➔ "Terverifikasi" ➔ "Sertifikasi" ➔ "Bea Cukai"</strong>.</span>
+              <span>
+                {currentLanguage === 'id'
+                  ? <>Mencoba memajukan langkah logistik dengan menekan <strong>"Draf" ➔ "Terverifikasi" ➔ "Sertifikasi" ➔ "Bea Cukai"</strong>.</>
+                  : <>Try advancing logistics stages by pressing <strong>"Draft" ➔ "Verified" ➔ "Certification" ➔ "Customs"</strong>.</>}
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 shrink-0" />
-              <span>Memperbarui data krusial seperti Nomor Kontrak, HS Code, dan nama Buyer untuk mencetaknya di lembar dokumen ekspor asli milik Anda.</span>
+              <span>
+                {currentLanguage === 'id'
+                  ? <>Memperbarui data krusial seperti Nomor Kontrak, HS Code, dan nama Buyer untuk mencetaknya di lembar dokumen ekspor asli milik Anda.</>
+                  : <>Update crucial transaction data such as Contract Number, HS Code, and Buyer name to print on your official export document drafts.</>}
+              </span>
             </li>
           </ul>
         </div>
@@ -811,8 +957,12 @@ export default function ExportGuide() {
             <HelpCircle className="w-5 h-5 text-slate-900" />
           </div>
           <div>
-            <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Tanya & Jawab tentang Kepatuhan Ekspor</h3>
-            <p className="text-xs text-slate-400">Pertanyaan umum dari calon pelaku usaha ekspor pemula</p>
+            <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+              {currentLanguage === 'id' ? 'Tanya & Jawab tentang Kepatuhan Ekspor' : 'Q&A on Export Compliance'}
+            </h3>
+            <p className="text-xs text-slate-400">
+              {currentLanguage === 'id' ? 'Pertanyaan umum dari calon pelaku usaha ekspor pemula' : 'Common questions from aspiring exporters'}
+            </p>
           </div>
         </div>
 

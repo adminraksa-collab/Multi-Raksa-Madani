@@ -113,6 +113,8 @@ export default function App() {
   const [negotiationProduct, setNegotiationProduct] = useState<ExportProduct | undefined>(undefined);
   const [showRestrictedAlert, setShowRestrictedAlert] = useState<string | null>(null);
   const [autoOpenLoi, setAutoOpenLoi] = useState<boolean>(false);
+  const [selectedShipmentIdForTracking, setSelectedShipmentIdForTracking] = useState<string | null>(null);
+  const [selectedBuyerFilter, setSelectedBuyerFilter] = useState<string>('All');
 
   // Local storage based user list and login credential state
   const [users, setUsers] = useState<UserProfile[]>(() => {
@@ -328,6 +330,8 @@ export default function App() {
   const [profilePhone, setProfilePhone] = useState('');
   const [profileAddress, setProfileAddress] = useState('');
   const [profileCountry, setProfileCountry] = useState('');
+  const [profilePortOfLoading, setProfilePortOfLoading] = useState('');
+  const [profilePortOfDischarge, setProfilePortOfDischarge] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('');
   const [profileCurrentPassword, setProfileCurrentPassword] = useState('');
   const [profileNewPassword, setProfileNewPassword] = useState('');
@@ -346,6 +350,8 @@ export default function App() {
     setProfilePhone(currentUser.phone || '');
     setProfileAddress(currentUser.address || '');
     setProfileCountry(currentUser.country || '');
+    setProfilePortOfLoading(currentUser.preferredPortOfLoading || '');
+    setProfilePortOfDischarge(currentUser.preferredPortOfDischarge || '');
     setProfileAvatar(currentUser.avatar);
     setProfileCurrentPassword('');
     setProfileNewPassword('');
@@ -447,6 +453,8 @@ export default function App() {
           phone: profilePhone.trim() || undefined,
           address: profileAddress.trim(),
           country: profileCountry.trim(),
+          preferredPortOfLoading: profilePortOfLoading.trim(),
+          preferredPortOfDischarge: profilePortOfDischarge.trim(),
           avatar: profileAvatar
         };
       }
@@ -464,6 +472,8 @@ export default function App() {
       phone: profilePhone.trim() || undefined,
       address: profileAddress.trim(),
       country: profileCountry.trim(),
+      preferredPortOfLoading: profilePortOfLoading.trim(),
+      preferredPortOfDischarge: profilePortOfDischarge.trim(),
       avatar: profileAvatar
     };
     setCurrentUser(updatedCurrentUser);
@@ -671,8 +681,21 @@ export default function App() {
     return true;
   });
 
+  // Filter sample requests by role (Buyer can only see their own sample requests)
+  const visibleSampleRequests = sampleRequests.filter(req => {
+    if (!currentUser) return true;
+    if (currentUser.role === 'Buyer') {
+      return req.buyerId === currentUser.id || req.buyerName === currentUser.name || req.buyerCompany === currentUser.companyName;
+    }
+    return true;
+  });
+
   // Apply Search Query & Status Filters
   const filteredShipments = visibleShipments.filter(s => {
+    // Filter by Selected Buyer (for Trader/Superadmin)
+    if ((currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && selectedBuyerFilter !== 'All') {
+      if (s.buyerId !== selectedBuyerFilter) return false;
+    }
     // Status Filter
     if (shipmentStatusFilter === 'Draft') {
       const isSigned = s.documents.some(d => (d.type === 'Sales Contract' || d.type === 'Proforma Invoice') && d.status === 'Approved');
@@ -935,6 +958,7 @@ export default function App() {
       paymentTerms: string;
       incoterms: string;
       portOfDischarge: string;
+      portOfLoading?: string;
       buyerCompany: string;
       nextStep: ShipmentStep;
       comments: string;
@@ -953,7 +977,7 @@ export default function App() {
       if (s.id === shipmentId) {
         // Also update documents status
         const updatedDocs = s.documents.map(d => {
-          if (d.type === 'Sales Contract' || d.type === 'Proforma Invoice') {
+          if (updatedData.nextStep === 'Shipping' && (d.type === 'Sales Contract' || d.type === 'Proforma Invoice')) {
             return { ...d, status: 'Approved' as const };
           }
           return d;
@@ -965,6 +989,7 @@ export default function App() {
           quantity: updatedData.quantity,
           totalValue: calculatedValue,
           portOfDischarge: updatedData.portOfDischarge,
+          portOfLoading: updatedData.portOfLoading || s.portOfLoading,
           buyerCompany: updatedData.buyerCompany,
           incoterms: updatedData.incoterms,
           paymentTerms: updatedData.paymentTerms,
@@ -1127,6 +1152,48 @@ export default function App() {
     const newShipmentId = `ship-${1000 + shipments.length + 1}`;
     const defaultBuyerCompany = (currentUser && currentUser.role === 'Buyer') ? currentUser.companyName : 'EuroFoods Import GmbH (München)';
     const defaultBuyerName = (currentUser && currentUser.role === 'Buyer') ? currentUser.name : 'EuroFoods Import GmbH';
+
+    let defaultPortOfDischarge = 'Port of Hamburg, Germany';
+    let defaultPortOfLoading = 'Tanjung Priok, Jakarta';
+
+    if (currentUser && currentUser.role === 'Buyer') {
+      if (currentUser.preferredPortOfDischarge) {
+        defaultPortOfDischarge = currentUser.preferredPortOfDischarge;
+      } else if (currentUser.country) {
+        const countryLower = currentUser.country.toLowerCase();
+        if (countryLower.includes('germany') || countryLower.includes('jerman') || countryLower.includes('hamburg')) {
+          defaultPortOfDischarge = 'Port of Hamburg, Germany';
+        } else if (countryLower.includes('japan') || countryLower.includes('jepang') || countryLower.includes('tokyo') || countryLower.includes('yokohama')) {
+          defaultPortOfDischarge = 'Port of Yokohama, Japan';
+        } else if (countryLower.includes('malaysia') || countryLower.includes('klang') || countryLower.includes('pt malay lion')) {
+          defaultPortOfDischarge = 'Port Klang, Malaysia';
+        } else if (countryLower.includes('singapore') || countryLower.includes('singapura')) {
+          defaultPortOfDischarge = 'Port of Singapore, Singapore';
+        } else if (countryLower.includes('netherlands') || countryLower.includes('belanda') || countryLower.includes('rotterdam')) {
+          defaultPortOfDischarge = 'Port of Rotterdam, Netherlands';
+        } else if (countryLower.includes('usa') || countryLower.includes('america') || countryLower.includes('amerika') || countryLower.includes('new york')) {
+          defaultPortOfDischarge = 'Port of New York, USA';
+        } else if (countryLower.includes('australia') || countryLower.includes('melbourne')) {
+          defaultPortOfDischarge = 'Port of Melbourne, Australia';
+        } else {
+          defaultPortOfDischarge = `Port of ${currentUser.country}`;
+        }
+      } else if (currentUser.companyName) {
+        const coLower = currentUser.companyName.toLowerCase();
+        if (coLower.includes('malay') || coLower.includes('lion')) {
+          defaultPortOfDischarge = 'Port Klang, Malaysia';
+        } else if (coLower.includes('yoshihide') || coLower.includes('tokyo') || coLower.includes('japan')) {
+          defaultPortOfDischarge = 'Port of Yokohama, Japan';
+        } else if (coLower.includes('euro') || coLower.includes('gmbh') || coLower.includes('deutsch')) {
+          defaultPortOfDischarge = 'Port of Hamburg, Germany';
+        }
+      }
+      
+      if (currentUser.preferredPortOfLoading) {
+        defaultPortOfLoading = currentUser.preferredPortOfLoading;
+      }
+    }
+
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${product.id.toUpperCase()}-2026`,
@@ -1140,15 +1207,15 @@ export default function App() {
       forwarderName: 'Siti Aminah',
       forwarderCompany: 'PT Samudera Logistik Internasional',
       traderId: 'usr-trader',
-      traderName: currentUser?.name || 'Hendry Kurniawan',
+      traderName: (currentUser && currentUser.role === 'Trader') ? currentUser.name : 'Dwi Rokhdialisa',
       productName: product.name,
       quantity: 15,
       unit: product.unit,
       totalValue: parseFloat(product.price.replace(/,/g, '')) * 15,
       currency: 'USD',
       hsCode: product.hsCode,
-      portOfLoading: 'Tanjung Priok, Jakarta',
-      portOfDischarge: 'Port of Hamburg, Germany',
+      portOfLoading: defaultPortOfLoading,
+      portOfDischarge: defaultPortOfDischarge,
       vesselName: 'MV Nusantara Trans',
       voyageNumber: 'V.11',
       etd: '2026-07-10',
@@ -1210,7 +1277,7 @@ export default function App() {
       forwarderName: 'Siti Aminah',
       forwarderCompany: 'PT Samudera Logistik Internasional',
       traderId: 'usr-trader',
-      traderName: currentUser?.name || 'Hendry Kurniawan',
+      traderName: (currentUser && currentUser.role === 'Trader') ? currentUser.name : 'Dwi Rokhdialisa',
       productName: formData.productName,
       quantity: formData.quantity,
       unit: formData.unit,
@@ -1299,6 +1366,47 @@ export default function App() {
     const pricePerTon = parseFloat(product.price.replace(/,/g, '')) || 1000;
     const finalTotalValue = pricePerTon * finalQty;
 
+    let defaultPortOfDischarge = 'Port of Yokohama, Japan';
+    let defaultPortOfLoading = 'Tanjung Priok, Jakarta';
+
+    if (currentUser && currentUser.role === 'Buyer') {
+      if (currentUser.preferredPortOfDischarge) {
+        defaultPortOfDischarge = currentUser.preferredPortOfDischarge;
+      } else if (currentUser.country) {
+        const countryLower = currentUser.country.toLowerCase();
+        if (countryLower.includes('germany') || countryLower.includes('jerman') || countryLower.includes('hamburg')) {
+          defaultPortOfDischarge = 'Port of Hamburg, Germany';
+        } else if (countryLower.includes('japan') || countryLower.includes('jepang') || countryLower.includes('tokyo') || countryLower.includes('yokohama')) {
+          defaultPortOfDischarge = 'Port of Yokohama, Japan';
+        } else if (countryLower.includes('malaysia') || countryLower.includes('klang') || countryLower.includes('pt malay lion')) {
+          defaultPortOfDischarge = 'Port Klang, Malaysia';
+        } else if (countryLower.includes('singapore') || countryLower.includes('singapura')) {
+          defaultPortOfDischarge = 'Port of Singapore, Singapore';
+        } else if (countryLower.includes('netherlands') || countryLower.includes('belanda') || countryLower.includes('rotterdam')) {
+          defaultPortOfDischarge = 'Port of Rotterdam, Netherlands';
+        } else if (countryLower.includes('usa') || countryLower.includes('america') || countryLower.includes('amerika') || countryLower.includes('new york')) {
+          defaultPortOfDischarge = 'Port of New York, USA';
+        } else if (countryLower.includes('australia') || countryLower.includes('melbourne')) {
+          defaultPortOfDischarge = 'Port of Melbourne, Australia';
+        } else {
+          defaultPortOfDischarge = `Port of ${currentUser.country}`;
+        }
+      } else if (currentUser.companyName) {
+        const coLower = currentUser.companyName.toLowerCase();
+        if (coLower.includes('malay') || coLower.includes('lion')) {
+          defaultPortOfDischarge = 'Port Klang, Malaysia';
+        } else if (coLower.includes('yoshihide') || coLower.includes('tokyo') || coLower.includes('japan')) {
+          defaultPortOfDischarge = 'Port of Yokohama, Japan';
+        } else if (coLower.includes('euro') || coLower.includes('gmbh') || coLower.includes('deutsch')) {
+          defaultPortOfDischarge = 'Port of Hamburg, Germany';
+        }
+      }
+      
+      if (currentUser.preferredPortOfLoading) {
+        defaultPortOfLoading = currentUser.preferredPortOfLoading;
+      }
+    }
+
     const newShip: ExportShipment = {
       id: newShipmentId,
       contractNumber: `SC/NGL/${product.id.toUpperCase()}-2026-NEGO`,
@@ -1312,15 +1420,15 @@ export default function App() {
       forwarderName: 'Siti Aminah',
       forwarderCompany: 'PT Samudera Logistik Internasional',
       traderId: 'usr-trader',
-      traderName: currentUser?.name || 'Hendry Kurniawan',
+      traderName: (currentUser && currentUser.role === 'Trader') ? currentUser.name : 'Dwi Rokhdialisa',
       productName: product.name,
       quantity: finalQty,
       unit: product.unit,
       totalValue: finalTotalValue,
       currency: 'USD',
       hsCode: product.hsCode,
-      portOfLoading: 'Tanjung Priok, Jakarta',
-      portOfDischarge: 'Port of Yokohama, Japan',
+      portOfLoading: defaultPortOfLoading,
+      portOfDischarge: defaultPortOfDischarge,
       vesselName: 'MV Samudera Pasifik V.204',
       voyageNumber: 'V.204',
       etd: new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString().split('T')[0],
@@ -1483,7 +1591,7 @@ export default function App() {
       forwarderName: 'Siti Aminah',
       forwarderCompany: 'PT Samudera Logistik Internasional',
       traderId: 'usr-trader',
-      traderName: currentUser?.name || 'Hendry Kurniawan',
+      traderName: (currentUser && currentUser.role === 'Trader') ? currentUser.name : 'Dwi Rokhdialisa',
       productName: dealData.product.name,
       quantity: dealData.quantity,
       unit: dealData.product.unit,
@@ -1705,7 +1813,7 @@ export default function App() {
               {/* Notification Center Bell */}
               <NotificationCenter 
                 currentUser={currentUser}
-                shipments={shipments}
+                shipments={visibleShipments}
                 onSelectShipment={(shipmentId, stepIndex, subStepIndex) => {
                   setActiveShipmentId(shipmentId);
                   setTargetStepIndex(stepIndex);
@@ -1939,29 +2047,6 @@ export default function App() {
           />
         ) : activeTab === 'workflow' ? (
           <div className="space-y-6">
-            {/* Header and Controls */}
-            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white p-4 rounded-2xl border border-gray-150 shadow-3xs text-left">
-              <div className="space-y-1">
-                <h2 className="text-base font-black text-slate-850 uppercase tracking-tight">
-                  Dasbor Tata Kelola Transaksi Kargo Ekspor
-                </h2>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Pantau, verifikasi dokumen kepabeanan RI, audit COO/Karantina, dan kelola alur pengapalan internasional secara real-time.
-                </p>
-              </div>
-
-              {/* Action buttons (New Contract) */}
-              {(currentUser?.role === 'Trader' || currentUser?.role === 'Buyer' || currentUser?.role === 'Superadmin') && (
-                <button
-                  onClick={() => setIsNewContractModalOpen(true)}
-                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer animate-none"
-                >
-                  <Plus className="w-4 h-4 text-emerald-400" />
-                  <span>Mulai Kontrak Baru</span>
-                </button>
-              )}
-            </div>
-
             {/* Sub-tab Navigation */}
             <div className="flex border-b border-slate-200">
               <button
@@ -1982,110 +2067,28 @@ export default function App() {
                     : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
                 }`}
               >
-                Permintaan Sampel ({sampleRequests.length})
+                Permintaan Sampel ({visibleSampleRequests.length})
               </button>
             </div>
 
-            {workflowSubTab === 'cargo' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-                {/* Left Column: Shipments list */}
-                <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-gray-150 shadow-3xs space-y-4 text-left">
-                  <div className="space-y-2.5">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                      Daftar Transaksi ({filteredShipments.length})
-                    </h3>
-                    
-                    {/* Search Bar */}
-                    <div className="relative">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Cari Kontrak/Pelabuhan..."
-                        value={shipmentSearchQuery}
-                        onChange={(e) => setShipmentSearchQuery(e.target.value)}
-                        className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
-                      />
-                    </div>
-
-                    {/* Status Filters */}
-                    <div className="grid grid-cols-3 gap-1">
-                      {[
-                        { code: 'All', label: 'Semua' },
-                        { code: 'Draft', label: 'Draf' },
-                        { code: 'Completed', label: 'Selesai' }
-                      ].map(f => (
-                        <button
-                          key={f.code}
-                          onClick={() => setShipmentStatusFilter(f.code)}
-                          className={`py-1.5 px-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer text-center ${
-                            shipmentStatusFilter === f.code
-                              ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-transparent'
-                          }`}
-                        >
-                          {f.label}
-                        </button>
-                      ))}
+{workflowSubTab === 'cargo' ? (
+              selectedShipmentIdForTracking ? (
+                /* Detail / Tracking mode (InteractiveInfographic) with back button */
+                <div className="space-y-6">
+                  {/* Back button row */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-150 shadow-3xs text-left">
+                    <button
+                      onClick={() => setSelectedShipmentIdForTracking(null)}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-250 shrink-0 animate-none"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Kembali ke Daftar Transaksi</span>
+                    </button>
+                    <div className="text-xs text-slate-500 font-bold">
+                      Menampilkan Pelacakan Logistik Rantai Pasok Kontrak: <strong className="font-mono text-indigo-750 bg-indigo-50/70 border border-indigo-150 px-2 py-0.5 rounded ml-1">{activeShipment?.contractNumber}</strong>
                     </div>
                   </div>
 
-                  {/* Shipments List */}
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                    {filteredShipments.length === 0 ? (
-                      <div className="py-8 text-center text-xs text-gray-400 font-semibold">
-                        Tidak ada transaksi.
-                      </div>
-                    ) : (
-                      filteredShipments.map((s) => {
-                        const isActive = s.id === activeShipment?.id;
-                        const isCompleted = s.currentStep === 'Completed';
-                        const isDraft = s.currentStep === 'Draft';
-                        
-                        return (
-                          <div
-                            key={s.id}
-                            onClick={() => {
-                              setActiveShipmentId(s.id);
-                              setTargetStepIndex(undefined);
-                              setTargetSubStepIndex(undefined);
-                            }}
-                            className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
-                              isActive
-                                ? 'bg-indigo-50/50 border-indigo-200 shadow-3xs'
-                                : 'bg-white hover:bg-slate-50 border-slate-150'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-1.5">
-                              <span className="text-[10px] font-bold font-mono text-indigo-650">{s.id.toUpperCase()}</span>
-                              <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight ${
-                                isCompleted
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : isDraft
-                                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
-                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
-                              }`}>
-                                {s.currentStep}
-                              </span>
-                            </div>
-                            
-                            <div>
-                              <h4 className="text-[11px] font-extrabold text-slate-800 line-clamp-1">{s.productName}</h4>
-                              <p className="text-[10px] text-slate-400 font-bold tracking-tight mt-0.5 font-mono">{s.contractNumber}</p>
-                            </div>
-
-                            <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold border-t border-slate-100 pt-1.5 mt-0.5">
-                              <span className="line-clamp-1">{s.buyerCompany}</span>
-                              <span className="font-extrabold text-indigo-600 shrink-0">{s.quantity} {s.unit.split(' ')[0]}</span>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Column: Shipment detail (InteractiveInfographic) */}
-                <div className="lg:col-span-3">
                   {activeShipment ? (
                     <InteractiveInfographic
                       shipment={activeShipment}
@@ -2108,20 +2111,251 @@ export default function App() {
                       }}
                     />
                   ) : (
-                    <div className="bg-white rounded-2xl border border-gray-150 p-16 text-center shadow-3xs max-w-lg mx-auto space-y-4">
+                    <div className="bg-white rounded-2xl border border-gray-150 p-16 text-center shadow-3xs max-w-lg mx-auto">
+                      <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
+                        <Layers className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider mt-4">Transaksi Tidak Ditemukan</h3>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Main Dashboard: List of Transactions Requested by Buyer */
+                <div className="space-y-6">
+                  {/* Search and Filters panel */}
+                  <div className="bg-white p-4 rounded-2xl border border-slate-150 shadow-3xs flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between text-left">
+                    {/* Search and status filters */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                      {/* Search Input */}
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Cari Komoditas/Kontrak/Pelabuhan..."
+                          value={shipmentSearchQuery}
+                          onChange={(e) => setShipmentSearchQuery(e.target.value)}
+                          className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                        />
+                      </div>
+
+                      {/* Status Tabs */}
+                      <div className="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-200 rounded-xl">
+                        {[
+                          { code: 'All', label: 'Semua Status' },
+                          { code: 'Draft', label: 'Draf' },
+                          { code: 'Completed', label: 'Selesai' }
+                        ].map(f => (
+                          <button
+                            key={f.code}
+                            onClick={() => setShipmentStatusFilter(f.code)}
+                            className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center ${
+                              shipmentStatusFilter === f.code
+                                ? 'bg-white text-indigo-700 shadow-3xs border border-slate-200 font-black'
+                                : 'text-slate-500 hover:text-slate-800 border border-transparent font-bold'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Filter by Buyer (Only for Trader & Superadmin to view different buyers' requests) */}
+                    {(currentUser?.role === 'Superadmin' || currentUser?.role === 'Trader') && (
+                      <div className="flex items-center gap-2 self-start md:self-auto">
+                        <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Filter Pembeli (Buyer):</span>
+                        <select
+                          value={selectedBuyerFilter}
+                          onChange={(e) => setSelectedBuyerFilter(e.target.value)}
+                          className="text-xs font-black px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                        >
+                          <option value="All">Semua Pembeli</option>
+                          {Array.from(new Set(shipments.map(s => JSON.stringify({ id: s.buyerId, name: s.buyerName, company: s.buyerCompany }))))
+                            .map((str: string) => {
+                              const b = JSON.parse(str);
+                              return (
+                                <option key={b.id} value={b.id}>
+                                  {b.company} ({b.name})
+                                </option>
+                              );
+                            })
+                          }
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Summary Stats Row */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-left text-white shadow-3xs">
+                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Total Nilai Kontrak (FOB)</p>
+                      <p className="text-lg sm:text-xl font-black mt-1 font-mono text-emerald-400">
+                        ${filteredShipments.reduce((sum, s) => sum + s.totalValue, 0).toLocaleString('en-US')} USD
+                      </p>
+                      <div className="text-[9px] text-slate-400 font-bold mt-1.5">Nilai transaksi ekspor terdaftar</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
+                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Draf / Negosiasi</p>
+                      <p className="text-lg sm:text-xl font-black mt-1 text-amber-600 font-mono">
+                        {filteredShipments.filter(s => s.currentStep === 'Draft').length} Kontrak
+                      </p>
+                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Proses penyusunan Sales Contract</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
+                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Pengapalan Aktif</p>
+                      <p className="text-lg sm:text-xl font-black mt-1 text-blue-600 font-mono">
+                        {filteredShipments.filter(s => s.currentStep === 'Shipping').length} Kargo
+                      </p>
+                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Pelayaran, karantina & logistik</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-150 text-left shadow-3xs">
+                      <p className="text-[9px] uppercase font-black tracking-wider text-slate-400">Transaksi Selesai</p>
+                      <p className="text-lg sm:text-xl font-black mt-1 text-emerald-600 font-mono">
+                        {filteredShipments.filter(s => s.currentStep === 'Completed').length} Kontrak
+                      </p>
+                      <div className="text-[9px] text-slate-500 font-semibold mt-1.5">Kargo diterima di port tujuan</div>
+                    </div>
+                  </div>
+
+                  {/* Transactions Grid */}
+                  {filteredShipments.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-slate-150 p-16 text-center shadow-3xs max-w-lg mx-auto space-y-4">
                       <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
                         <Layers className="w-8 h-8" />
                       </div>
                       <div>
-                        <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Belum Ada Transaksi</h3>
+                        <h3 className="text-xs font-black text-slate-850 uppercase tracking-wider">Tidak Ada Transaksi</h3>
                         <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                          Pilih transaksi atau mulai buat transaksi baru untuk memantau alur logistik ekspor.
+                          Tidak ditemukan kontrak dagang atau kargo logistik yang diminta oleh buyer. Silakan ganti filter atau buat draf transaksi baru.
                         </p>
                       </div>
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {filteredShipments.map((s) => {
+                        const isCompleted = s.currentStep === 'Completed';
+                        const isDraft = s.currentStep === 'Draft';
+                        
+                        // Estimate completion progress based on step
+                        let progressPercent = 33;
+                        if (s.currentStep === 'Shipping') progressPercent = 66;
+                        if (s.currentStep === 'Completed') progressPercent = 100;
+
+                        const displayTraderName = s.traderName === s.buyerName ? 'Dwi Rokhdialisa' : (s.traderName || 'Dwi Rokhdialisa');
+
+                        return (
+                          <div 
+                            key={s.id}
+                            className="bg-white rounded-2xl border border-slate-150 shadow-3xs hover:shadow-2xs transition-all flex flex-col justify-between overflow-hidden text-left"
+                          >
+                            {/* Card Header */}
+                            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                                  <Package className="w-4 h-4 text-indigo-600" />
+                                </div>
+                                <div>
+                                  <span className="text-[10px] font-black font-mono text-indigo-750 tracking-wider block">{s.id.toUpperCase()}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 font-mono">{s.contractNumber}</span>
+                                </div>
+                              </div>
+                              
+                              <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                                isCompleted
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : isDraft
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}>
+                                {isDraft ? 'Negosiasi & Kontrak' : isCompleted ? 'Selesai & Serah Terima' : 'Proses Logistik & L/C'}
+                              </span>
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="p-4 space-y-4 flex-1">
+                              <div>
+                                <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight line-clamp-2 leading-relaxed h-8">
+                                  {s.productName}
+                                </h4>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">HS {s.hsCode}</span>
+                                  <span className="text-[10px] font-bold text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded font-mono">{s.quantity} {s.unit.split(' ')[0]}</span>
+                                </div>
+                              </div>
+
+                              {/* Route Info */}
+                              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 flex items-center justify-between text-center">
+                                <div className="text-left space-y-0.5 max-w-[45%]">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN ASAL</span>
+                                  <span className="text-[10px] font-black text-slate-700 line-clamp-1">{s.portOfLoading.split('(')[0]}</span>
+                                </div>
+                                <div className="flex flex-col items-center justify-center flex-1 px-1">
+                                  <Truck className="w-3.5 h-3.5 text-indigo-400" />
+                                  <div className="w-full border-t border-dashed border-slate-250 my-1 relative">
+                                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                  </div>
+                                </div>
+                                <div className="text-right space-y-0.5 max-w-[45%]">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">PELABUHAN TUJUAN</span>
+                                  <span className="text-[10px] font-black text-slate-700 line-clamp-1">{s.portOfDischarge.split('(')[0]}</span>
+                                </div>
+                              </div>
+
+                              {/* Buyer & Trader details */}
+                              <div className="grid grid-cols-2 gap-3 pt-1 text-[10px] border-t border-slate-100">
+                                <div className="space-y-0.5">
+                                  <span className="text-[8.5px] text-slate-400 font-bold block">Pembeli (Buyer):</span>
+                                  <p className="font-extrabold text-slate-700 truncate" title={s.buyerCompany}>{s.buyerCompany}</p>
+                                  <p className="text-[9px] text-slate-500 font-medium truncate">{s.buyerName}</p>
+                                </div>
+                                <div className="space-y-0.5 border-l border-slate-150 pl-3">
+                                  <span className="text-[8.5px] text-slate-400 font-bold block">Eksportir (Trader):</span>
+                                  <p className="font-extrabold text-slate-700 truncate" title="PT Multi Raksa Madani">PT Multi Raksa Madani</p>
+                                  <p className="text-[9px] text-slate-500 font-medium truncate">{displayTraderName}</p>
+                                </div>
+                              </div>
+
+                              {/* Progress Line */}
+                              <div className="space-y-1 pt-1">
+                                <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                  <span>Progress Alur Transaksi</span>
+                                  <span className="font-mono text-indigo-600 font-black">{progressPercent}%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                  <div 
+                                    className="bg-indigo-600 h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${progressPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card Footer */}
+                            <div className="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
+                              <div className="text-[11px] font-black text-indigo-700 font-mono">
+                                FOB: ${s.totalValue.toLocaleString('en-US')} USD
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  setActiveShipmentId(s.id);
+                                  setSelectedShipmentIdForTracking(s.id);
+                                  setTargetStepIndex(undefined);
+                                  setTargetSubStepIndex(undefined);
+                                }}
+                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black transition-all flex items-center gap-1 shadow-3xs cursor-pointer border border-transparent"
+                              >
+                                <Globe className="w-3.5 h-3.5 text-indigo-300" />
+                                <span>Lacak Logistik (3 Langkah)</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-              </div>
+              )
             ) : (
               <div className="space-y-6 text-left">
                 <div className="bg-emerald-50 border border-emerald-150 rounded-2xl p-4 flex items-start gap-3">
@@ -2136,7 +2370,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {sampleRequests.length === 0 ? (
+                {visibleSampleRequests.length === 0 ? (
                   <div className="bg-white rounded-xl border border-gray-150 p-12 text-center max-w-lg mx-auto space-y-4 shadow-3xs">
                     <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-150 flex items-center justify-center mx-auto text-slate-400">
                       <Award className="w-8 h-8" />
@@ -2150,7 +2384,7 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {sampleRequests.map((req) => {
+                    {visibleSampleRequests.map((req) => {
                       const isPending = req.status === 'pending';
                       const isShipped = req.status === 'shipped';
                       const isDelivered = req.status === 'delivered';
@@ -2501,6 +2735,32 @@ export default function App() {
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
                     placeholder="Contoh: +62 812 3456 7890"
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+
+                {/* Preferred Port of Discharge */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Pelabuhan Bongkar Utama (Destinasi)</label>
+                  <input
+                    type="text"
+                    value={profilePortOfDischarge}
+                    onChange={(e) => setProfilePortOfDischarge(e.target.value)}
+                    placeholder="Contoh: Port of Yokohama, Japan"
+                    className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Preferred Port of Loading */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black uppercase text-slate-500">Pelabuhan Muat Utama (Asal)</label>
+                  <input
+                    type="text"
+                    value={profilePortOfLoading}
+                    onChange={(e) => setProfilePortOfLoading(e.target.value)}
+                    placeholder="Contoh: Tanjung Priok, Jakarta"
                     className="w-full text-xs p-2.5 bg-slate-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none transition-all font-sans font-medium"
                   />
                 </div>
@@ -2875,7 +3135,7 @@ export default function App() {
       {/* Floating document editor with templates */}
       {isDocEditorOpen && (
         <DocumentEditor
-          shipments={shipments}
+          shipments={visibleShipments}
           currentUser={currentUser}
           onSaveDocument={handleSaveNewDocument}
           onClose={() => setIsDocEditorOpen(false)}

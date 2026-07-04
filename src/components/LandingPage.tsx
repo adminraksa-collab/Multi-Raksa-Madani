@@ -608,6 +608,7 @@ export default function LandingPage({
       id: `samp-${Math.floor(100 + Math.random() * 900)}`,
       productId: selectedSampleProduct.id,
       productName: selectedSampleProduct.name,
+      buyerId: currentUser.id,
       buyerName: currentUser.name,
       buyerCompany: currentUser.companyName || 'Importir Asing',
       quantity: sampleQty,

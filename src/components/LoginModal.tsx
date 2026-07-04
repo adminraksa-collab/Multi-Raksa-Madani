@@ -170,7 +170,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     if (currentUser) {
       setEmail(currentUser.email);
     } else {
-      setEmail('lis@exportflow.com'); // Default to Trader
+      setEmail(''); // Default to empty as requested by user
     }
     setPassword('');
     setErrorMsg('');

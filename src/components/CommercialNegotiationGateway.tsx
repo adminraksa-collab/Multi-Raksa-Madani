@@ -22,6 +22,7 @@ interface CommercialNegotiationGatewayProps {
     paymentTerms: string;
     incoterms: string;
     portOfDischarge: string;
+    portOfLoading?: string;
     buyerCompany: string;
     nextStep: ShipmentStep;
     comments: string;
@@ -166,6 +167,28 @@ export default function CommercialNegotiationGateway({
     } catch (e) {}
     return officialProposal.notes;
   });
+
+  const [negoPortOfLoading, setNegoPortOfLoading] = useState<string>(() => {
+    try {
+      const key = activeSimulatedRole === 'Buyer'
+        ? `commercial_nego_buyer_draft_port_loading_${shipment.id}`
+        : `commercial_nego_trader_draft_port_loading_${shipment.id}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return saved;
+    } catch (e) {}
+    return shipment.portOfLoading || 'Tanjung Priok, Jakarta';
+  });
+
+  const [negoPortOfDischarge, setNegoPortOfDischarge] = useState<string>(() => {
+    try {
+      const key = activeSimulatedRole === 'Buyer'
+        ? `commercial_nego_buyer_draft_port_discharge_${shipment.id}`
+        : `commercial_nego_trader_draft_port_discharge_${shipment.id}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return saved;
+    } catch (e) {}
+    return shipment.portOfDischarge || 'Port of Yokohama, Japan';
+  });
   
   // File upload state for LOI attachment with 2MB limit
   const [attachedFile, setAttachedFile] = useState<{ name: string; size: number; url?: string } | null>(() => {
@@ -199,13 +222,13 @@ export default function CommercialNegotiationGateway({
         sender: 'Buyer',
         senderName: 'Kenji Sato (Importir)',
         avatar: '🇯🇵',
-        message: `Halo Pak Hendry. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
+        message: `Halo Bu Dwi. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
         timestamp: '10:15'
       },
       {
         id: '2',
         sender: 'Trader',
-        senderName: 'Hendry Kurniawan (Eksportir)',
+        senderName: 'Dwi Rokhdialisa (Eksportir)',
         avatar: '🇮🇩',
         message: 'Selamat pagi Sato-san! Senang mendengar ketertarikan Anda. Kami siap menyuplai biji kopi pilihan dengan standardisasi ekspor terbaik dan sertifikasi lengkap.',
         timestamp: '10:20'
@@ -318,6 +341,22 @@ export default function CommercialNegotiationGateway({
   }, [negotiationNotes, activeSimulatedRole, shipment.id]);
 
   useEffect(() => {
+    if (activeSimulatedRole === 'Buyer') {
+      localStorage.setItem(`commercial_nego_buyer_draft_port_loading_${shipment.id}`, negoPortOfLoading);
+    } else if (activeSimulatedRole === 'Trader') {
+      localStorage.setItem(`commercial_nego_trader_draft_port_loading_${shipment.id}`, negoPortOfLoading);
+    }
+  }, [negoPortOfLoading, activeSimulatedRole, shipment.id]);
+
+  useEffect(() => {
+    if (activeSimulatedRole === 'Buyer') {
+      localStorage.setItem(`commercial_nego_buyer_draft_port_discharge_${shipment.id}`, negoPortOfDischarge);
+    } else if (activeSimulatedRole === 'Trader') {
+      localStorage.setItem(`commercial_nego_trader_draft_port_discharge_${shipment.id}`, negoPortOfDischarge);
+    }
+  }, [negoPortOfDischarge, activeSimulatedRole, shipment.id]);
+
+  useEffect(() => {
     localStorage.setItem(`commercial_nego_buyerSigned_${shipment.id}`, String(buyerSigned));
   }, [buyerSigned, shipment.id]);
 
@@ -392,7 +431,7 @@ export default function CommercialNegotiationGateway({
     if (!msgText) return;
 
     const senderRole = activeSimulatedRole === 'Viewer' ? 'Buyer' : activeSimulatedRole;
-    const senderName = senderRole === 'Buyer' ? 'Kenji Sato (Importir)' : 'Hendry Kurniawan (Eksportir)';
+    const senderName = senderRole === 'Buyer' ? 'Kenji Sato (Importir)' : 'Dwi Rokhdialisa (Eksportir)';
     const avatar = senderRole === 'Buyer' ? '🇯🇵' : '🇮🇩';
 
     const newMsg: ChatMessage = {
@@ -436,6 +475,20 @@ export default function CommercialNegotiationGateway({
     };
     setOfficialProposal(updated);
     localStorage.setItem(`commercial_nego_official_proposal_${shipment.id}`, JSON.stringify(updated));
+
+    if (onUpdateShipmentFromDeal) {
+      onUpdateShipmentFromDeal(shipment.id, {
+        quantity: updatedQty,
+        pricePerUnit: updatedPrice,
+        paymentTerms: updatedPayment,
+        incoterms: updatedIncoterm,
+        portOfDischarge: negoPortOfDischarge,
+        portOfLoading: negoPortOfLoading,
+        buyerCompany: shipment.buyerCompany,
+        nextStep: shipment.currentStep, // Keep current step
+        comments: `Pengajuan draf penawaran baru oleh ${activeSimulatedRole === 'Buyer' ? 'Importir' : 'Eksportir'}.`
+      });
+    }
 
     // Append log message to the chat
     const logMsg: ChatMessage = {
@@ -487,6 +540,21 @@ export default function CommercialNegotiationGateway({
               traderAgreed: true
             };
             localStorage.setItem(`commercial_nego_official_proposal_${shipment.id}`, JSON.stringify(acceptedProposal));
+            
+            if (onUpdateShipmentFromDeal) {
+              onUpdateShipmentFromDeal(shipment.id, {
+                quantity: updatedQty,
+                pricePerUnit: updatedPrice,
+                paymentTerms: updatedPayment,
+                incoterms: updatedIncoterm,
+                portOfDischarge: negoPortOfDischarge,
+                portOfLoading: negoPortOfLoading,
+                buyerCompany: shipment.buyerCompany,
+                nextStep: shipment.currentStep,
+                comments: `Draf proposal disetujui secara otomatis oleh sistem simulasi pembeli.`
+              });
+            }
+
             return acceptedProposal;
           });
 
@@ -512,6 +580,20 @@ export default function CommercialNegotiationGateway({
     };
     setOfficialProposal(updated);
     localStorage.setItem(`commercial_nego_official_proposal_${shipment.id}`, JSON.stringify(updated));
+
+    if (onUpdateShipmentFromDeal) {
+      onUpdateShipmentFromDeal(shipment.id, {
+        quantity: updated.quantity,
+        pricePerUnit: updated.price,
+        paymentTerms: updated.payment,
+        incoterms: updated.incoterm,
+        portOfDischarge: negoPortOfDischarge,
+        portOfLoading: negoPortOfLoading,
+        buyerCompany: shipment.buyerCompany,
+        nextStep: shipment.currentStep,
+        comments: `Draf proposal disetujui secara bilateral.`
+      });
+    }
 
     const logMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -575,7 +657,7 @@ export default function CommercialNegotiationGateway({
       sender: 'System',
       senderName: 'Sistem Portal',
       avatar: '⚙️',
-      message: '✍️ Eksportir (Hendry Kurniawan) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
+      message: '✍️ Eksportir (Dwi Rokhdialisa) telah membubuhkan tanda tangan resmi pada draf Proforma Invoice!',
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     setChatMessages(prev => [...prev, logMsg]);
@@ -589,7 +671,8 @@ export default function CommercialNegotiationGateway({
         pricePerUnit: officialProposal.price,
         paymentTerms: officialProposal.payment,
         incoterms: officialProposal.incoterm,
-        portOfDischarge: shipment.portOfDischarge || 'Port of Tokyo, Japan',
+        portOfDischarge: negoPortOfDischarge || shipment.portOfDischarge || 'Port of Tokyo, Japan',
+        portOfLoading: negoPortOfLoading || shipment.portOfLoading || 'Tanjung Priok, Jakarta',
         buyerCompany: shipment.buyerCompany || 'Tokyo Coffee Trading Co.',
         nextStep: 'Shipping',
         comments: `Fase I Komersial Selesai: LOI telah dibaca, klausul disepakati melalui negosiasi asinkron nyata, dan Proforma Invoice (PI) telah ditandatangani secara bilateral oleh ${shipment.buyerCompany} dan PT Multi Raksa Madani.`
@@ -627,7 +710,7 @@ export default function CommercialNegotiationGateway({
       sender: 'Buyer',
       senderName: 'Kenji Sato (Importir)',
       avatar: '🇯🇵',
-      message: `Halo Pak Hendry. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
+      message: `Halo Bu Dwi. Kami dari Tokyo Coffee Trading Co. sangat tertarik untuk mengimpor ${shipment.productName || 'Kopi Gayo Organik'} berkualitas premium dari Anda.`,
       timestamp: '10:15'
     };
     setChatMessages([initialMsg]);
@@ -1015,11 +1098,11 @@ export default function CommercialNegotiationGateway({
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelabuhan Muat</p>
-                    <p className="text-xs font-semibold text-slate-800">{shipment.portOfLoading}</p>
+                    <p className="text-xs font-semibold text-slate-800">{negoPortOfLoading}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pelabuhan Bongkar</p>
-                    <p className="text-xs font-semibold text-slate-800">{shipment.portOfDischarge}</p>
+                    <p className="text-xs font-semibold text-slate-800">{negoPortOfDischarge}</p>
                   </div>
                 </div>
 
@@ -1451,6 +1534,32 @@ export default function CommercialNegotiationGateway({
                         </div>
                       </div>
 
+                      {/* Port of Loading & Port of Discharge Input Fields */}
+                      <div className="grid grid-cols-2 gap-3 mt-2.5 mb-2 px-0.5">
+                        <div className="space-y-0.5">
+                          <label className="text-[10px] font-black uppercase text-slate-500 block">Pelabuhan Muat (Origin)</label>
+                          <input
+                            type="text"
+                            value={negoPortOfLoading}
+                            onChange={(e) => setNegoPortOfLoading(e.target.value)}
+                            placeholder="Contoh: Tanjung Priok, Jakarta"
+                            className="w-full bg-slate-50 border border-slate-250 text-xs font-semibold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-sans"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Asal pengiriman kargo</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <label className="text-[10px] font-black uppercase text-slate-500 block">Pelabuhan Bongkar (Destination)</label>
+                          <input
+                            type="text"
+                            value={negoPortOfDischarge}
+                            onChange={(e) => setNegoPortOfDischarge(e.target.value)}
+                            placeholder="Contoh: Port of Yokohama, Japan"
+                            className="w-full bg-slate-50 border border-slate-250 text-xs font-semibold text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-sans"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Tujuan pengiriman kargo</p>
+                        </div>
+                      </div>
+
                       <div className="flex flex-col py-2 px-3 bg-slate-100/50 rounded-lg border border-slate-200 mt-2 mb-2">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold text-slate-700">Estimasi Total Nilai (FOB):</span>
@@ -1572,7 +1681,7 @@ export default function CommercialNegotiationGateway({
                           <div className="w-full h-8 border border-slate-200 rounded-lg flex items-center justify-center bg-slate-50 relative mt-0.5">
                             {traderSigned ? (
                               <span className="font-serif italic text-sm text-indigo-700 font-bold tracking-tighter select-none -rotate-2">
-                                Hendry Kurniawan
+                                Dwi Rokhdialisa
                               </span>
                             ) : (
                               <span className="text-slate-400 text-[9px] animate-pulse">Belum TTD</span>
@@ -2143,11 +2252,11 @@ export default function CommercialNegotiationGateway({
                 <div>
                   <div className="flex items-center gap-4 border-b border-slate-200 pb-4 mb-5">
                     <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-500 font-bold text-lg font-mono shrink-0">
-                      HK
+                      DR
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="text-base font-black text-slate-900">Hendry Kurniawan</h3>
+                        <h3 className="text-base font-black text-slate-900">Dwi Rokhdialisa</h3>
                         <span className="px-2 py-0.5 text-[8.5px] bg-emerald-50 text-emerald-700 font-mono font-black rounded-full uppercase tracking-wider">🇮🇩 Eksportir</span>
                       </div>
                       <p className="text-xs text-emerald-700 font-semibold mt-0.5">PT Multi Raksa Madani</p>
@@ -2169,7 +2278,7 @@ export default function CommercialNegotiationGateway({
                         <User className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <div>
                           <span className="text-slate-500 font-mono text-[9px] block uppercase font-bold leading-none mb-1">Perwakilan Hukum / Jabatan</span>
-                          <span className="text-slate-800 font-bold">Hendry Kurniawan</span>
+                          <span className="text-slate-800 font-bold">Dwi Rokhdialisa</span>
                           <span className="text-slate-600 block text-[11px] mt-0.5">Senior Export-Import Specialist</span>
                         </div>
                       </div>

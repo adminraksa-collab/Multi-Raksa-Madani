@@ -13,6 +13,7 @@ interface AccountManagementProps {
   onDeleteUser: (userId: string) => void;
   onToggleApprove: (userId: string, isApproved: boolean) => void;
   onUpdateUsersList: (newUsers: UserProfile[]) => void;
+  currentLanguage?: string;
 }
 
 export default function AccountManagement({ 
@@ -20,7 +21,8 @@ export default function AccountManagement({
   currentUser, 
   onDeleteUser, 
   onToggleApprove,
-  onUpdateUsersList
+  onUpdateUsersList,
+  currentLanguage = 'id'
 }: AccountManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -44,9 +46,9 @@ export default function AccountManagement({
       },
       {
         role: 'Trader',
-        email: 'hendry@nusantara-traders.com',
+        email: 'dwi@nusantara-traders.com',
         password: 'trader123',
-        name: 'Hendry Kurniawan',
+        name: 'Dwi Rokhdialisa',
         company: 'PT Multi Raksa Madani'
       },
       {
@@ -105,6 +107,107 @@ export default function AccountManagement({
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
 
+  const isIndo = currentLanguage === 'id';
+  const t = {
+    formErrorRequired: isIndo ? 'Harap lengkapi semua bidang yang wajib diisi.' : 'Please complete all required fields.',
+    emailExists: isIndo ? 'Email ini sudah terdaftar di sistem.' : 'This email is already registered in the system.',
+    registerSuccess: (name: string, role: string) => isIndo ? `Sukses mendaftarkan ${name} (${role}) dengan kata sandi aktif!` : `Successfully registered ${name} (${role}) with active password!`,
+    allFieldsRequired: isIndo ? 'Semua bidang wajib diisi.' : 'All fields are required.',
+    emailClash: isIndo ? 'Surel tersebut sudah dipakai oleh pengguna lain.' : 'This email is already used by another user.',
+    editSuccess: isIndo ? 'Data akun & password berhasil diperbarui!' : 'Account data & password successfully updated!',
+    
+    // Header
+    superadminPanel: isIndo ? 'Panel Superadmin' : 'Superadmin Panel',
+    title: isIndo ? 'Manajemen User, Akun & Kata Sandi' : 'User, Account & Password Management',
+    desc: isIndo ? 'Otoritas tertinggi Superadmin untuk mengawasi akun, menyunting username, melihat kata sandi, mengubah approval, dan mendaftarkan kru baru.' : 'Superadmin authority to manage accounts, edit usernames, view passwords, toggle approval, and register new crew members.',
+    validationActive: isIndo ? 'Otoritas Validasi Aktif' : 'Active Validation Authority',
+    
+    // Stats
+    pendingApproval: isIndo ? 'Persetujuan Tertunda' : 'Pending Approval',
+    waitingAuthorize: isIndo ? 'Menunggu disahkan' : 'Awaiting approval',
+    traderApproved: isIndo ? 'Trader Disahkan' : 'Trader Approved',
+    licensedExporter: isIndo ? 'Eksportir berlisensi' : 'Licensed exporter',
+    forwarderApproved: isIndo ? 'Forwarder Disahkan' : 'Forwarder Approved',
+    logisticsPartner: isIndo ? 'Mitra draf kapal logistik' : 'Logistics vessel partner',
+    supplierApproved: isIndo ? 'Supplier Disahkan' : 'Supplier Approved',
+    coopProducer: isIndo ? 'Koperasi produsen tani' : 'Agricultural producer cooperative',
+    
+    // Form toggle
+    formTitle: isIndo ? 'Pendaftaran & Buat Akun Baru Langsung' : 'Registration & Instant New Account Creation',
+    closeForm: isIndo ? 'Tutup Formulir' : 'Close Form',
+    openForm: isIndo ? 'Buka Formulir Buat Akun' : 'Open Create Account Form',
+    formHeader: isIndo ? 'Lengkapi Data Kredensial Pabean' : 'Complete Custom Credentials Details',
+    formSubtitle: isIndo ? 'Akun baru yang dibuat di sini otomatis menyatu dengan basis data kredensial masuk pabean.' : 'New accounts created here automatically integrate with the login credential database.',
+    
+    // Form fields
+    fullName: isIndo ? 'Nama Lengkap Pengguna' : 'User Full Name',
+    fullNamePlaceholder: isIndo ? 'Contoh: Andi Wijaya' : 'e.g. Andi Wijaya',
+    emailLabel: isIndo ? 'Surel (Email) untuk Masuk' : 'Login Email Address',
+    emailPlaceholder: isIndo ? 'Contoh: andi@eksporindo.com' : 'e.g. andi@eksporindo.com',
+    passwordLabel: isIndo ? 'Kata Sandi (Password) Akun' : 'Account Password',
+    passwordPlaceholder: isIndo ? 'Ketik minimal 6 karakter...' : 'At least 6 characters...',
+    roleLabel: isIndo ? 'Peran Sistem (Aktor)' : 'System Role (Actor)',
+    companyLabel: isIndo ? 'Nama Instansi / Perusahaan' : 'Company / Institution Name',
+    companyPlaceholder: isIndo ? 'Contoh: PT Agro Sukses Makmur' : 'e.g. PT Agro Sukses Makmur',
+    phoneLabel: isIndo ? 'Nomor Telepon / WhatsApp' : 'Phone / WhatsApp Number',
+    phonePlaceholder: isIndo ? 'Contoh: +6281234567890' : 'e.g. +6281234567890',
+    approveInstantly: isIndo ? 'Sahkan langsung (Beri Izin Akses Penuh tanpa Verifikasi)' : 'Approve instantly (Grant full access without extra verification)',
+    cancel: isIndo ? 'Batal' : 'Cancel',
+    registerAccount: isIndo ? 'Mendaftarkan Akun' : 'Register Account',
+    
+    // Search
+    searchPlaceholder: isIndo ? 'Cari nama, email, perusahaan, atau kata sandi...' : 'Search name, email, company, or password...',
+    roleFilterLabel: isIndo ? 'Peran:' : 'Role:',
+    allRoles: isIndo ? 'Semua Peran' : 'All Roles',
+    statusFilterLabel: isIndo ? 'Status:' : 'Status:',
+    allStatus: isIndo ? 'Semua Status' : 'All Statuses',
+    approvedStatus: isIndo ? 'Telah Disahkan (Aktif)' : 'Approved (Active)',
+    pendingStatus: isIndo ? 'Menunggu Pengesahan' : 'Pending Approval',
+    
+    // Table
+    tableTitle: (count: number) => isIndo ? `Daftar Akun Pengguna Terdaftar (${count} Pengguna)` : `Registered User Accounts List (${count} Users)`,
+    waitingValidation: (count: number) => isIndo ? `⚠️ ${count} AKUN MENUNGGU VALIDASI DIREKTUR` : `⚠️ ${count} ACCOUNTS AWAITING DIRECTOR VALIDATION`,
+    noResults: isIndo ? 'Tidak ada akun yang sesuai dengan filter pencarian.' : 'No accounts match the search filters.',
+    resetFilters: isIndo ? 'Reset Filter Pencarian' : 'Reset Search Filters',
+    
+    thProfile: isIndo ? 'Profil & Identitas' : 'Profile & Identity',
+    thEmail: isIndo ? 'Surel & Kata Sandi' : 'Email & Password',
+    thRole: isIndo ? 'Peran Sistem' : 'System Role',
+    thCompany: isIndo ? 'Instansi / Perusahaan' : 'Company / Institution',
+    thStatus: isIndo ? 'Status Validasi' : 'Validation Status',
+    thAction: isIndo ? 'Tindakan Otoritas' : 'Authority Action',
+    
+    me: isIndo ? 'Saya' : 'Me',
+    cityCountry: isIndo ? 'Kab/Kota: Indonesia' : 'City/Country: Indonesia',
+    
+    hidePass: isIndo ? "Sembunyikan Sandi" : "Hide Password",
+    showPass: isIndo ? "Tampilkan Sandi" : "Show Password",
+    approvedBadge: isIndo ? 'Disah - Sah' : 'Approved',
+    pendingBadge: isIndo ? 'Belum Sah' : 'Pending',
+    fullAccess: isIndo ? 'Akses Penuh' : 'Full Access',
+    editTooltip: isIndo ? 'Edit Akun & Password' : 'Edit Account & Password',
+    toggleApproveCancel: isIndo ? 'Batal' : 'Revoke',
+    toggleApproveOk: isIndo ? 'Acc' : 'Approve',
+    revokeTooltip: isIndo ? "Batalkan pengesahan pabean" : "Revoke custom validation",
+    approveTooltip: isIndo ? "Sahkan akun pabean" : "Validate custom account",
+    deleteTooltip: isIndo ? 'Hapus Akun Permanen' : 'Delete Account Permanently',
+    confirmDelete: (name: string, role: string) => isIndo ? `Anda yakin ingin menghapus akun ${name} (${role}) secara permanen? Akun ini tidak akan bisa login lagi.` : `Are you sure you want to permanently delete account ${name} (${role})? This user will no longer be able to log in.`,
+    locked: isIndo ? 'Kunci' : 'Locked',
+    
+    // Modal
+    modalTitle: isIndo ? 'Sunting Akun & Kata Sandi' : 'Edit Account & Password',
+    modalNewPass: isIndo ? 'Kata Sandi (Password Baru)' : 'Password (New Password)',
+    modalPassPlaceholder: isIndo ? 'Masukkan sandi unik pabean hulu...' : 'Enter unique custom password...',
+    modalPassDesc: isIndo ? 'Ubah password di sini akan langsung berlaku saat pengguna melakukan login siber berikutnya.' : 'Changing the password here will take effect immediately upon their next login.',
+    modalRoleLabel: isIndo ? 'Aktor / Hak Akses' : 'Actor / Access Rights',
+    modalApproveCheckbox: isIndo ? 'Akun Berstatus Sah (Approved) - Aktif melakukan alur ekspor' : 'Validated Account Status (Approved) - Active in export workflow',
+    modalSave: isIndo ? 'Simpan Perubahan' : 'Save Changes',
+    
+    // Sidebar/Footer banner
+    bannerTitle: isIndo ? 'Panduan Kredensial & Pengaman Siber' : 'Credentials & Cybersecurity Guide',
+    bannerDesc: isIndo ? 'Semua perubahan nama lengkap, surat elektronik (email), maupun sandi yang diawasi di menu ini di-enkripsi dalam penyimpanan lokal browser (localStorage). Ini menjaga keamanan pendaftaran data agar tetap sinkron dan andal saat Anda berpindah aktor dengan tombol "Ganti Aktor" di halaman gerbang utama.' : 'All changes to full name, email, or password managed in this menu are encrypted in the browser\'s local storage (localStorage). This ensures secure, synchronized, and reliable user profiles when switching actors using the "Switch Actor" button on the main portal page.'
+  };
+
   const togglePasswordVisibility = (email: string) => {
     setVisiblePasswords(prev => ({
       ...prev,
@@ -119,7 +222,7 @@ export default function AccountManagement({
     setFormSuccess('');
 
     if (!newUserName || !newUserEmail || !newUserPassword || !newUserCompany) {
-      setFormError('Harap lengkapi semua bidang yang wajib diisi.');
+      setFormError(t.formErrorRequired);
       return;
     }
 
@@ -128,7 +231,7 @@ export default function AccountManagement({
     // Check if email already registered
     const emailExists = users.some(u => u.email.toLowerCase() === emailLower);
     if (emailExists) {
-      setFormError('Email ini sudah terdaftar di sistem.');
+      setFormError(t.emailExists);
       return;
     }
 
@@ -158,7 +261,7 @@ export default function AccountManagement({
     const updatedCreds = [...credentials, newCred];
     setCredentials(updatedCreds);
 
-    setFormSuccess(`Sukses mendaftarkan ${newUserName} (${newUserRole}) dengan kata sandi aktif!`);
+    setFormSuccess(t.registerSuccess(newUserName, newUserRole));
     
     // Clear Form
     setNewUserName('');
@@ -197,7 +300,7 @@ export default function AccountManagement({
 
     if (!editingUser) return;
     if (!editName || !editEmail || !editPassword || !editCompany) {
-      setEditError('Semua bidang wajib diisi.');
+      setEditError(t.allFieldsRequired);
       return;
     }
 
@@ -206,7 +309,7 @@ export default function AccountManagement({
     // Check email clash
     const isEmailClash = users.some(u => u.id !== editingUser.id && u.email.toLowerCase() === emailLower);
     if (isEmailClash) {
-      setEditError('Surel tersebut sudah dipakai oleh pengguna lain.');
+      setEditError(t.emailClash);
       return;
     }
 
@@ -256,7 +359,7 @@ export default function AccountManagement({
     onUpdateUsersList(updatedUsers);
     setCredentials(updatedCreds);
 
-    setEditSuccess('Data akun & password berhasil diperbarui!');
+    setEditSuccess(t.editSuccess);
     setTimeout(() => {
       setEditingUser(null);
     }, 1200);
@@ -328,7 +431,7 @@ export default function AccountManagement({
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-lg text-indigo-300 font-extrabold text-[10px] tracking-wider uppercase">
-              Superadmin Panel
+              {t.superadminPanel}
             </span>
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -337,16 +440,16 @@ export default function AccountManagement({
           </div>
           <h1 className="text-2xl font-black tracking-tight leading-none flex items-center gap-2">
             <Key className="w-6 h-6 text-indigo-400" />
-            <span>Manajemen User, Akun &amp; Kata Sandi</span>
+            <span>{t.title}</span>
           </h1>
           <p className="text-xs text-slate-300 font-medium">
-            Otoritas tertinggi Superadmin untuk mengawasi akun, menyunting username, melihat kata sandi, mengubah approval, dan mendaftarkan kru baru.
+            {t.desc}
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/10">
           <Shield className="w-5 h-5 text-indigo-300 shrink-0" />
           <div className="text-left text-xs">
-            <p className="font-extrabold text-white leading-none">Otoritas Validasi Aktif</p>
+            <p className="font-extrabold text-white leading-none">{t.validationActive}</p>
             <p className="text-[10px] text-slate-300 leading-tight mt-0.5">{currentUser?.name}</p>
           </div>
         </div>
@@ -360,9 +463,9 @@ export default function AccountManagement({
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Persetujuan Tertunda</p>
+            <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider">{t.pendingApproval}</p>
             <p className="text-2xl font-black text-amber-900 leading-none mt-1">{pendingUsers}</p>
-            <p className="text-[10px] text-amber-700 font-semibold mt-1">Menunggu disahkan</p>
+            <p className="text-[10px] text-amber-700 font-semibold mt-1">{t.waitingAuthorize}</p>
           </div>
         </div>
 
@@ -372,9 +475,9 @@ export default function AccountManagement({
             <Users className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">Trader Disahkan</p>
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">{t.traderApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedTraders}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">Eksportir berlisensi</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.licensedExporter}</p>
           </div>
         </div>
 
@@ -384,9 +487,9 @@ export default function AccountManagement({
             <Truck className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider">Forwarder Disahkan</p>
+            <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider">{t.forwarderApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedForwarders}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">Mitra draf kapal logistik</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.logisticsPartner}</p>
           </div>
         </div>
 
@@ -396,9 +499,9 @@ export default function AccountManagement({
             <UserCheck className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Supplier Disahkan</p>
+            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">{t.supplierApproved}</p>
             <p className="text-2xl font-black text-slate-900 leading-none mt-1">{approvedSuppliers}</p>
-            <p className="text-[10px] text-slate-500 font-medium mt-1">Koperasi produsen tani</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-1">{t.coopProducer}</p>
           </div>
         </div>
       </div>
@@ -411,10 +514,10 @@ export default function AccountManagement({
         >
           <div className="flex items-center gap-2">
             <Plus className={`w-5 h-5 text-indigo-600 transition-transform ${showAddForm ? 'rotate-45' : ''}`} />
-            <span className="text-xs font-black uppercase tracking-wider text-slate-700">Pendaftaran &amp; Buat Akun Baru Langsung</span>
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700">{t.formTitle}</span>
           </div>
           <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2.5 py-1 rounded-lg">
-            {showAddForm ? 'Tutup Formulir' : 'Buka Formulir Buat Akun'}
+            {showAddForm ? t.closeForm : t.openForm}
           </span>
         </button>
 
@@ -430,9 +533,9 @@ export default function AccountManagement({
                 <div className="md:col-span-2">
                   <h4 className="text-xs font-black text-slate-800 uppercase flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-indigo-500" />
-                    <span>Lengkapi Data Kredensial Pabean</span>
+                    <span>{t.formHeader}</span>
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 font-medium">Akun baru yang dibuat di sini otomatis menyatu dengan basis data kredensial masuk pabean.</p>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">{t.formSubtitle}</p>
                 </div>
 
                 {/* Form Alerts */}
@@ -451,11 +554,11 @@ export default function AccountManagement({
 
                 {/* Field 1: Nama */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nama Lengkap Pengguna</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Andi Wijaya"
+                    placeholder={t.fullNamePlaceholder}
                     value={newUserName}
                     onChange={(e) => setNewUserName(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
@@ -464,11 +567,11 @@ export default function AccountManagement({
 
                 {/* Field 2: Email */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Surel (Email) untuk Masuk</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
                   <input
                     type="email"
                     required
-                    placeholder="Contoh: andi@eksporindo.com"
+                    placeholder={t.emailPlaceholder}
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
@@ -477,11 +580,11 @@ export default function AccountManagement({
 
                 {/* Field 3: Password */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Kata Sandi (Password) Akun</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.passwordLabel}</label>
                   <input
                     type="text"
                     required
-                    placeholder="Ketik minimal 6 karakter..."
+                    placeholder={t.passwordPlaceholder}
                     value={newUserPassword}
                     onChange={(e) => setNewUserPassword(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600 font-mono"
@@ -490,27 +593,27 @@ export default function AccountManagement({
 
                 {/* Field 4: Peran */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Peran Sistem (Aktor)</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
                   <select
                     value={newUserRole}
                     onChange={(e) => setNewUserRole(e.target.value as UserRole)}
                     className="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                   >
-                    <option value="Trader">Trader (Eksportir)</option>
-                    <option value="Forwarder">Forwarder (Mitra Logistik)</option>
-                    <option value="Supplier">Supplier (Koperasi Produsen)</option>
-                    <option value="Buyer">Buyer (Importir Asing)</option>
-                    <option value="Superadmin">Superadmin Utama</option>
+                    <option value="Trader">{isIndo ? 'Trader (Eksportir)' : 'Trader (Exporter)'}</option>
+                    <option value="Forwarder">{isIndo ? 'Forwarder (Mitra Logistik)' : 'Forwarder (Logistics Partner)'}</option>
+                    <option value="Supplier">{isIndo ? 'Supplier (Koperasi Produsen)' : 'Supplier (Producer Coop)'}</option>
+                    <option value="Buyer">{isIndo ? 'Buyer (Importir Asing)' : 'Buyer (Foreign Importer)'}</option>
+                    <option value="Superadmin">{isIndo ? 'Superadmin Utama' : 'Main Superadmin'}</option>
                   </select>
                 </div>
 
                 {/* Field 5: Perusahaan */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nama Instansi / Perusahaan</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: PT Agro Sukses Makmur"
+                    placeholder={t.companyPlaceholder}
                     value={newUserCompany}
                     onChange={(e) => setNewUserCompany(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
@@ -519,11 +622,11 @@ export default function AccountManagement({
 
                 {/* Field 5b: Nomor Telepon / WA */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nomor Telepon / WhatsApp</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
                   <input
                     type="tel"
                     required
-                    placeholder="Contoh: +6281234567890"
+                    placeholder={t.phonePlaceholder}
                     value={newUserPhone}
                     onChange={(e) => setNewUserPhone(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
@@ -540,7 +643,7 @@ export default function AccountManagement({
                     className="h-4 w-4 rounded border-slate-300 text-indigo-650 focus:ring-indigo-600 cursor-pointer"
                   />
                   <label htmlFor="newApprovedCheck" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
-                    Sahkan langsung (Beri Izin Akses Penuh tanpa Verifikasi)
+                    {t.approveInstantly}
                   </label>
                 </div>
 
@@ -551,14 +654,14 @@ export default function AccountManagement({
                     onClick={() => setShowAddForm(false)}
                     className="px-4 py-2 border border-slate-250 rounded-xl text-slate-600 text-xs font-bold hover:bg-slate-50 cursor-pointer"
                   >
-                    Batal
+                    {t.cancel}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2 bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-indigo-800 hover:to-indigo-950 text-white text-xs font-black rounded-xl cursor-pointer shadow-md flex items-center gap-1.5"
                   >
                     <UserCheck className="w-4 h-4" />
-                    <span>Mendaftarkan Akun</span>
+                    <span>{t.registerAccount}</span>
                   </button>
                 </div>
               </form>
@@ -574,7 +677,7 @@ export default function AccountManagement({
           <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari nama, email, perusahaan, atau kata sandi..."
+            placeholder={t.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full text-xs font-semibold pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
@@ -585,32 +688,32 @@ export default function AccountManagement({
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Role Filter */}
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-semibold">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Peran:</span>
+            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">{t.roleFilterLabel}</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
               className="bg-transparent border-none text-slate-700 font-bold focus:outline-none pr-1"
             >
-              <option value="ALL">Semua Peran</option>
-              <option value="Trader">Trader / Eksportir</option>
-              <option value="Forwarder">Forwarder Logistik</option>
-              <option value="Supplier">Supplier / Produsen</option>
-              <option value="Buyer">Buyer / Importir</option>
+              <option value="ALL">{t.allRoles}</option>
+              <option value="Trader">{isIndo ? 'Trader / Eksportir' : 'Trader / Exporter'}</option>
+              <option value="Forwarder">{isIndo ? 'Forwarder Logistik' : 'Logistics Forwarder'}</option>
+              <option value="Supplier">{isIndo ? 'Supplier / Produsen' : 'Supplier / Producer'}</option>
+              <option value="Buyer">{isIndo ? 'Buyer / Importir' : 'Buyer / Importer'}</option>
               <option value="Superadmin">Superadmin</option>
             </select>
           </div>
 
           {/* Status Filter */}
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-semibold">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Status:</span>
+            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">{t.statusFilterLabel}</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
               className="bg-transparent border-none text-slate-700 font-bold focus:outline-none pr-1"
             >
-              <option value="ALL">Semua Status</option>
-              <option value="APPROVED">Telah Disahkan (Aktif)</option>
-              <option value="PENDING">Menunggu Pengesahan</option>
+              <option value="ALL">{t.allStatus}</option>
+              <option value="APPROVED">{t.approvedStatus}</option>
+              <option value="PENDING">{t.pendingStatus}</option>
             </select>
           </div>
         </div>
@@ -621,11 +724,11 @@ export default function AccountManagement({
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
           <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-2">
             <Users className="w-4 h-4 text-slate-400" />
-            <span>Daftar Akun Pengguna Terdaftar ({filteredUsers.length} Pengguna)</span>
+            <span>{t.tableTitle(filteredUsers.length)}</span>
           </h3>
           {pendingUsers > 0 && (
             <span className="text-[10px] bg-red-100 text-red-900 font-black px-2.5 py-1 rounded-full animate-pulse">
-              ⚠️ {pendingUsers} AKUN MENUNGGU VALIDASI DIREKTUR
+              {t.waitingValidation(pendingUsers)}
             </span>
           )}
         </div>
@@ -634,24 +737,24 @@ export default function AccountManagement({
           {filteredUsers.length === 0 ? (
             <div className="p-12 text-center text-slate-400">
               <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs font-bold">Tidak ada akun yang sesuai dengan filter pencarian.</p>
+              <p className="text-xs font-bold">{t.noResults}</p>
               <button 
                 onClick={() => { setSearchTerm(''); setRoleFilter('ALL'); setStatusFilter('ALL'); }}
                 className="mt-3 px-3 py-1.5 bg-indigo-50 hover:bg-slate-100 text-indigo-750 text-[10px] font-extrabold rounded-lg border border-indigo-200 cursor-pointer"
               >
-                Reset Filter Pencarian
+                {t.resetFilters}
               </button>
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-100/50 border-b border-slate-200 text-slate-400 uppercase tracking-wider font-extrabold text-[9px]">
-                  <th className="p-4 w-[220px]">Profil &amp; Identitas</th>
-                  <th className="p-4 w-[240px]">Surel &amp; Kata Sandi</th>
-                  <th className="p-4 w-[130px]">Peran Sistem</th>
-                  <th className="p-4 w-[180px]">Instansi / Perusahaan</th>
-                  <th className="p-4 w-[140px] text-center">Status Validasi</th>
-                  <th className="p-4 w-[180px] text-right">Tindakan Otoritas</th>
+                  <th className="p-4 w-[220px]">{t.thProfile}</th>
+                  <th className="p-4 w-[240px]">{t.thEmail}</th>
+                  <th className="p-4 w-[130px]">{t.thRole}</th>
+                  <th className="p-4 w-[180px]">{t.thCompany}</th>
+                  <th className="p-4 w-[140px] text-center">{t.thStatus}</th>
+                  <th className="p-4 w-[180px] text-right">{t.thAction}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-150">
@@ -686,10 +789,10 @@ export default function AccountManagement({
                               <p className="font-extrabold text-slate-900 text-xs truncate flex items-center gap-1.5">
                                 <span>{user.name}</span>
                                 {isCurrentUser && (
-                                  <span className="bg-indigo-650 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Saya</span>
+                                  <span className="bg-indigo-650 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">{t.me}</span>
                                 )}
                               </p>
-                              <p className="text-[9px] text-slate-400 font-semibold truncate">Kab/Kota: {user.country || 'Indonesia'}</p>
+                              <p className="text-[9px] text-slate-400 font-semibold truncate">{(isIndo ? 'Kab/Kota: ' : 'City/Regency: ') + (user.country || 'Indonesia')}</p>
                               {user.phone && (
                                 <p className="text-[9px] text-emerald-600 font-bold truncate flex items-center gap-1 mt-0.5" title="WhatsApp / Telepon">
                                   <Phone className="w-3 h-3 shrink-0 text-emerald-500" />
@@ -721,7 +824,7 @@ export default function AccountManagement({
                               <button
                                 onClick={() => togglePasswordVisibility(user.email)}
                                 className="text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none cursor-pointer p-0.5 rounded"
-                                title={isPassVisible ? "Sembunyikan Sandi" : "Tampilkan Sandi"}
+                                title={isPassVisible ? t.hidePass : t.showPass}
                               >
                                 {isPassVisible ? (
                                   <EyeOff className="w-3.5 h-3.5" />
@@ -754,17 +857,17 @@ export default function AccountManagement({
                             isApproved ? (
                               <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-black uppercase">
                                 <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>Disah - Sah</span>
+                                <span>{t.approvedBadge}</span>
                               </div>
                             ) : (
                               <div className="inline-flex items-center justify-center gap-1 px-3 py-1 bg-red-50 text-red-800 border border-red-200 rounded-full text-[10px] font-black uppercase animate-pulse">
                                 <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                                <span>Belum Sah</span>
+                                <span>{t.pendingBadge}</span>
                               </div>
                             )
                           ) : (
                             <span className="text-[10px] font-bold text-slate-400 uppercase italic">
-                              Akses Penuh
+                              {t.fullAccess}
                             </span>
                           )}
                         </td>
@@ -776,7 +879,7 @@ export default function AccountManagement({
                             <button
                               onClick={() => handleOpenEditModal(user)}
                               className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-lg cursor-pointer transition-colors"
-                              title="Edit Akun & Password"
+                              title={t.editTooltip}
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -789,10 +892,10 @@ export default function AccountManagement({
                                   isApproved
                                     ? 'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-transparent'
                                     : 'bg-emerald-600 text-white hover:bg-emerald-700 border border-transparent shadow-sm'
-                                }`}
-                                title={isApproved ? "Batalkan pengesahan pabean" : "Sahkan akun pabean"}
+                                  }`}
+                                title={isApproved ? t.revokeTooltip : t.approveTooltip}
                               >
-                                {isApproved ? 'Batal' : 'Acc'}
+                                {isApproved ? t.toggleApproveCancel : t.toggleApproveOk}
                               </button>
                             )}
 
@@ -800,18 +903,18 @@ export default function AccountManagement({
                             {!isCurrentUser ? (
                               <button
                                 onClick={() => {
-                                  if (confirm(`Anda yakin ingin menghapus akun ${user.name} (${user.role}) secara permanen? Akun ini tidak akan bisa login lagi.`)) {
+                                  if (confirm(t.confirmDelete(user.name, user.role))) {
                                     handleDeleteWrapper(user.id);
                                   }
                                 }}
                                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-red-100"
-                                title="Hapus Akun Permanen"
+                                title={t.deleteTooltip}
                               >
                                 <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-500" />
                               </button>
                             ) : (
                               <div className="px-2 text-[9px] text-slate-400 font-bold uppercase italic select-none">
-                                Kunci
+                                {t.locked}
                               </div>
                             )}
                           </div>
@@ -846,7 +949,7 @@ export default function AccountManagement({
 
               <div className="mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider">Sunting Akun &amp; Kata Sandi</h3>
+                <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider">{t.modalTitle}</h3>
               </div>
 
               {editError && (
@@ -865,7 +968,7 @@ export default function AccountManagement({
               <form onSubmit={handleSaveEditSubmit} className="space-y-4">
                 {/* Name */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nama Lengkap</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.fullName}</label>
                   <input
                     type="text"
                     required
@@ -877,9 +980,9 @@ export default function AccountManagement({
 
                 {/* Email (User) */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Email (Nama Masuk)</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.emailLabel}</label>
                   <input
-                    type="email"
+                    type="type"
                     required
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
@@ -891,7 +994,7 @@ export default function AccountManagement({
                 <div className="space-y-1 bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100/40">
                   <label className="text-[10px] font-extrabold uppercase text-slate-700 tracking-wider flex items-center gap-1">
                     <Key className="w-3.5 h-3.5" />
-                    <span>Kata Sandi (Password Baru)</span>
+                    <span>{t.passwordLabel}</span>
                   </label>
                   <input
                     type="text"
@@ -899,30 +1002,30 @@ export default function AccountManagement({
                     value={editPassword}
                     onChange={(e) => setEditPassword(e.target.value)}
                     className="w-full text-xs font-mono font-bold px-3 py-2 rounded-xl border border-indigo-200 bg-white text-indigo-900 focus:outline-indigo-600"
-                    placeholder="Masukkan sandi unik pabean hulu..."
+                    placeholder={t.modalPassPlaceholder}
                   />
-                  <p className="text-[9px] text-slate-500 mt-1 font-semibold">Ubah password di sini akan langsung berlaku saat pengguna melakukan login siber berikutnya.</p>
+                  <p className="text-[9px] text-slate-500 mt-1 font-semibold">{t.modalPassDesc}</p>
                 </div>
 
                 {/* Role */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Aktor / Hak Akses</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.roleLabel}</label>
                   <select
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value as UserRole)}
                     className="w-full text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                   >
-                    <option value="Trader">Trader (Eksportir)</option>
-                    <option value="Forwarder">Forwarder (Mitra Logistik)</option>
-                    <option value="Supplier">Supplier (Koperasi Produsen)</option>
-                    <option value="Buyer">Buyer (Importir Asing)</option>
-                    <option value="Superadmin">Superadmin Utama</option>
+                    <option value="Trader">{isIndo ? 'Trader (Eksportir)' : 'Trader (Exporter)'}</option>
+                    <option value="Forwarder">{isIndo ? 'Forwarder (Mitra Logistik)' : 'Forwarder (Logistics Partner)'}</option>
+                    <option value="Supplier">{isIndo ? 'Supplier (Koperasi Produsen)' : 'Supplier (Producer Coop)'}</option>
+                    <option value="Buyer">{isIndo ? 'Buyer (Importir Asing)' : 'Buyer (Foreign Importer)'}</option>
+                    <option value="Superadmin">{isIndo ? 'Superadmin Utama' : 'Main Superadmin'}</option>
                   </select>
                 </div>
 
                 {/* Company */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nama Perusahaan / Instansi</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.companyLabel}</label>
                   <input
                     type="text"
                     required
@@ -934,14 +1037,14 @@ export default function AccountManagement({
 
                 {/* Nomor Telepon / WA */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Nomor Telepon / WhatsApp</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">{t.phoneLabel}</label>
                   <input
                     type="tel"
                     required
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                     className="w-full text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
-                    placeholder="Contoh: +6281234567890"
+                    placeholder={t.phonePlaceholder}
                   />
                 </div>
 
@@ -956,7 +1059,7 @@ export default function AccountManagement({
                       className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
                     />
                     <label htmlFor="editApprovedCheck" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
-                      Akun Berstatus Sah (Approved) - Aktif melakukan alur ekspor
+                      {t.modalApproveCheckbox}
                     </label>
                   </div>
                 )}
@@ -968,14 +1071,14 @@ export default function AccountManagement({
                     onClick={() => setEditingUser(null)}
                     className="px-4 py-2 border border-slate-300 rounded-xl text-slate-600 text-xs font-bold hover:bg-slate-50 cursor-pointer"
                   >
-                    Kembali
+                    {t.cancel}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-black rounded-xl cursor-pointer shadow-md flex items-center gap-1"
                   >
                     <Save className="w-4 h-4" />
-                    <span>Simpan Perubahan</span>
+                    <span>{t.modalSave}</span>
                   </button>
                 </div>
               </form>
@@ -988,10 +1091,9 @@ export default function AccountManagement({
       <div className="bg-indigo-50 border border-indigo-150 rounded-2xl p-4 flex gap-3 text-left">
         <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5 animate-pulse" />
         <div className="text-xs space-y-1 text-indigo-950">
-          <p className="font-extrabold uppercase tracking-wide text-indigo-900 text-[10px]">Panduan Kredensial &amp; Pengaman Siber</p>
+          <p className="font-extrabold uppercase tracking-wide text-indigo-900 text-[10px]">{t.bannerTitle}</p>
           <p className="font-semibold leading-relaxed">
-            Semua perubahan nama lengkap, surat elektronik (email), maupun sandi yang diawasi di menu ini di-enkripsi dalam penyimpanan lokal browser (localStorage). 
-            Ini menjaga keamanan pendaftaran data agar tetap sinkron dan andal saat Anda berpindah aktor dengan tombol **"Ganti Aktor"** di halaman gerbang utama.
+            {t.bannerDesc}
           </p>
         </div>
       </div>
