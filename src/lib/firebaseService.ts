@@ -51,49 +51,12 @@ export async function fetchAndSeedInitialData(defaultProfile: any, defaultSample
     const samplesEmpty = await isCollectionEmpty(SAMPLE_REQS_COL);
     const profileEmpty = await isCollectionEmpty(CONFIG_COL);
 
-    // If any of the main data is empty, let's seed them so the app is immediately usable
-    if (usersEmpty || productsEmpty || shipmentsEmpty || alertsEmpty || samplesEmpty || profileEmpty) {
-      console.log('Firestore is empty or partially unseeded. Seeding initial data...');
+    // If the profile is empty, assume this is a fresh database and seed initial data
+    if (profileEmpty) {
+      console.log('Firestore profile is empty. Seeding initial data...');
       const batch = writeBatch(db);
 
-      // Seed Users
-      const initialUsers = mockUsers.map(u => ({ ...u, isApproved: true }));
-      initialUsers.forEach(user => {
-        const docRef = doc(db, USERS_COL, user.id);
-        batch.set(docRef, user);
-      });
-
-      // Seed Products
-      mockProducts.forEach(prod => {
-        const docRef = doc(db, PRODUCTS_COL, prod.id);
-        batch.set(docRef, prod);
-      });
-
-      // Seed Shipments
-      const baseShipments = initialShipments();
-      const initialShip = baseShipments.map(s => ({
-        ...s,
-        documents: createMockDocuments(s.id, s.totalValue, s.quantity, s.unit, s.productName, s.hsCode),
-        certifications: mockCertificationsList(s.id)
-      }));
-      initialShip.forEach(ship => {
-        const docRef = doc(db, SHIPMENTS_COL, ship.id);
-        batch.set(docRef, ship);
-      });
-
-      // Seed Alerts
-      initialAlerts.forEach(alert => {
-        const docRef = doc(db, ALERTS_COL, alert.id);
-        batch.set(docRef, alert);
-      });
-
-      // Seed Sample Requests
-      defaultSampleRequests.forEach(req => {
-        const docRef = doc(db, SAMPLE_REQS_COL, req.id);
-        batch.set(docRef, req);
-      });
-
-      // Seed Company Profile
+      // Seed Company Profile only, we do not want dummy products/users anymore
       const profileRef = doc(db, CONFIG_COL, PROFILE_DOC_ID);
       batch.set(profileRef, defaultProfile);
 
@@ -102,11 +65,11 @@ export async function fetchAndSeedInitialData(defaultProfile: any, defaultSample
       console.log('Firestore seeding completed successfully.');
 
       return {
-        users: initialUsers,
-        products: mockProducts,
-        shipments: initialShip,
-        alerts: initialAlerts,
-        sampleRequests: defaultSampleRequests,
+        users: [],
+        products: [],
+        shipments: [],
+        alerts: [],
+        sampleRequests: [],
         companyProfile: defaultProfile
       };
     }
@@ -162,17 +125,13 @@ export async function fetchAndSeedInitialData(defaultProfile: any, defaultSample
     };
   } catch (error) {
     console.error('Error fetching data from Firestore:', error);
-    // Fallback to local storage or mocks
+    // Fallback to empty data instead of mocks
     return {
-      users: mockUsers.map(u => ({ ...u, isApproved: true })),
-      products: mockProducts,
-      shipments: initialShipments().map(s => ({
-        ...s,
-        documents: createMockDocuments(s.id, s.totalValue, s.quantity, s.unit, s.productName, s.hsCode),
-        certifications: mockCertificationsList(s.id)
-      })),
-      alerts: initialAlerts,
-      sampleRequests: defaultSampleRequests,
+      users: [],
+      products: [],
+      shipments: [],
+      alerts: [],
+      sampleRequests: [],
       companyProfile: defaultProfile
     };
   }
@@ -181,7 +140,9 @@ export async function fetchAndSeedInitialData(defaultProfile: any, defaultSample
 // Single item persistence helpers
 export async function saveUserToFirestore(user: UserProfile) {
   try {
-    await setDoc(doc(db, USERS_COL, user.id), user);
+    // Remove undefined fields before saving
+    const sanitizedData = Object.fromEntries(Object.entries(user).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, USERS_COL, user.id), sanitizedData);
   } catch (error) {
     console.error('Error saving user to Firestore:', error);
   }
@@ -205,7 +166,8 @@ export async function deleteProductFromFirestore(productId: string) {
 
 export async function saveProductToFirestore(product: ExportProduct) {
   try {
-    await setDoc(doc(db, PRODUCTS_COL, product.id), product);
+    const sanitizedProduct = Object.fromEntries(Object.entries(product).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, PRODUCTS_COL, product.id), sanitizedProduct);
   } catch (error) {
     console.error('Error saving product to Firestore:', error);
   }
@@ -213,7 +175,9 @@ export async function saveProductToFirestore(product: ExportProduct) {
 
 export async function saveShipmentToFirestore(shipment: ExportShipment) {
   try {
-    await setDoc(doc(db, SHIPMENTS_COL, shipment.id), shipment);
+    // Remove undefined fields before saving
+    const sanitizedData = Object.fromEntries(Object.entries(shipment).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, SHIPMENTS_COL, shipment.id), sanitizedData);
   } catch (error) {
     console.error('Error saving shipment to Firestore:', error);
   }
@@ -221,7 +185,9 @@ export async function saveShipmentToFirestore(shipment: ExportShipment) {
 
 export async function saveAlertToFirestore(alert: RealTimeAlert) {
   try {
-    await setDoc(doc(db, ALERTS_COL, alert.id), alert);
+    // Remove undefined fields before saving
+    const sanitizedData = Object.fromEntries(Object.entries(alert).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, ALERTS_COL, alert.id), sanitizedData);
   } catch (error) {
     console.error('Error saving alert to Firestore:', error);
   }
@@ -229,7 +195,9 @@ export async function saveAlertToFirestore(alert: RealTimeAlert) {
 
 export async function saveSampleRequestToFirestore(request: any) {
   try {
-    await setDoc(doc(db, SAMPLE_REQS_COL, request.id), request);
+    // Remove undefined fields before saving
+    const sanitizedData = Object.fromEntries(Object.entries(request).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, SAMPLE_REQS_COL, request.id), sanitizedData);
   } catch (error) {
     console.error('Error saving sample request to Firestore:', error);
   }
@@ -237,7 +205,9 @@ export async function saveSampleRequestToFirestore(request: any) {
 
 export async function saveCompanyProfileToFirestore(profile: any) {
   try {
-    await setDoc(doc(db, CONFIG_COL, PROFILE_DOC_ID), profile);
+    // Remove undefined fields before saving
+    const sanitizedData = Object.fromEntries(Object.entries(profile).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, CONFIG_COL, PROFILE_DOC_ID), sanitizedData);
   } catch (error) {
     console.error('Error saving company profile to Firestore:', error);
   }

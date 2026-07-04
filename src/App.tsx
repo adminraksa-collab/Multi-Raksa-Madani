@@ -90,14 +90,7 @@ export default function App() {
         return parsed;
       } catch (e) {}
     }
-    const base = initialShipments();
-    const initial = base.map(s => ({
-      ...s,
-      documents: createMockDocuments(s.id, s.totalValue, s.quantity, s.unit, s.productName, s.hsCode),
-      certifications: mockCertificationsList(s.id)
-    }));
-    localStorage.setItem('exportflow_shipments', JSON.stringify(initial));
-    return initial;
+    return [];
   });
 
   // Save current user to local storage whenever it changes
@@ -109,7 +102,7 @@ export default function App() {
     }
   }, [currentUser]);
 
-  const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => initialAlerts);
+  const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => []);
   const [activeShipmentId, setActiveShipmentId] = useState<string>('');
   const [targetStepIndex, setTargetStepIndex] = useState<number | undefined>(undefined);
   const [targetSubStepIndex, setTargetSubStepIndex] = useState<number | undefined>(undefined);
@@ -126,57 +119,14 @@ export default function App() {
 
   // Local storage based user list and login credential state
   const [users, setUsers] = useState<UserProfile[]>(() => {
-    const isSandboxToRemove = (emailStr: string) => {
-      const e = (emailStr || '').trim().toLowerCase();
-      return [
-        'admin@exportflow.com',
-        'hendry@nusantara-traders.com',
-        'hans.m@tokyocoffee-import.de',
-        'siti.aminah@samuderatrans.co.id',
-        'wayan@organic-bali-spices.com'
-      ].includes(e);
-    };
-
     const stored = localStorage.getItem('exportflow_users');
     if (stored) {
       try {
         let us = JSON.parse(stored);
-        us = us.map((u: any) => u.role === 'Owner/Direktur' ? { ...u, role: 'Superadmin' } : u);
-        us = us.filter((u: any) => !isSandboxToRemove(u.email));
-        
-        // Ensure joko is present in users
-        if (!us.some((u: any) => u.name.toLowerCase() === 'joko')) {
-          us.unshift({
-            id: 'usr-joko',
-            name: 'joko',
-            role: 'Superadmin',
-            email: 'joko@exportflow.com',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-            companyName: 'Kementerian Perdagangan & Bea Cukai (Bea Cukai RI)',
-            phone: '0822-1832-2672',
-            isApproved: true
-          } as any);
-        }
-        // Ensure lis is present in users
-        if (!us.some((u: any) => u.name.toLowerCase() === 'lis')) {
-          us.unshift({
-            id: 'usr-lis',
-            name: 'lis',
-            role: 'Trader',
-            email: 'lis@exportflow.com',
-            avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-            companyName: 'PT Multi Raksa Madani',
-            phone: '0857-2045-21691',
-            isApproved: true
-          } as any);
-        }
-        localStorage.setItem('exportflow_users', JSON.stringify(us));
         return us;
       } catch (e) {}
     }
-    const initial = mockUsers.map(u => ({ ...u, isApproved: true })).filter((u: any) => !isSandboxToRemove(u.email));
-    localStorage.setItem('exportflow_users', JSON.stringify(initial));
-    return initial;
+    return [];
   });
 
   // Local storage based products state
@@ -187,7 +137,7 @@ export default function App() {
         return JSON.parse(stored);
       } catch (e) {}
     }
-    return mockProducts;
+    return [];
   });
 
   // Local storage based company profile
