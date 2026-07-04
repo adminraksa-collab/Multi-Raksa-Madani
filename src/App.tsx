@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, ExportShipment, ExportDocument, ShipmentStep, RealTimeAlert, ExportProduct, Certification } from './types';
+import { onSnapshot, collection } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import { 
   mockUsers, 
   initialShipments, 
@@ -9,6 +11,15 @@ import {
   WORKFLOW_STEPS,
   mockProducts
 } from './mockData';
+import {
+  fetchAndSeedInitialData,
+  saveUserToFirestore,
+  saveProductToFirestore,
+  saveShipmentToFirestore,
+  saveAlertToFirestore,
+  saveSampleRequestToFirestore,
+  saveCompanyProfileToFirestore
+} from './lib/firebaseService';
 import LoginModal from './components/LoginModal';
 import DocumentEditor from './components/DocumentEditor';
 import DocumentViewer from './components/DocumentViewer';
@@ -28,6 +39,8 @@ import {
 
 export default function App() {
   // 1. Initial State Initialization
+  const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
+
   const [lang, setLang] = useState<string>(() => {
     // Default to 'id' for the user's workspace
     return 'id';
@@ -95,11 +108,6 @@ export default function App() {
       localStorage.removeItem('exportflow_current_user');
     }
   }, [currentUser]);
-
-  // Save shipments to local storage whenever they change
-  useEffect(() => {
-    localStorage.setItem('exportflow_shipments', JSON.stringify(shipments));
-  }, [shipments]);
 
   const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => initialAlerts);
   const [activeShipmentId, setActiveShipmentId] = useState<string>('');
@@ -255,13 +263,17 @@ export default function App() {
     }
   }, []);
 
+  // Save products to local storage whenever they change
   useEffect(() => {
     localStorage.setItem('exportflow_products', JSON.stringify(products));
   }, [products]);
 
+  // Save company profile to local storage and Firestore whenever it changes
   useEffect(() => {
     localStorage.setItem('exportflow_company_profile', JSON.stringify(companyProfile));
-  }, [companyProfile]);
+    if (isFirebaseLoading) return;
+    saveCompanyProfileToFirestore(companyProfile).catch(err => console.error("Error saving company profile to Firestore:", err));
+  }, [companyProfile, isFirebaseLoading]);
 
   // Local storage based sample requests state
   const [sampleRequests, setSampleRequests] = useState<any[]>(() => {
@@ -307,9 +319,140 @@ export default function App() {
     ];
   });
 
+  // Save sample requests to local storage and Firestore whenever they change
   useEffect(() => {
     localStorage.setItem('exportflow_sample_requests', JSON.stringify(sampleRequests));
-  }, [sampleRequests]);
+    if (isFirebaseLoading) return;
+    sampleRequests.forEach(req => {
+      saveSampleRequestToFirestore(req).catch(err => console.error("Error saving sample request to Firestore:", err));
+    });
+  }, [sampleRequests, isFirebaseLoading]);
+
+  // Load data from Firebase Firestore on mount, falling back to local storage
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const defaultProfile = {
+          nib: '0602230086432',
+          nibNotes: '(Izin Ekspor Pertanian & Agro-Industri Aktif)',
+          npwp: '62.708.227.4-429.000',
+          ceisa: 'rec CEISA',
+          insw: 'rec insw',
+          address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
+          telephone: '0857-2045-21691',
+          whatsapp: '0822-1832-2672',
+          email: 'support@ptmrm.my.id',
+          bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80',
+          originPort: 'Tanjung Priok, JKT',
+          exporterLegality: 'NIK-294021796-A',
+          qualityCompliance: 'ISO 9001, SVLK',
+          financialGuarantee: 'Bank Escrow SSL',
+        };
+        const defaultSampleRequests = [
+          {
+            id: 'samp-101',
+            productId: 'prod-1',
+            productName: 'Kopi Gayo Arabika (Grade 1 Specialty)',
+            buyerName: 'Hiroshi Tanaka',
+            buyerCompany: 'Tanaka Specialty Coffee Ltd.',
+            quantity: '2 kg',
+            courier: 'DHL Express',
+            courierAccount: 'DHL-987654321',
+            shippingAddress: 'Aoyama 3-Chome, Minato-ku, Tokyo 107-0062, Japan',
+            shippingFeePaidBy: 'buyer',
+            shippingFeeAmount: 85,
+            status: 'shipped',
+            trackingNumber: 'TRK-DHL-88772211',
+            createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString()
+          },
+          {
+            id: 'samp-102',
+            productId: 'prod-2',
+            productName: 'Arang Batok Kelapa (Coconut Charcoal Briquettes)',
+            buyerName: 'Sophie Dubois',
+            buyerCompany: 'Paris Hookah Lounge Supply',
+            quantity: '1 kg',
+            courier: 'FedEx International',
+            courierAccount: '',
+            shippingAddress: 'Rue du Faubourg Saint-Antoine, 75011 Paris, France',
+            shippingFeePaidBy: 'buyer',
+            shippingFeeAmount: 110,
+            status: 'pending',
+            trackingNumber: '',
+            createdAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString()
+          }
+        ];
+        
+        const data = await fetchAndSeedInitialData(defaultProfile, defaultSampleRequests);
+        
+        if (data.users && data.users.length > 0) {
+          setUsers(data.users);
+        }
+        if (data.products && data.products.length > 0) {
+          setProducts(data.products);
+        }
+        if (data.shipments && data.shipments.length > 0) {
+          setShipments(data.shipments);
+        }
+        if (data.alerts && data.alerts.length > 0) {
+          setAlerts(data.alerts);
+        }
+        if (data.sampleRequests && data.sampleRequests.length > 0) {
+          setSampleRequests(data.sampleRequests);
+        }
+        if (data.companyProfile) {
+          setCompanyProfile(data.companyProfile);
+        }
+      } catch (err) {
+        console.error("Firebase load failed, using local storage fallback:", err);
+      } finally {
+        setIsFirebaseLoading(false);
+      }
+    }
+    loadData();
+
+    // Set up real-time listener for products
+    const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
+      const updatedProducts: ExportProduct[] = [];
+      snapshot.forEach((doc) => {
+        updatedProducts.push(doc.data() as ExportProduct);
+      });
+      setProducts(updatedProducts);
+    }, (error) => {
+      console.error("Error listening to products snapshot:", error);
+    });
+
+    return () => {
+      unsubscribeProducts();
+    };
+  }, []);
+
+  // Save shipments to local storage and Firestore whenever they change
+  useEffect(() => {
+    localStorage.setItem('exportflow_shipments', JSON.stringify(shipments));
+    if (isFirebaseLoading) return;
+    shipments.forEach(shipment => {
+      saveShipmentToFirestore(shipment).catch(err => console.error("Error saving shipment to Firestore:", err));
+    });
+  }, [shipments, isFirebaseLoading]);
+
+  // Save users to local storage and Firestore whenever they change
+  useEffect(() => {
+    localStorage.setItem('exportflow_users', JSON.stringify(users));
+    if (isFirebaseLoading) return;
+    users.forEach(user => {
+      saveUserToFirestore(user).catch(err => console.error("Error saving user to Firestore:", err));
+    });
+  }, [users, isFirebaseLoading]);
+
+  // Save alerts to local storage and Firestore whenever they change
+  useEffect(() => {
+    localStorage.setItem('exportflow_alerts', JSON.stringify(alerts));
+    if (isFirebaseLoading) return;
+    alerts.forEach(alert => {
+      saveAlertToFirestore(alert).catch(err => console.error("Error saving alert to Firestore:", err));
+    });
+  }, [alerts, isFirebaseLoading]);
 
   // States for Change Password Modal
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);

@@ -195,6 +195,14 @@ export async function deleteUserFromFirestore(userId: string) {
   }
 }
 
+export async function deleteProductFromFirestore(productId: string) {
+  try {
+    await deleteDoc(doc(db, PRODUCTS_COL, productId));
+  } catch (error) {
+    console.error('Error deleting product from Firestore:', error);
+  }
+}
+
 export async function saveProductToFirestore(product: ExportProduct) {
   try {
     await setDoc(doc(db, PRODUCTS_COL, product.id), product);

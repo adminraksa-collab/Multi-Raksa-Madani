@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 import { UserProfile, ExportProduct, ExportShipment } from '../types';
+import { deleteProductFromFirestore, saveProductToFirestore } from '../lib/firebaseService';
 
 
 const landingTranslations: Record<string, Record<string, string>> = {
@@ -721,6 +722,7 @@ export default function LandingPage({
     const updated = products.filter(p => p.id !== productId);
     onUpdateProducts(updated);
     setProductToDeleteId(null);
+    deleteProductFromFirestore(productId).catch(err => console.error("Failed to delete from Firestore:", err));
   };
 
   const handleSaveProduct = (e: React.FormEvent) => {
@@ -741,27 +743,30 @@ export default function LandingPage({
         attachmentUrl: productForm.attachmentUrl || undefined,
         attachmentName: productForm.attachmentName || undefined,
       };
+      saveProductToFirestore(newProd).catch(err => console.error(err));
       onUpdateProducts([...products, newProd]);
       // set as default target
       setTargetProduct(newProd.id);
     } else if (editingProduct && editingProduct !== 'new') {
+      const updatedItem = {
+        ...editingProduct,
+        name: productForm.name,
+        category: productForm.category,
+        hsCode: productForm.hsCode,
+        price: productForm.price,
+        unit: productForm.unit,
+        specification: productForm.specification,
+        origin: productForm.origin,
+        minOrder: productForm.minOrder,
+        image: productForm.image,
+        supplierName: editingProduct.supplierName || 'Koperasi Mitra AgriFlow',
+        attachmentUrl: productForm.attachmentUrl || undefined,
+        attachmentName: productForm.attachmentName || undefined,
+      };
+      saveProductToFirestore(updatedItem).catch(err => console.error(err));
       const updated = products.map(p => {
         if (p.id === editingProduct.id) {
-          return {
-            ...p,
-            name: productForm.name,
-            category: productForm.category,
-            hsCode: productForm.hsCode,
-            price: productForm.price,
-            unit: productForm.unit,
-            specification: productForm.specification,
-            origin: productForm.origin,
-            minOrder: productForm.minOrder,
-            image: productForm.image,
-            supplierName: p.supplierName || 'Koperasi Mitra AgriFlow',
-            attachmentUrl: productForm.attachmentUrl || undefined,
-            attachmentName: productForm.attachmentName || undefined,
-          };
+          return updatedItem;
         }
         return p;
       });
