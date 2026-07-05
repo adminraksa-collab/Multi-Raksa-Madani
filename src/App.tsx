@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ExportShipment, ExportDocument, ShipmentStep, RealTimeAlert, ExportProduct, Certification } from './types';
 import { onSnapshot, collection } from 'firebase/firestore';
@@ -39,7 +39,7 @@ import {
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
   Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
-  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut, ChevronDown
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut, ChevronDown, Upload
 } from 'lucide-react';
 
 export default function App() {
@@ -106,6 +106,11 @@ export default function App() {
       localStorage.removeItem('exportflow_current_user');
     }
   }, [currentUser]);
+
+  const lastSyncedShipmentsRef = useRef<string>('');
+  const lastSyncedSampleRequestsRef = useRef<string>('');
+  const lastSyncedUsersRef = useRef<string>('');
+  const lastSyncedCompanyProfileRef = useRef<string>('');
 
   const [alerts, setAlerts] = useState<RealTimeAlert[]>(() => []);
   const [activeShipmentId, setActiveShipmentId] = useState<string>('');
@@ -227,6 +232,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('exportflow_company_profile', JSON.stringify(companyProfile));
     if (isFirebaseLoading) return;
+    const stringified = JSON.stringify(companyProfile);
+    if (stringified === lastSyncedCompanyProfileRef.current) return;
+    lastSyncedCompanyProfileRef.current = stringified;
     saveCompanyProfileToFirestore(companyProfile).catch(err => console.error("Error saving company profile to Firestore:", err));
   }, [companyProfile, isFirebaseLoading]);
 
@@ -278,6 +286,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('exportflow_sample_requests', JSON.stringify(sampleRequests));
     if (isFirebaseLoading) return;
+    const stringified = JSON.stringify(sampleRequests);
+    if (stringified === lastSyncedSampleRequestsRef.current) return;
+    lastSyncedSampleRequestsRef.current = stringified;
     sampleRequests.forEach(req => {
       saveSampleRequestToFirestore(req).catch(err => console.error("Error saving sample request to Firestore:", err));
     });
@@ -309,21 +320,25 @@ export default function App() {
         
         if (data.users) {
           setUsers(data.users);
+          lastSyncedUsersRef.current = JSON.stringify(data.users);
         }
         if (data.products) {
           setProducts(data.products);
         }
         if (data.shipments) {
           setShipments(data.shipments);
+          lastSyncedShipmentsRef.current = JSON.stringify(data.shipments);
         }
         if (data.alerts) {
           setAlerts(data.alerts);
         }
         if (data.sampleRequests) {
           setSampleRequests(data.sampleRequests);
+          lastSyncedSampleRequestsRef.current = JSON.stringify(data.sampleRequests);
         }
         if (data.companyProfile) {
           setCompanyProfile(data.companyProfile);
+          lastSyncedCompanyProfileRef.current = JSON.stringify(data.companyProfile);
         }
       } catch (err) {
         console.error("Firebase load failed, using local storage fallback:", err);
@@ -357,9 +372,87 @@ export default function App() {
       console.error("Error listening to alerts snapshot:", error);
     });
 
+    // Set up real-time listener for shipments
+    const unsubscribeShipments = onSnapshot(collection(db, 'shipments'), (snapshot) => {
+      const updatedShipments: ExportShipment[] = [];
+      snapshot.forEach((doc) => {
+        updatedShipments.push(doc.data() as ExportShipment);
+      });
+      updatedShipments.sort((a, b) => b.id.localeCompare(a.id));
+      
+      const stringified = JSON.stringify(updatedShipments);
+      lastSyncedShipmentsRef.current = stringified;
+      setShipments(updatedShipments);
+    }, (error) => {
+      console.error("Error listening to shipments snapshot:", error);
+    });
+
+    // Set up real-time listener for sample requests
+    const unsubscribeSampleRequests = onSnapshot(collection(db, 'sample_requests'), (snapshot) => {
+      const updatedSampleRequests: any[] = [];
+      snapshot.forEach((doc) => {
+        updatedSampleRequests.push(doc.data());
+      });
+      updatedSampleRequests.sort((a, b) => b.id.localeCompare(a.id));
+      
+      const stringified = JSON.stringify(updatedSampleRequests);
+      lastSyncedSampleRequestsRef.current = stringified;
+      setSampleRequests(updatedSampleRequests);
+    }, (error) => {
+      console.error("Error listening to sample requests snapshot:", error);
+    });
+
+    // Set up real-time listener for users
+    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const updatedUsers: UserProfile[] = [];
+      snapshot.forEach((doc) => {
+        updatedUsers.push(doc.data() as UserProfile);
+      });
+      
+      // Merge with what we currently have in localStorage to avoid wiping out offline/local-only users
+      const stored = localStorage.getItem('exportflow_users');
+      let localUs: UserProfile[] = [];
+      if (stored) {
+        try {
+          localUs = JSON.parse(stored);
+        } catch (e) {}
+      }
+      
+      const mergedUsers = [...updatedUsers];
+      localUs.forEach(localU => {
+        if (!mergedUsers.some(u => u.id === localU.id || u.name.toLowerCase() === localU.name.toLowerCase())) {
+          mergedUsers.push(localU);
+        }
+      });
+      
+      const stringified = JSON.stringify(mergedUsers);
+      lastSyncedUsersRef.current = stringified;
+      setUsers(mergedUsers);
+    }, (error) => {
+      console.error("Error listening to users snapshot:", error);
+    });
+
+    // Set up real-time listener for company profile config
+    const unsubscribeCompanyProfile = onSnapshot(collection(db, 'config'), (snapshot) => {
+      snapshot.forEach((doc) => {
+        if (doc.id === 'company_profile') {
+          const updatedProfile = doc.data();
+          const stringified = JSON.stringify(updatedProfile);
+          lastSyncedCompanyProfileRef.current = stringified;
+          setCompanyProfile(updatedProfile);
+        }
+      });
+    }, (error) => {
+      console.error("Error listening to company profile snapshot:", error);
+    });
+
     return () => {
       unsubscribeProducts();
       unsubscribeAlerts();
+      unsubscribeShipments();
+      unsubscribeSampleRequests();
+      unsubscribeUsers();
+      unsubscribeCompanyProfile();
     };
   }, []);
 
@@ -367,6 +460,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('exportflow_shipments', JSON.stringify(shipments));
     if (isFirebaseLoading) return;
+    const stringified = JSON.stringify(shipments);
+    if (stringified === lastSyncedShipmentsRef.current) return;
+    lastSyncedShipmentsRef.current = stringified;
     shipments.forEach(shipment => {
       saveShipmentToFirestore(shipment).catch(err => console.error("Error saving shipment to Firestore:", err));
     });
@@ -376,6 +472,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('exportflow_users', JSON.stringify(users));
     if (isFirebaseLoading) return;
+    const stringified = JSON.stringify(users);
+    if (stringified === lastSyncedUsersRef.current) return;
+    lastSyncedUsersRef.current = stringified;
     users.forEach(user => {
       saveUserToFirestore(user).catch(err => console.error("Error saving user to Firestore:", err));
     });
@@ -437,6 +536,30 @@ export default function App() {
     setShowProfileNewPassword(false);
     setShowProfileConfirmPassword(false);
     setIsEditProfileOpen(true);
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileError('');
+    setProfileSuccess('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      setProfileError('Ukuran file foto profil maksimal adalah 500 KB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setProfileAvatar(event.target.result as string);
+        setProfileSuccess('Foto profil berhasil diunggah!');
+      }
+    };
+    reader.onerror = () => {
+      setProfileError('Gagal membaca file foto profil.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -2131,7 +2254,21 @@ export default function App() {
             currentLanguage={lang}
             activeShipment={activeShipment || undefined}
             negoStepId={negoStepId}
-            onAddSampleRequest={(req) => setSampleRequests([...sampleRequests, req])}
+            onAddSampleRequest={(req) => {
+              setSampleRequests([...sampleRequests, req]);
+              const isId = lang === 'id';
+              const newAlert: RealTimeAlert = {
+                id: `alt-samp-${Date.now()}`,
+                title: isId ? 'Permintaan Sampel Baru' : 'New Sample Request',
+                message: isId 
+                  ? `Pembeli ${req.buyerCompany} (${req.buyerName}) mengajukan permintaan sampel untuk produk ${req.productName} sebanyak ${req.quantity} via kurir ${req.courier}.`
+                  : `Buyer ${req.buyerCompany} (${req.buyerName}) requested a sample of ${req.productName} (${req.quantity}) via courier ${req.courier}.`,
+                type: 'info',
+                timestamp: new Date().toISOString(),
+                readBy: []
+              };
+              saveAlertToFirestore(newAlert);
+            }}
           />
         ) : activeTab === 'workflow' ? (
           <div className="space-y-6">
@@ -2544,6 +2681,18 @@ export default function App() {
                                 <button
                                   onClick={() => {
                                     setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'shipped' } : r));
+                                    const isId = lang === 'id';
+                                    const newAlert: RealTimeAlert = {
+                                      id: `alt-samp-ship-${Date.now()}`,
+                                      title: isId ? 'Sampel Dikirim' : 'Sample Shipped',
+                                      message: isId 
+                                        ? `Sampel produk ${req.productName} untuk buyer ${req.buyerCompany} telah dikirim.`
+                                        : `Product sample of ${req.productName} for buyer ${req.buyerCompany} has been shipped.`,
+                                      type: 'success',
+                                      timestamp: new Date().toISOString(),
+                                      readBy: []
+                                    };
+                                    saveAlertToFirestore(newAlert);
                                   }}
                                   className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                                 >
@@ -2554,6 +2703,18 @@ export default function App() {
                                 <button
                                   onClick={() => {
                                     setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'delivered' } : r));
+                                    const isId = lang === 'id';
+                                    const newAlert: RealTimeAlert = {
+                                      id: `alt-samp-deliv-${Date.now()}`,
+                                      title: isId ? 'Sampel Diterima' : 'Sample Delivered',
+                                      message: isId 
+                                        ? `Sampel produk ${req.productName} telah sukses terkirim dan diterima oleh buyer ${req.buyerCompany}.`
+                                        : `Product sample of ${req.productName} has been successfully delivered and received by buyer ${req.buyerCompany}.`,
+                                      type: 'success',
+                                      timestamp: new Date().toISOString(),
+                                      readBy: []
+                                    };
+                                    saveAlertToFirestore(newAlert);
                                   }}
                                   className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
                                 >
@@ -2753,9 +2914,9 @@ export default function App() {
                   <img 
                     src={profileAvatar} 
                     alt="Current Avatar" 
-                    className="w-12 h-12 rounded-full border-2 border-indigo-500 object-cover p-0.5" 
+                    className="w-12 h-12 rounded-full border-2 border-indigo-500 object-cover p-0.5 shrink-0" 
                   />
-                  <div className="grid grid-cols-6 gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {[
                       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
                       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -2775,6 +2936,38 @@ export default function App() {
                         <img src={url} alt={`Preset ${idx}`} className="w-full h-full object-cover" />
                       </button>
                     ))}
+
+                    {/* Show current custom avatar if not a preset */}
+                    {profileAvatar && ![
+                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+                      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+                      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+                    ].includes(profileAvatar) && (
+                      <button
+                        type="button"
+                        onClick={() => setProfileAvatar(profileAvatar)}
+                        className="w-8 h-8 rounded-full overflow-hidden border-2 border-indigo-600 ring-2 ring-indigo-200 transition-all cursor-pointer hover:scale-105"
+                      >
+                        <img src={profileAvatar} alt="Custom Upload" className="w-full h-full object-cover" />
+                      </button>
+                    )}
+
+                    {/* Custom Image Upload Button */}
+                    <label
+                      className="w-8 h-8 rounded-full border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-slate-50 hover:text-indigo-600 text-slate-400 transition-all flex items-center justify-center cursor-pointer hover:scale-105 shrink-0"
+                      title="Unggah Foto Kustom (Maks 500kb)"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
                 </div>
               </div>

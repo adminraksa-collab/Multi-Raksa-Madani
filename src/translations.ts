@@ -279,6 +279,11 @@ export interface TranslationKeys {
   exportStep2Desc: string;
   exportStep3Title: string;
   exportStep3Desc: string;
+  chooseProfileAvatar?: string;
+  countryLabel?: string;
+  preferredPortOfDischargeLabel?: string;
+  preferredPortOfLoadingLabel?: string;
+  companyAddressLabel?: string;
 }
 
 export const LANGUAGES = [
@@ -538,7 +543,7 @@ export const translations: Record<string, TranslationKeys> = {
     placeholderPhone: 'Contoh: +6281234567890',
     phoneWhatsappLabel: 'Nomor Telepon / WhatsApp *',
     ecosystemRoleLabel: 'Peran Ekosistem',
-    institutionLabel: 'Instansi *',
+    institutionLabel: 'Perusahaan/Instansi *',
     confirmPasswordLabel: 'Konfirmasi *',
     passwordLabel: 'Sandi *',
     placeholderExampleName: 'Contoh: Kenji Sato',
@@ -553,6 +558,11 @@ export const translations: Record<string, TranslationKeys> = {
     exportStep2Desc: "Deal secara transparan",
     exportStep3Title: "3. Logistik & Escrow",
     exportStep3Desc: "Pembayaran aman & terjamin",
+    chooseProfileAvatar: "Pilih Foto Profil",
+    countryLabel: "Negara Asal (Country)",
+    preferredPortOfDischargeLabel: "Pelabuhan Bongkar Utama (Destinasi)",
+    preferredPortOfLoadingLabel: "Pelabuhan Muat Utama (Asal)",
+    companyAddressLabel: "Alamat Perusahaan",
   },
   en: {
     minOrder: 'TBD',
@@ -805,7 +815,7 @@ export const translations: Record<string, TranslationKeys> = {
     placeholderPhone: 'Example: +6281234567890',
     phoneWhatsappLabel: 'Phone / WhatsApp *',
     ecosystemRoleLabel: 'Ecosystem Role',
-    institutionLabel: 'Institution *',
+    institutionLabel: 'Company/Institution *',
     confirmPasswordLabel: 'Confirm *',
     passwordLabel: 'Password *',
     placeholderExampleName: 'Example: Kenji Sato',
@@ -820,6 +830,11 @@ export const translations: Record<string, TranslationKeys> = {
     exportStep2Desc: "Deal transparently",
     exportStep3Title: "3. Logistics & Escrow",
     exportStep3Desc: "Safe & secure payment",
+    chooseProfileAvatar: "Choose Profile Picture",
+    countryLabel: "Country of Origin",
+    preferredPortOfDischargeLabel: "Main Port of Discharge (Destination)",
+    preferredPortOfLoadingLabel: "Main Port of Loading (Origin)",
+    companyAddressLabel: "Company Address",
   },
   zh: {
     telephoneContact: '电话:',
@@ -1023,7 +1038,7 @@ export const translations: Record<string, TranslationKeys> = {
     placeholderPhone: '例如: +6281234567890',
     phoneWhatsappLabel: '电话 / WhatsApp *',
     ecosystemRoleLabel: '生态系统角色',
-    institutionLabel: '机构 / 部门 *',
+    institutionLabel: '公司 / 机构 *',
     confirmPasswordLabel: '确认密码 *',
     passwordLabel: '密码 *',
     placeholderExampleName: '例如: 佐藤健二',
