@@ -3,6 +3,7 @@ export type UserRole = 'Superadmin' | 'Trader' | 'Buyer' | 'Forwarder' | 'Suppli
 export interface UserProfile {
   id: string;
   name: string;
+  username?: string;
   role: UserRole;
   email: string;
   avatar: string;

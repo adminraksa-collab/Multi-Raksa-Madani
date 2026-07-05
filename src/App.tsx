@@ -119,7 +119,7 @@ export default function App() {
   const [shipmentSearchQuery, setShipmentSearchQuery] = useState('');
   const [shipmentStatusFilter, setShipmentStatusFilter] = useState('All');
   const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'guide' | 'negotiation' | 'users'>('home');
-  const [workflowSubTab, setWorkflowSubTab] = useState<'cargo' | 'sample'>('cargo');
+  const [workflowSubTab, setWorkflowSubTab] = useState<'cargo' | 'sample'>('sample');
   const [negoStepId, setNegoStepId] = useState<number>(1);
   const [negotiationProduct, setNegotiationProduct] = useState<ExportProduct | undefined>(undefined);
   const [showRestrictedAlert, setShowRestrictedAlert] = useState<string | null>(null);
@@ -2275,16 +2275,6 @@ export default function App() {
             {/* Sub-tab Navigation */}
             <div className="flex border-b border-slate-200">
               <button
-                onClick={() => setWorkflowSubTab('cargo')}
-                className={`py-2 px-4 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                  workflowSubTab === 'cargo'
-                    ? 'border-indigo-600 text-indigo-700 font-black'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
-                }`}
-              >
-                {t.tabCargoExport} ({filteredShipments.length})
-              </button>
-              <button
                 onClick={() => setWorkflowSubTab('sample')}
                 className={`py-2 px-4 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
                   workflowSubTab === 'sample'
@@ -2293,6 +2283,16 @@ export default function App() {
                 }`}
               >
                 {t.tabSampleRequest} ({visibleSampleRequests.length})
+              </button>
+              <button
+                onClick={() => setWorkflowSubTab('cargo')}
+                className={`py-2 px-4 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                  workflowSubTab === 'cargo'
+                    ? 'border-indigo-600 text-indigo-700 font-black'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 font-bold'
+                }`}
+              >
+                {t.tabCargoExport} ({filteredShipments.length})
               </button>
             </div>
 
@@ -2623,6 +2623,7 @@ export default function App() {
                       const isShipped = req.status === 'shipped';
                       const isDelivered = req.status === 'delivered';
                       const isExporter = currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin';
+                      const formattedDate = req.createdAt ? new Date(req.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
                       return (
                         <div 
@@ -2634,6 +2635,7 @@ export default function App() {
                               <div>
                                 <span className="text-[12px] font-black uppercase text-slate-400 tracking-wider font-mono">KODE: {req.id}</span>
                                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-0.5">{req.productName}</h4>
+                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Diajukan: {formattedDate}</span>
                               </div>
                               <span className={`px-2 py-0.5 text-[12px] font-bold uppercase rounded-md border shrink-0 ${
                                 isPending 
@@ -2658,11 +2660,195 @@ export default function App() {
                                 <span className="font-extrabold text-indigo-600 block mt-0.5">{req.quantity}</span>
                               </div>
 
+                              <div>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Kurir Logistik:</span>
+                                <span className="font-extrabold text-slate-800 block mt-0.5">{req.courier || '-'}</span>
+                              </div>
+
+                              <div>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">No. Akun Kurir:</span>
+                                <span className="font-mono text-slate-700 block mt-0.5">{req.courierAccount || 'Tidak Ada (Cash)'}</span>
+                              </div>
+
+                              <div>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Penanggung Ongkir:</span>
+                                <span className="font-bold text-slate-800 block mt-0.5">
+                                  {req.shippingFeePaidBy === 'buyer' ? 'Buyer (Penerima)' : 'Seller (Pengirim)'}
+                                </span>
+                              </div>
+
+                              <div>
+                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Est. Biaya Kirim:</span>
+                                <span className="font-black text-emerald-600 block mt-0.5">
+                                  ${req.shippingFeeAmount || 0} USD
+                                </span>
+                              </div>
+
+                              {(req.trackingNumber || isShipped || isDelivered) && (
+                                <div className="col-span-2">
+                                  <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">No. Resi Pelacakan:</span>
+                                  <span className="font-mono font-extrabold text-indigo-600 block mt-0.5 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100/50">
+                                    {req.trackingNumber || 'PROSES_GENERATE...'}
+                                  </span>
+                                </div>
+                              )}
+
                               <div className="col-span-2">
                                 <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">Alamat Pengiriman:</span>
                                 <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[12px] mt-0.5">
                                   {req.shippingAddress}
                                 </span>
+                              </div>
+
+                              {/* PROSEDUR DAN ALUR PEMBAYARAN ONGKIR */}
+                              <div className="col-span-2 border-t border-dashed border-gray-150 pt-3 mt-1">
+                                <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans mb-2 flex items-center gap-1.5">
+                                  <Info className="w-3.5 h-3.5 text-indigo-500" />
+                                  <span>Mekanisme Pembayaran Ongkir:</span>
+                                </span>
+
+                                {req.shippingFeePaidBy === 'buyer' ? (
+                                  req.courierAccount && req.courierAccount !== 'Tidak Ada (Cash)' && req.courierAccount !== 'Cash' ? (
+                                    <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 text-[12px]">
+                                      <div className="flex items-center gap-1.5 font-bold text-indigo-700">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                                        <span>Metode: Freight Collect (Autodebit Akun Buyer)</span>
+                                      </div>
+                                      <p className="mt-1.5 text-slate-500 font-medium leading-relaxed">
+                                        Biaya kirim <strong className="font-bold text-slate-700">${req.shippingFeeAmount || 75} USD</strong> akan ditagih langsung oleh kurir <strong className="font-bold text-slate-700">{req.courier}</strong> ke nomor rekening akun Buyer: <strong className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-[10px] text-indigo-800 font-bold">{req.courierAccount}</strong> saat paket diserahkan. Eksportir tidak menanggung ongkir apa pun.
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 font-bold text-amber-700">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                                          <span>Metode: Prepaid (Transfer Langsung ke Seller)</span>
+                                        </div>
+                                        <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase border ${
+                                          req.shippingFeePaymentStatus === 'paid'
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : req.shippingFeePaymentStatus === 'pending_confirmation'
+                                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                              : 'bg-red-50 text-red-700 border-red-200 animate-pulse'
+                                        }`}>
+                                          {req.shippingFeePaymentStatus === 'paid'
+                                            ? 'LUNAS'
+                                            : req.shippingFeePaymentStatus === 'pending_confirmation'
+                                              ? 'MENUNGGU VERIFIKASI'
+                                              : 'BELUM BAYAR'}
+                                        </span>
+                                      </div>
+
+                                      {(!req.shippingFeePaymentStatus || req.shippingFeePaymentStatus === 'unpaid') && (
+                                        <div className="space-y-2 font-medium">
+                                          <p className="text-slate-500 leading-relaxed">
+                                            Buyer wajib mentransfer biaya pengiriman sebesar <strong className="font-bold text-slate-800">${req.shippingFeeAmount || 75} USD</strong> ke rekening bank Seller. Seller akan menyetor tunai di agen kurir saat mengirimkan paket.
+                                          </p>
+                                          <div className="bg-white border border-gray-150 rounded-lg p-2 text-[11px] text-slate-600 font-mono space-y-1">
+                                            <p className="font-bold text-slate-700">REKENING TRANSFER SELLER:</p>
+                                            <p>Bank: <strong className="font-bold">Bank Mandiri (IDR/USD)</strong></p>
+                                            <p>No. Rekening: <strong className="font-bold">123-00-9876543-2</strong></p>
+                                            <p>Atas Nama: <strong className="font-bold">PT Multi Raksa Madani</strong></p>
+                                          </div>
+                                          {currentUser?.role === 'Buyer' ? (
+                                            <button
+                                              onClick={() => {
+                                                setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'pending_confirmation' } : r));
+                                                const isId = lang === 'id';
+                                                const newAlert: RealTimeAlert = {
+                                                  id: `alt-pay-confirm-${Date.now()}`,
+                                                  title: isId ? 'Bukti Bayar Sampel' : 'Sample Payment Sent',
+                                                  message: isId 
+                                                    ? `Buyer ${req.buyerCompany} mengirim konfirmasi transfer ongkir sampel sebesar $${req.shippingFeeAmount} USD.`
+                                                    : `Buyer ${req.buyerCompany} submitted payment confirmation of $${req.shippingFeeAmount} USD for sample shipping.`,
+                                                  type: 'info',
+                                                  timestamp: new Date().toISOString(),
+                                                  readBy: []
+                                                };
+                                                saveAlertToFirestore(newAlert);
+                                              }}
+                                              className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                            >
+                                              Konfirmasi Saya Sudah Transfer
+                                            </button>
+                                          ) : (
+                                            <div className="flex gap-1.5">
+                                              <button
+                                                onClick={() => {
+                                                  setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'paid' } : r));
+                                                  const isId = lang === 'id';
+                                                  const newAlert: RealTimeAlert = {
+                                                    id: `alt-pay-confirm-${Date.now()}`,
+                                                    title: isId ? 'Ongkir Sampel Lunas' : 'Sample Fee Cleared',
+                                                    message: isId 
+                                                      ? `Eksportir menandai ongkos kirim sampel $${req.shippingFeeAmount} USD untuk ${req.buyerCompany} telah lunas.`
+                                                      : `Exporter marked sample shipping fee of $${req.shippingFeeAmount} USD for ${req.buyerCompany} as paid.`,
+                                                    type: 'success',
+                                                    timestamp: new Date().toISOString(),
+                                                    readBy: []
+                                                  };
+                                                  saveAlertToFirestore(newAlert);
+                                                }}
+                                                className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                              >
+                                                Verifikasi Dana Diterima (Lunas)
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {req.shippingFeePaymentStatus === 'pending_confirmation' && (
+                                        <div className="space-y-2 font-medium">
+                                          <p className="text-amber-700 leading-relaxed text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                            {currentUser?.role === 'Buyer' 
+                                              ? 'Konfirmasi transfer Anda telah terkirim! Menunggu Eksportir memverifikasi mutasi rekening.' 
+                                              : 'Buyer telah mengonfirmasi transfer ongkos kirim! Silakan periksa mutasi rekening Bank Mandiri Anda.'}
+                                          </p>
+                                          {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
+                                            <button
+                                              onClick={() => {
+                                                setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'paid' } : r));
+                                                const isId = lang === 'id';
+                                                const newAlert: RealTimeAlert = {
+                                                  id: `alt-pay-confirm-${Date.now()}`,
+                                                  title: isId ? 'Ongkir Sampel Lunas' : 'Sample Fee Cleared',
+                                                  message: isId 
+                                                    ? `Eksportir menandai ongkos kirim sampel $${req.shippingFeeAmount} USD untuk ${req.buyerCompany} telah lunas.`
+                                                    : `Exporter marked sample shipping fee of $${req.shippingFeeAmount} USD for ${req.buyerCompany} as paid.`,
+                                                  type: 'success',
+                                                  timestamp: new Date().toISOString(),
+                                                  readBy: []
+                                                };
+                                                saveAlertToFirestore(newAlert);
+                                              }}
+                                              className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                            >
+                                              Sahkan & Terima Pembayaran (Lunas)
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {req.shippingFeePaymentStatus === 'paid' && (
+                                        <div className="font-semibold text-emerald-700 leading-relaxed text-[11px] bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200">
+                                          Ongkos kirim sebesar <strong className="font-black">${req.shippingFeeAmount || 75} USD</strong> telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel dapat segera diproses untuk dikirim.
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                ) : (
+                                  <div className="bg-emerald-50/50 border border-emerald-150 rounded-xl p-3 text-[12px]">
+                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                      <span>Metode: Gratis / Ditanggung Seller</span>
+                                    </div>
+                                    <p className="mt-1.5 text-slate-500 font-medium leading-relaxed">
+                                      Seluruh biaya pengiriman sampel sebesar <strong className="font-bold text-emerald-600">${req.shippingFeeAmount || 110} USD</strong> dibayarkan sepenuhnya oleh Seller sebagai bagian dari strategi pemasaran/loyalitas pembeli. Gratis bagi Buyer.
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -2680,7 +2866,11 @@ export default function App() {
                               {isExporter && isPending && (
                                 <button
                                   onClick={() => {
-                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'shipped' } : r));
+                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { 
+                                      ...r, 
+                                      status: 'shipped',
+                                      trackingNumber: `TRK-${r.courier ? r.courier.split(' ')[0].toUpperCase() : 'EXPR'}-${Math.floor(10000000 + Math.random() * 90000000)}`
+                                    } : r));
                                     const isId = lang === 'id';
                                     const newAlert: RealTimeAlert = {
                                       id: `alt-samp-ship-${Date.now()}`,

@@ -42,7 +42,17 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
   if (!isOpen) return null;
 
   // Tab mode
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot_password'>('login');
+
+  // Forgot password form local states
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStep, setResetStep] = useState<1 | 2>(1);
+  const [matchedCred, setMatchedCred] = useState<any | null>(null);
+  const [securityAnswer, setSecurityAnswer] = useState('');
+  const [newResetPassword, setNewResetPassword] = useState('');
+  const [confirmNewResetPassword, setConfirmNewResetPassword] = useState('');
+  const [showResetPass, setShowResetPass] = useState(false);
 
   // Login form local states
   const [email, setEmail] = useState('');
@@ -53,6 +63,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
 
   // Register form local states
   const [regName, setRegName] = useState('');
+  const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
@@ -264,18 +275,112 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     }
   };
 
+  const handleResetStep1 = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const usernameTrimmed = resetUsername.trim().toLowerCase();
+    const emailTrimmed = resetEmail.trim().toLowerCase();
+
+    if (!usernameTrimmed || !emailTrimmed) {
+      setErrorMsg('Silakan masukkan Username DAN Email Anda.');
+      return;
+    }
+
+    const matched = localCredentials.find(c => {
+      const dbUsername = (c.username || c.name || '').trim().toLowerCase();
+      const dbEmail = (c.email || '').trim().toLowerCase();
+      return dbUsername === usernameTrimmed && dbEmail === emailTrimmed;
+    });
+
+    if (!matched) {
+      setErrorMsg('Username dan Email tidak cocok atau tidak terdaftar.');
+      return;
+    }
+
+    setMatchedCred(matched);
+    setResetStep(2);
+  };
+
+  const handleResetStep2 = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!matchedCred) {
+      setResetStep(1);
+      return;
+    }
+
+    if (newResetPassword.length < 6) {
+      setErrorMsg('Kata sandi minimal harus 6 karakter.');
+      return;
+    }
+
+    if (newResetPassword.length > 32) {
+      setErrorMsg('Kata sandi maksimal 32 karakter.');
+      return;
+    }
+
+    if (newResetPassword !== confirmNewResetPassword) {
+      setErrorMsg('Konfirmasi kata sandi tidak sesuai.');
+      return;
+    }
+
+    // Perform password update
+    const updatedCreds = localCredentials.map(c => {
+      if (c.email.trim().toLowerCase() === matchedCred.email.trim().toLowerCase()) {
+        return { ...c, password: newResetPassword };
+      }
+      return c;
+    });
+
+    // Update static array
+    const staticIdx = demoCredentials.findIndex(c => c.email.trim().toLowerCase() === matchedCred.email.trim().toLowerCase());
+    if (staticIdx !== -1) {
+      demoCredentials[staticIdx].password = newResetPassword;
+    }
+
+    localStorage.setItem('exportflow_credentials', JSON.stringify(updatedCreds));
+    setLocalCredentials(updatedCreds);
+    setSuccessMsg(t.resetSuccessMsg);
+  };
+
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (!regName.trim() || !regEmail.trim() || !regPassword || !regConfirmPassword || !regCompany.trim()) {
+    const usernameTrimmed = regUsername.trim();
+
+    if (!regName.trim() || !usernameTrimmed || !regEmail.trim() || !regPassword || !regConfirmPassword || !regCompany.trim()) {
       setErrorMsg('Semua kolom pendaftaran wajib diisi.');
       return;
     }
 
     if (regName.trim().length > 50) {
       setErrorMsg('Nama Lengkap maksimal 50 karakter.');
+      return;
+    }
+
+    if (usernameTrimmed.length > 30) {
+      setErrorMsg('Nama User Login (Username) maksimal 30 karakter.');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(usernameTrimmed)) {
+      setErrorMsg('Nama User Login (Username) hanya boleh berisi huruf, angka, dan underscore (_).');
+      return;
+    }
+
+    const usernameLower = usernameTrimmed.toLowerCase();
+    const usernameExists = localCredentials.some(c => 
+      (c.username && c.username.trim().toLowerCase() === usernameLower) || 
+      c.name.trim().toLowerCase() === usernameLower
+    );
+    if (usernameExists) {
+      setErrorMsg('Nama User Login (Username) ini sudah digunakan. Silakan pilih username lain.');
       return;
     }
 
@@ -315,6 +420,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     const newProfile: UserProfile = {
       id: 'usr-' + Date.now(),
       name: regName.trim(),
+      username: usernameTrimmed,
       role: regRole,
       email: emailLower,
       avatar: regAvatar,
@@ -332,6 +438,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
       email: emailLower,
       password: regPassword,
       name: regName.trim(),
+      username: usernameTrimmed,
       company: regCompany.trim()
     };
 
@@ -357,6 +464,7 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
     setTimeout(() => {
       onSelectUser(newProfile);
       setRegName('');
+      setRegUsername('');
       setRegEmail('');
       setRegPassword('');
       setRegConfirmPassword('');
@@ -417,46 +525,238 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                 </div>
                 <div>
                   <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 leading-tight">
-                    {mode === 'login' ? t.loginToSystem : t.registerNewAccount}
+                    {mode === 'login' ? t.loginToSystem : mode === 'register' ? t.registerNewAccount : t.resetPasswordTitle}
                   </h3>
                 </div>
               </div>
 
               {/* TABS SELECTOR */}
-              <div className="flex border border-slate-200 p-1 bg-slate-50 rounded-xl">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setMode('login');
-                    setErrorMsg('');
-                    setSuccessMsg('');
-                  }}
-                  className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
-                    mode === 'login' 
-                      ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {t.loginTab}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setMode('register');
-                    setErrorMsg('');
-                    setSuccessMsg('');
-                  }}
-                  className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
-                    mode === 'register' 
-                      ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {t.registerTab}
-                </button>
-              </div>
+              {mode !== 'forgot_password' && (
+                <div className="flex border border-slate-200 p-1 bg-slate-50 rounded-xl">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setErrorMsg('');
+                      setSuccessMsg('');
+                    }}
+                    className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
+                      mode === 'login' 
+                        ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {t.loginTab}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setMode('register');
+                      setErrorMsg('');
+                      setSuccessMsg('');
+                    }}
+                    className={`flex-1 py-2 text-center text-xs font-black uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
+                      mode === 'register' 
+                        ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {t.registerTab}
+                  </button>
+                </div>
+              )}
 
-              {mode === 'login' ? (
+              {mode === 'forgot_password' ? (
+                <div className="space-y-4 pt-1 text-left">
+                  {/* Step 1: Input email and username */}
+                  {resetStep === 1 && (
+                    <form onSubmit={handleResetStep1} className="space-y-4">
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                        Masukkan Username DAN Email terdaftar untuk memverifikasi akun Anda.
+                      </p>
+                      
+                      {/* Username Input */}
+                      <div className="space-y-1">
+                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>Username *</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={resetUsername}
+                          onChange={(e) => {
+                            setResetUsername(e.target.value);
+                            setErrorMsg('');
+                          }}
+                          placeholder="Masukkan username Anda..."
+                          className="w-full text-[13px] font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                          required
+                        />
+                      </div>
+
+                      {/* Email Input */}
+                      <div className="space-y-1">
+                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>Surel (Email) *</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => {
+                            setResetEmail(e.target.value);
+                            setErrorMsg('');
+                          }}
+                          placeholder="Masukkan email terdaftar..."
+                          className="w-full text-[13px] font-semibold p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                          required
+                        />
+                      </div>
+
+                      {errorMsg && (
+                        <div className="p-3 bg-red-50 border border-red-200 text-red-950 text-xs rounded-xl flex items-start gap-2 animate-shake">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                          <span className="font-semibold">{errorMsg}</span>
+                        </div>
+                      )}
+
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode('login');
+                            setErrorMsg('');
+                            setSuccessMsg('');
+                          }}
+                          className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          {t.backToLoginBtn}
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                        >
+                          <span>{t.resetPasswordBtn}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Step 2: Set New Password / Complete */}
+                  {resetStep === 2 && matchedCred && (
+                    <form onSubmit={handleResetStep2} className="space-y-4">
+                      {successMsg ? (
+                        <div className="space-y-4 text-center py-2">
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs rounded-xl flex items-start gap-2 text-left">
+                            <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                            <span className="font-semibold">{successMsg}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMode('login');
+                              setResetStep(1);
+                              setResetUsername('');
+                              setResetEmail('');
+                              setSecurityAnswer('');
+                              setNewResetPassword('');
+                              setConfirmNewResetPassword('');
+                              setErrorMsg('');
+                              setSuccessMsg('');
+                            }}
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                          >
+                            <span>{t.backToLoginBtn}</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                            Silakan masukkan kata sandi baru untuk akun Anda.
+                          </p>
+                          
+                          {/* New Password Input */}
+                          <div className="space-y-1">
+                            <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                              <Key className="w-3.5 h-3.5" />
+                              <span>{t.newPasswordResetLabel}</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showResetPass ? 'text' : 'password'}
+                                value={newResetPassword}
+                                onChange={(e) => {
+                                  setNewResetPassword(e.target.value);
+                                  setErrorMsg('');
+                                }}
+                                placeholder="Masukkan sandi baru (min 6 karakter)..."
+                                className="w-full text-[13px] font-mono p-2.5 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowResetPass(!showResetPass)}
+                                className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                              >
+                                {showResetPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Confirm New Password Input */}
+                          <div className="space-y-1">
+                            <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                              <Key className="w-3.5 h-3.5" />
+                              <span>{t.confirmNewPasswordResetLabel}</span>
+                            </label>
+                            <input
+                              type={showResetPass ? 'text' : 'password'}
+                              value={confirmNewResetPassword}
+                              onChange={(e) => {
+                                  setConfirmNewResetPassword(e.target.value);
+                                  setErrorMsg('');
+                              }}
+                              placeholder="Ketik ulang sandi baru..."
+                              className="w-full text-[13px] font-mono p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                              required
+                            />
+                          </div>
+
+                          {errorMsg && (
+                            <div className="p-3 bg-red-50 border border-red-200 text-red-950 text-xs rounded-xl flex items-start gap-2 animate-shake">
+                              <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                              <span className="font-semibold">{errorMsg}</span>
+                            </div>
+                          )}
+
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResetStep(1);
+                                setErrorMsg('');
+                                setSuccessMsg('');
+                              }}
+                              className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center cursor-pointer"
+                            >
+                              {t.cancel}
+                            </button>
+                            <button
+                              type="submit"
+                              className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                            >
+                              <span>Simpan Sandi</span>
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </form>
+                  )}
+                </div>
+              ) : mode === 'login' ? (
                 <form onSubmit={handleFormSubmit} className="space-y-4 pt-1">
                   {/* Email Selector */}
                   <div className="space-y-1">
@@ -505,6 +805,27 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  {/* Forgot Password Link */}
+                  <div className="flex justify-end pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('forgot_password');
+                        setResetStep(1);
+                        setResetUsername('');
+                        setResetEmail('');
+                        setSecurityAnswer('');
+                        setNewResetPassword('');
+                        setConfirmNewResetPassword('');
+                        setErrorMsg('');
+                        setSuccessMsg('');
+                      }}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                    >
+                      {t.forgotPasswordLink}
+                    </button>
                   </div>
 
                   {/* Feedbacks */}
@@ -617,6 +938,29 @@ export default function LoginModal({ isOpen, onClose, onSelectUser, currentUser,
                       }}
                       maxLength={50}
                       placeholder={t.placeholderExampleName}
+                      className="w-full text-[13px] font-semibold p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
+                      required
+                    />
+                  </div>
+
+                  {/* Username */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>{t.loginUsernameLabel}</span>
+                      </label>
+                      <span className="text-[12px] text-slate-400 font-bold">30</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={regUsername}
+                      onChange={(e) => {
+                        setRegUsername(e.target.value);
+                        setErrorMsg('');
+                      }}
+                      maxLength={30}
+                      placeholder={t.placeholderUsername}
                       className="w-full text-[13px] font-semibold p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-indigo-600"
                       required
                     />
