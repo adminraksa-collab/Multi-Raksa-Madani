@@ -695,7 +695,7 @@ export default function NotificationCenter({
             )}
 
             {/* Single Consolidated List Body */}
-            <div className="max-h-[420px] overflow-y-auto p-3.5 space-y-4 bg-slate-50/40">
+            <div className="max-h-[280px] overflow-y-auto p-3.5 space-y-4 bg-slate-50/40">
               
               {/* GUEST WARNING / EMPTY STATE IF NOT LOGGED IN */}
               {!currentUser && (
