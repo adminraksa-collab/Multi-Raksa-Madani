@@ -21,7 +21,9 @@ import {
   saveSampleRequestToFirestore,
   saveCompanyProfileToFirestore,
   deleteShipmentFromFirestore,
-  deleteSampleRequestFromFirestore
+  deleteSampleRequestFromFirestore,
+  deleteAlertFromFirestore,
+  clearAllAlertsFromFirestore
 } from './lib/firebaseService';
 import LoginModal from './components/LoginModal';
 import DocumentEditor from './components/DocumentEditor';
@@ -342,8 +344,22 @@ export default function App() {
       console.error("Error listening to products snapshot:", error);
     });
 
+    // Set up real-time listener for alerts
+    const unsubscribeAlerts = onSnapshot(collection(db, 'alerts'), (snapshot) => {
+      const updatedAlerts: RealTimeAlert[] = [];
+      snapshot.forEach((doc) => {
+        updatedAlerts.push(doc.data() as RealTimeAlert);
+      });
+      // Sort by timestamp descending
+      updatedAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setAlerts(updatedAlerts);
+    }, (error) => {
+      console.error("Error listening to alerts snapshot:", error);
+    });
+
     return () => {
       unsubscribeProducts();
+      unsubscribeAlerts();
     };
   }, []);
 
@@ -365,14 +381,10 @@ export default function App() {
     });
   }, [users, isFirebaseLoading]);
 
-  // Save alerts to local storage and Firestore whenever they change
+  // Save alerts to local storage whenever they change
   useEffect(() => {
     localStorage.setItem('exportflow_alerts', JSON.stringify(alerts));
-    if (isFirebaseLoading) return;
-    alerts.forEach(alert => {
-      saveAlertToFirestore(alert).catch(err => console.error("Error saving alert to Firestore:", err));
-    });
-  }, [alerts, isFirebaseLoading]);
+  }, [alerts]);
 
   // States for Change Password Modal
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -817,7 +829,7 @@ export default function App() {
           timestamp,
           readBy: []
         };
-        setAlerts(prev => [newAlert, ...prev]);
+        saveAlertToFirestore(newAlert);
         break;
       }
 
@@ -851,7 +863,7 @@ export default function App() {
           timestamp,
           readBy: []
         };
-        setAlerts(prev => [newAlert, ...prev]);
+        saveAlertToFirestore(newAlert);
         break;
       }
 
@@ -879,7 +891,7 @@ export default function App() {
           timestamp,
           readBy: []
         };
-        setAlerts(prev => [newAlert, ...prev]);
+        saveAlertToFirestore(newAlert);
         break;
       }
 
@@ -913,7 +925,7 @@ export default function App() {
           timestamp,
           readBy: []
         };
-        setAlerts(prev => [newAlert, ...prev]);
+        saveAlertToFirestore(newAlert);
         break;
       }
     }
@@ -946,7 +958,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleSubmitDocumentForApproval = (docId: string) => {
@@ -979,7 +991,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleApproveDocument = (docId: string) => {
@@ -1012,7 +1024,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleUpdateShipmentFromDeal = (
@@ -1085,7 +1097,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleUpdateStep = (shipmentId: string, nextStep: ShipmentStep, comments: string) => {
@@ -1141,7 +1153,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleAddCertToShipment = (shipmentId: string, name: string, authority: string) => {
@@ -1177,7 +1189,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const getBuyerIdForNewTransaction = (buyerCompany: string, buyerName?: string) => {
@@ -1401,24 +1413,25 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   const handleMarkAlertAsRead = (alertId: string) => {
     if (!currentUser) return;
-    setAlerts(prev => prev.map(a => {
-      if (a.id === alertId) {
-        return {
-          ...a,
-          readBy: [...a.readBy, currentUser.id]
-        };
-      }
-      return a;
-    }));
+    const alertToUpdate = alerts.find(a => a.id === alertId);
+    if (alertToUpdate && !alertToUpdate.readBy.includes(currentUser.id)) {
+      const updatedAlert = {
+        ...alertToUpdate,
+        readBy: [...alertToUpdate.readBy, currentUser.id]
+      };
+      saveAlertToFirestore(updatedAlert).catch(err => console.error("Error updating alert in Firestore:", err));
+      // Local state will be updated by onSnapshot listener
+    }
   };
 
   const handleClearAlerts = () => {
-    setAlerts([]);
+    clearAllAlertsFromFirestore().catch(err => console.error("Error clearing alerts from Firestore:", err));
+    // Local state will be updated by onSnapshot listener
   };
 
   const handleStartNegotiation = (product: ExportProduct, customQuantity?: number) => {
@@ -1580,7 +1593,7 @@ export default function App() {
         timestamp: new Date().toISOString(),
         readBy: []
       };
-      setAlerts(prev => [newAlert, ...prev]);
+      saveAlertToFirestore(newAlert);
     }
   };
 
@@ -1612,7 +1625,7 @@ export default function App() {
         timestamp: new Date().toISOString(),
         readBy: []
       };
-      setAlerts(prev => [newAlert, ...prev]);
+      saveAlertToFirestore(newAlert);
     }
   };
 
@@ -1714,7 +1727,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       readBy: []
     };
-    setAlerts(prev => [newAlert, ...prev]);
+    saveAlertToFirestore(newAlert);
   };
 
   // 4. Counts and Analytics Calculation
@@ -3034,7 +3047,7 @@ export default function App() {
                         timestamp: new Date().toISOString(),
                         readBy: []
                       };
-                      setAlerts(prev => [newAlert, ...prev]);
+                      saveAlertToFirestore(newAlert);
                     }
                     deleteShipmentFromFirestore(shipmentToDeleteId);
                     setShipmentToDeleteId(null);

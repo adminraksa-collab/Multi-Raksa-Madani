@@ -228,3 +228,26 @@ export async function deleteSampleRequestFromFirestore(sampleId: string) {
     console.error('Error deleting sample request from Firestore:', error);
   }
 }
+
+export async function deleteAlertFromFirestore(alertId: string) {
+  try {
+    await deleteDoc(doc(db, ALERTS_COL, alertId));
+  } catch (error) {
+    console.error('Error deleting alert from Firestore:', error);
+  }
+}
+
+export async function clearAllAlertsFromFirestore() {
+  try {
+    const querySnapshot = await getDocs(collection(db, ALERTS_COL));
+    if (querySnapshot.empty) return;
+    
+    const batch = writeBatch(db);
+    querySnapshot.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+  } catch (error) {
+    console.error('Error clearing all alerts from Firestore:', error);
+  }
+}

@@ -26,9 +26,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "Alamat Kantor",
     contactService: "Kontak & Layanan",
     editCompanyProfile: "Edit Profil Perusahaan",
-    featuredCommoditiesTitle: "Katalog Komoditas Ekspor Unggulan",
+    featuredCommoditiesTitle: "Katalog Ekspor Unggulan",
     featuredCommoditiesDesc: "Eksplorasi komoditas agro-industri Indonesia bersertifikat ekspor aman siap kirim.",
-    addCommodity: "Tambah Komoditas",
+    addCommodity: "Katalog",
     customsClearedTag: "99.8% Lolos Bea Cukai RI & Karantina",
     calculatorTitle: "Kalkulator & Permintaan/LOI",
     calculatorSub: "Estimasi Volume, Wadah Laut FCL, & Harga FOB",
@@ -88,9 +88,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "Office Address",
     contactService: "Contact & Services",
     editCompanyProfile: "Edit Company Profile",
-    featuredCommoditiesTitle: "Featured Export Commodity Catalog",
+    featuredCommoditiesTitle: "Featured Export Catalog",
     featuredCommoditiesDesc: "Explore Indonesian agro-industrial commodities with secure export certification ready to ship.",
-    addCommodity: "Add Commodity",
+    addCommodity: "Catalog",
     customsClearedTag: "99.8% Passed RI Customs & Quarantine",
     calculatorTitle: "Calculator & Request/LOI",
     calculatorSub: "Estimate Volume, FCL Ocean Containers, & FOB Price",
@@ -149,9 +149,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "办公地址",
     contactService: "联系与服务",
     editCompanyProfile: "编辑公司简介",
-    featuredCommoditiesTitle: "精选出口商品目录",
+    featuredCommoditiesTitle: "精选出口目录",
     featuredCommoditiesDesc: "探索印尼农工业商品，具备安全出口认证，准备发货。",
-    addCommodity: "添加商品",
+    addCommodity: "目录",
     customsClearedTag: "99.8% 通过印尼海关与检疫",
     calculatorTitle: "计算器与意向书 (LOI) 申请",
     calculatorSub: "估算数量、FCL 海运集装箱与 FOB 价格",
@@ -210,9 +210,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "عنوان المكتب",
     contactService: "الاتصال والخدمات",
     editCompanyProfile: "تعديل ملف الشركة",
-    featuredCommoditiesTitle: "كتالوج السلع التصديرية المميزة",
+    featuredCommoditiesTitle: "كتالوج التصدير المميز",
     featuredCommoditiesDesc: "اكتشف السلع الزراعية الصناعية الإندونيسية المعتمدة للتصدير الآمن والجاهزة للشحن.",
-    addCommodity: "إضافة سلعة",
+    addCommodity: "الكتالوج",
     customsClearedTag: "99.8٪ اجتازت الجمارك والحجر الصحي الإندونيسي",
     calculatorTitle: "الحاسبة وطلب خطاب النوايا (LOI)",
     calculatorSub: "تقدير الحجم، حاويات الشحن البحري (FCL)، وسعر FOB",
@@ -271,9 +271,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "ที่อยู่สำนักงาน",
     contactService: "การติดต่อและบริการ",
     editCompanyProfile: "แก้ไขข้อมูลบริษัท",
-    featuredCommoditiesTitle: "แคตตาล็อกสินค้าโภคภัณฑ์ส่งออกเด่น",
+    featuredCommoditiesTitle: "แคตตาล็อกส่งออกเด่น",
     featuredCommoditiesDesc: "สำรวจสินค้าเกษตรอุตสาหกรรมของอินโดนีเซียที่ได้รับการรับรองการส่งออกอย่างปลอดภัยและพร้อมจัดส่ง",
-    addCommodity: "เพิ่มสินค้าโภคภัณฑ์",
+    addCommodity: "แคตตาล็อก",
     customsClearedTag: "99.8% ผ่านพิธีการศุลกากรและการกักกันของอินโดนีเซีย",
     calculatorTitle: "เครื่องคำนวณและคำขอ/LOI",
     calculatorSub: "ประมาณการปริมาณ, ตู้คอนเทนเนอร์ FCL และราคา FOB",
@@ -332,9 +332,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "Адрес офиса",
     contactService: "Контакты и услуги",
     editCompanyProfile: "Редактировать профиль компании",
-    featuredCommoditiesTitle: "Каталог экспортируемых премиальных товаров",
+    featuredCommoditiesTitle: "Каталог ведущего экспорта",
     featuredCommoditiesDesc: "Изучите индонезийские агропромышленные товары с безопасной экспортной сертификацией, готовые к отправке.",
-    addCommodity: "Добавить товар",
+    addCommodity: "Каталог",
     customsClearedTag: "99.8% прошли таможню и карантин Индонезии",
     calculatorTitle: "Калькулятор и запрос/LOI",
     calculatorSub: "Оценка объема, FCL-контейнеров и цены FOB",
@@ -393,9 +393,9 @@ const landingTranslations: Record<string, Record<string, string>> = {
     officeAddress: "オフィス住所",
     contactService: "連絡先＆サービス",
     editCompanyProfile: "会社概要を編集",
-    featuredCommoditiesTitle: "注目の輸出商品カタログ",
+    featuredCommoditiesTitle: "注目の輸出カタログ",
     featuredCommoditiesDesc: "安全な輸出認証を取得した、出荷準備が整ったインドネシアの農産業商品を探索します。",
-    addCommodity: "商品を追加",
+    addCommodity: "カタログ",
     customsClearedTag: "99.8% インドネシア通関＆検疫を通過",
     calculatorTitle: "電卓＆意向表明書（LOI）申請",
     calculatorSub: "注文数量、FCL海上コンテナ、FOB価格を推定",
@@ -2337,42 +2337,35 @@ export default function LandingPage({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Pilih Preset / Upload Gambar)</label>
+                  <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas (Upload Gambar)</label>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* Presets and URL inputs */}
-                    <div className="space-y-2">
-                      <select
-                        value={productForm.image}
-                        onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold select-none text-xs"
-                      >
-                        <option value="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400">Gayo Coffee Beans (Kopi)</option>
-                        <option value="https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400">Coconut Shell Charcoal (Briket Arang)</option>
-                        <option value="https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400">Whole Nutmeg (Pala Kupas)</option>
-                        <option value="https://images.unsplash.com/photo-1622484211148-71749840bcec?w=400">Palm Olein Oils (Minyak Kelapa Sawit)</option>
-                        <option value="https://images.unsplash.com/photo-1550592755-cb0c0fc33827?w=400">Desiccated Coconut (Kelapa Kering)</option>
-                        <option value="https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=400">Raw Cocoa Beans (Biji Kakao Cokelat)</option>
-                        <option value="https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400">Green Tea Leaves (Daun Teh)</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Atau masukkan tautan gambar kustom..."
-                        value={productForm.image}
-                        onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                        className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold font-mono text-xs"
-                      />
-                    </div>
-
-                    {/* Drag and Drop Upload Area */}
-                    <div 
-                      className="border-2 border-dashed border-slate-800 hover:border-indigo-500 bg-slate-950/40 rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all cursor-pointer group relative overflow-hidden"
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const file = e.dataTransfer.files?.[0];
+                  {/* Drag and Drop Upload Area */}
+                  <div 
+                    className="border-2 border-dashed border-slate-800 hover:border-indigo-500 bg-slate-950/40 rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all cursor-pointer group relative overflow-hidden w-full"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          if (typeof reader.result === 'string') {
+                            setProductForm(prev => ({ ...prev, image: reader.result as string }));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  >
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      id="commodity-file-upload"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
                         if (file) {
                           const reader = new FileReader();
                           reader.onloadend = () => {
@@ -2383,46 +2376,27 @@ export default function LandingPage({
                           reader.readAsDataURL(file);
                         }
                       }}
-                    >
-                      <input 
-                        type="file"
-                        accept="image/*"
-                        id="commodity-file-upload"
-                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              if (typeof reader.result === 'string') {
-                                setProductForm(prev => ({ ...prev, image: reader.result as string }));
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      {productForm.image && (productForm.image.startsWith('data:') || productForm.image.startsWith('http')) ? (
-                        <div className="relative w-full h-20 flex items-center justify-center">
-                          <img 
-                            src={productForm.image} 
-                            alt="Preview" 
-                            className="h-full object-contain rounded-lg max-w-full"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity rounded-lg text-slate-200 gap-1">
-                            <Upload className="w-4 h-4 text-indigo-400" />
-                            <span className="text-[12px] font-bold uppercase">Ganti File Gambar</span>
-                          </div>
+                    />
+                    {productForm.image && (productForm.image.startsWith('data:') || productForm.image.startsWith('http')) ? (
+                      <div className="relative w-full h-20 flex items-center justify-center">
+                        <img 
+                          src={productForm.image} 
+                          alt="Preview" 
+                          className="h-full object-contain rounded-lg max-w-full"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity rounded-lg text-slate-200 gap-1">
+                          <Upload className="w-4 h-4 text-indigo-400" />
+                          <span className="text-[12px] font-bold uppercase">Ganti File Gambar</span>
                         </div>
-                      ) : (
-                        <div className="py-2">
-                          <Upload className="w-6 h-6 text-slate-500 group-hover:text-indigo-400 mx-auto mb-1 transition-colors" />
-                          <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200">Lepaskan file / Klik di sini</p>
-                          <p className="text-[12px] text-slate-500 font-semibold mt-0.5">Mendukung file JPG, PNG, WEBP</p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="py-2">
+                        <Upload className="w-6 h-6 text-slate-500 group-hover:text-indigo-400 mx-auto mb-1 transition-colors" />
+                        <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-200">Lepaskan file / Klik di sini</p>
+                        <p className="text-[12px] text-slate-500 font-semibold mt-0.5">Mendukung file JPG, PNG, WEBP</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
