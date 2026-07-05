@@ -660,7 +660,7 @@ export default function LandingPage({
     if (!selectedSampleProduct) return;
 
     const newSampleReq = {
-      id: `samp-${Math.floor(100 + Math.random() * 900)}`,
+      id: `samp-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       productId: selectedSampleProduct.id,
       productName: selectedSampleProduct.name,
       buyerId: currentUser.id,
@@ -671,7 +671,8 @@ export default function LandingPage({
       courierAccount: sampleCourierAcc,
       shippingAddress: sampleAddress || currentUser.address || 'Alamat tidak diisi',
       shippingFeePaidBy: sampleFeePayer,
-      shippingFeeAmount: sampleFeePayer === 'buyer' ? 75 : 110,
+      shippingFeeAmount: sampleQty === '500 gram' ? 35 : sampleQty === '1 kg' ? 45 : sampleQty === '2 kg' ? 65 : sampleQty === '5 kg' ? 120 : 25,
+      shippingFeeFixed: sampleFeePayer === 'buyer' && !sampleCourierAcc ? false : true,
       status: 'pending',
       trackingNumber: '',
       createdAt: new Date().toISOString()
@@ -1124,6 +1125,20 @@ export default function LandingPage({
                 <div className="p-5 pt-0 flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => {
+                      setSelectedSampleProduct(p);
+                      if (currentUser && currentUser.address) {
+                        setSampleAddress(currentUser.address);
+                      } else {
+                        setSampleAddress('');
+                      }
+                      setIsSampleModalOpen(true);
+                    }}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
+                  >
+                    <span>{t.requestSample}</span>
+                  </button>
+                  <button
+                    onClick={() => {
                       setTargetProduct(p.id);
                       const prodInfo = productPricing[p.id as keyof typeof productPricing];
                       if (prodInfo) {
@@ -1143,15 +1158,6 @@ export default function LandingPage({
                     className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
                   >
                     <span>{t.logisticsCert}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedSampleProduct(p);
-                      setIsSampleModalOpen(true);
-                    }}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-black rounded-lg transition-all shadow-sm hover:translate-y-[-1px] flex items-center justify-center gap-1 tracking-wider cursor-pointer font-sans"
-                  >
-                    <span>{t.requestSample}</span>
                   </button>
                 </div>
               </div>
@@ -1486,6 +1492,64 @@ export default function LandingPage({
                         <option value="FedEx International">FedEx International</option>
                         <option value="UPS / TNT">UPS / TNT Express</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Estimasi Biaya & Mekanisme Pembayaran (Tabel) */}
+                  <div className="space-y-2">
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-indigo-500" />
+                      {currentLanguage === 'id' ? 'Opsi Pembayaran Ongkir' : 'Shipping Payment Options'}
+                    </label>
+                    <div className="overflow-x-auto rounded-lg shadow-sm">
+                      <table className="w-full text-left text-[10px] border-collapse border border-slate-200">
+                        <thead className="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase font-bold tracking-wider">
+                          <tr>
+                            <th className="px-2.5 py-2 border-r border-slate-200 whitespace-nowrap">{currentLanguage === 'id' ? 'Metode' : 'Method'}</th>
+                            <th className="px-2.5 py-2 border-r border-slate-200 whitespace-nowrap">{currentLanguage === 'id' ? 'Biaya' : 'Cost'}</th>
+                            <th className="px-2.5 py-2 border-r border-slate-200 whitespace-nowrap">{currentLanguage === 'id' ? 'Waktu' : 'Time'}</th>
+                            <th className="px-2.5 py-2">{currentLanguage === 'id' ? 'Proses' : 'Process'}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 bg-white text-slate-700">
+                          {/* Opsi 1: Dengan Akun Kurir (Freight Collect) */}
+                          <tr className="bg-indigo-50 hover:bg-indigo-100/80 transition-colors">
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-bold text-indigo-800 whitespace-nowrap">
+                              Freight Collect
+                              <span className="block text-[8.5px] text-indigo-600 font-medium uppercase mt-0.5 tracking-wider">{currentLanguage === 'id' ? '(Punya Akun Kurir)' : '(Have Courier Account)'}</span>
+                            </td>
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-medium italic whitespace-nowrap text-slate-500">
+                              {currentLanguage === 'id' ? 'Tarif Kurir' : 'Courier Rate'}
+                            </td>
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-bold whitespace-nowrap text-slate-800">
+                              {sampleCourier === 'DHL Express' ? '3-5' : sampleCourier === 'FedEx International' ? '4-6' : '5-7'} {currentLanguage === 'id' ? 'Hr' : 'Day'}
+                            </td>
+                            <td className="px-2.5 py-2.5 min-w-[150px] leading-snug">
+                              {currentLanguage === 'id' 
+                                ? 'Ditagih otomatis (autodebit) ke akun kurir Anda.' 
+                                : 'Billed automatically to your courier account.'}
+                            </td>
+                          </tr>
+                          {/* Opsi 2: Tanpa Akun Kurir (Prepaid Transfer) */}
+                          <tr className="bg-amber-50 hover:bg-amber-100/80 transition-colors">
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-bold text-amber-800 whitespace-nowrap">
+                              Prepaid
+                              <span className="block text-[8.5px] text-amber-600 font-medium uppercase mt-0.5 tracking-wider">{currentLanguage === 'id' ? '(Tanpa Akun Kurir)' : '(No Courier Account)'}</span>
+                            </td>
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-black text-emerald-600 whitespace-nowrap">
+                              ${sampleQty === '500 gram' ? '35' : sampleQty === '1 kg' ? '45' : sampleQty === '2 kg' ? '65' : sampleQty === '5 kg' ? '120' : '25'}
+                            </td>
+                            <td className="px-2.5 py-2.5 border-r border-slate-200 font-bold whitespace-nowrap text-slate-800">
+                              {sampleCourier === 'DHL Express' ? '3-5' : sampleCourier === 'FedEx International' ? '4-6' : '5-7'} {currentLanguage === 'id' ? 'Hr' : 'Day'}
+                            </td>
+                            <td className="px-2.5 py-2.5 min-w-[150px] leading-snug">
+                              {currentLanguage === 'id' 
+                                ? 'Transfer ke eksportir, eksportir bayar ke agen kurir.' 
+                                : 'Transfer to exporter, exporter pays to courier agent.'}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 

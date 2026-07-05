@@ -240,6 +240,9 @@ export interface TranslationKeys {
   sampleQty5kg: string;
   sampleQtySwatch: string;
   logisticCourierLabel: string;
+  estShippingCost: string;
+  estDeliveryTime: string;
+  daysLabel: string;
   courierAccountNoLabel: string;
   optionalLabel: string;
   courierAccountPlaceholder: string;
@@ -528,6 +531,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 Kilogram (Besar)",
     sampleQtySwatch: "Kit Contoh Bahan / Swatch",
     logisticCourierLabel: "Kurir Logistik",
+    estShippingCost: "Estimasi Biaya Kirim",
+    estDeliveryTime: "Estimasi Waktu Sampai",
+    daysLabel: "Hari Kerja",
     courierAccountNoLabel: "No. Akun Kurir (Freight Collect)",
     optionalLabel: "Opsional",
     courierAccountPlaceholder: "Contoh: DHL-987654321",
@@ -812,6 +818,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 Kilograms (Large)",
     sampleQtySwatch: "Material Kit / Swatch",
     logisticCourierLabel: "Logistics Courier",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Business Days",
     courierAccountNoLabel: "Courier Account No. (Freight Collect)",
     optionalLabel: "Optional",
     courierAccountPlaceholder: "Example: DHL-987654321",
@@ -988,6 +997,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 公斤（大）",
     sampleQtySwatch: "材料样品套件",
     logisticCourierLabel: "物流快递",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Days",
     courierAccountNoLabel: "快递账号（运费到付）",
     optionalLabel: "可选",
     courierAccountPlaceholder: "例如：DHL-987654321",
@@ -1267,6 +1279,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 كيلوغرام (كبير)",
     sampleQtySwatch: "مجموعة المواد / عينة",
     logisticCourierLabel: "شركة الشحن اللوجستية",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Days",
     courierAccountNoLabel: "رقم حساب الشحن (جمع الشحن)",
     optionalLabel: "اختياري",
     courierAccountPlaceholder: "مثال: DHL-987654321",
@@ -1546,6 +1561,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 กิโลกรัม (ใหญ่)",
     sampleQtySwatch: "ชุดวัสดุ / ตัวอย่าง",
     logisticCourierLabel: "ผู้จัดส่งโลจิสติกส์",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Days",
     courierAccountNoLabel: "หมายเลขบัญชีผู้จัดส่ง (เก็บเงินปลายทาง)",
     optionalLabel: "ไม่บังคับ",
     courierAccountPlaceholder: "ตัวอย่าง: DHL-987654321",
@@ -1936,6 +1954,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 Килограмм (Большой)",
     sampleQtySwatch: "Набор материалов / Образец",
     logisticCourierLabel: "Логистический курьер",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Days",
     courierAccountNoLabel: "Номер счета курьера (Оплата получателем)",
     optionalLabel: "Необязательно",
     courierAccountPlaceholder: "Пример: DHL-987654321",
@@ -2104,6 +2125,9 @@ export const translations: Record<string, TranslationKeys> = {
     sampleQty5kg: "5 キログラム (大)",
     sampleQtySwatch: "素材キット / スウォッチ",
     logisticCourierLabel: "物流クーリエ",
+    estShippingCost: "Estimated Shipping Cost",
+    estDeliveryTime: "Estimated Delivery Time",
+    daysLabel: "Days",
     courierAccountNoLabel: "クーリエアカウント番号 (着払い)",
     optionalLabel: "オプション",
     courierAccountPlaceholder: "例: DHL-987654321",
