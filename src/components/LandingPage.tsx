@@ -20,6 +20,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     heroTitle: "Sourcing Komoditas Premium Secara Aman & Transparan",
     heroDesc: "PT Multi Raksa Madani menghubungkan petani lokal dengan pembeli internasional secara transparan. Mulai negosiasi kargo bilateral secara elektronik, awasi draf berkas pabean dari meja kerja Anda.",
     companyProfileTitle: "PROFIL PERUSAHAAN",
+    companyProfileSubTitle: "Terintegrasi dengan Karantina, Bea Cukai RI, CEISA, & INSW",
     verified: "Terverifikasi",
     officialLicense: "Izin Resmi",
     officeAddress: "Alamat Kantor",
@@ -81,6 +82,7 @@ const landingTranslations: Record<string, Record<string, string>> = {
     heroTitle: "Source Premium Commodities Securely & Transparently",
     heroDesc: "PT Multi Raksa Madani connects local farmers with international buyers transparently. Start bilateral cargo negotiations electronically, oversee custom clearance draft documents from your desk.",
     companyProfileTitle: "COMPANY PROFILE",
+    companyProfileSubTitle: "Integrated with Quarantine, Indonesian Customs, CEISA, & INSW",
     verified: "Verified",
     officialLicense: "Official License",
     officeAddress: "Office Address",
@@ -559,17 +561,17 @@ const ExportProcessInfographic = ({ t }: { t: any }) => {
     { icon: ShieldCheck, title: t.exportStep3Title, desc: t.exportStep3Desc }
   ];
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-5 text-center">{t.exportProcessTitle}</h3>
+    <div className="bg-slate-900/40 border border-slate-700/30 rounded-2xl p-5 shadow-sm">
+      <h3 className="text-sm font-black text-white uppercase tracking-widest mb-5 text-center">{t.exportProcessTitle}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {steps.map((step, idx) => (
           <div key={idx} className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center shrink-0">
-              <step.icon className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 bg-indigo-500/20 rounded-full flex items-center justify-center shrink-0">
+              <step.icon className="w-5 h-5 text-indigo-300" />
             </div>
             <div>
-              <div className="font-black text-sm text-slate-900">{step.title}</div>
-              <div className="text-xs text-slate-500 leading-tight">{step.desc}</div>
+              <div className="font-black text-sm text-white">{step.title}</div>
+              <div className="text-xs text-slate-300 leading-tight">{step.desc}</div>
             </div>
           </div>
         ))}
@@ -898,7 +900,7 @@ export default function LandingPage({
       <div 
         className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-lg bg-cover bg-center"
         style={{ 
-          backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%), url(${companyProfile.bannerImage || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80'})` 
+          backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.5) 100%), url(${companyProfile.bannerImage || 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80'})` 
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none" />
@@ -907,9 +909,14 @@ export default function LandingPage({
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-500/20 pb-2.5">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-black text-white tracking-wider uppercase">
-                {t.companyProfileTitle} — PT Multi Raksa Madani
-              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-black text-white tracking-wider uppercase drop-shadow-md">
+                  {t.companyProfileTitle} — PT Multi Raksa Madani
+                </span>
+                <span className="text-[11px] text-indigo-200 tracking-wide drop-shadow-md">
+                  {t.companyProfileSubTitle}
+                </span>
+              </div>
               <span className="px-2.5 py-0.5 rounded text-[12px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
                 {t.verified}
               </span>
@@ -994,12 +1001,10 @@ export default function LandingPage({
               </div>
             </div>
           </div>
+          <div className="px-4 pb-4">
+            <ExportProcessInfographic t={t} />
+          </div>
         </div>
-      </div>
-
-      {/* 3. EXPORT PROCESS INFOGRAPHIC */}
-      <div className="max-w-7xl mx-auto px-4">
-        <ExportProcessInfographic t={t} />
       </div>
 
       {/* 4. DYNAMIC INLINE COMMODITY CATALOG */}

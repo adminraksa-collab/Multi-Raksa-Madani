@@ -7,6 +7,7 @@ export interface TranslationKeys {
   contactService: string;
   officeAddress: string;
   officialLicense: string;
+  companyProfileSubTitle: string;
   editCompanyProfile: string;
   verified: string;
   companyProfileTitle: string;
@@ -379,7 +380,7 @@ export const translations: Record<string, TranslationKeys> = {
     logisticsCert: "Logistik & Sertifikat",
     originLabel: "Asal",
     categoryAgri: "PERTANIAN / HASIL BUMI",
-    footerLine1: "Aplikasi Manajemen Administrasi Ekspor Indonesia (ExportFlow) \u2022 Terintegrasi dengan Karantina, Bea Cukai RI, CEISA, & INSW.",
+    footerLine1: "Aplikasi Manajemen Administrasi Ekspor Indonesia (ExportFlow).",
     footerLine2: "Semua kalkulasi FOB dan data kepabeanan mematuhi standar INCOTERMS internasional.",
     tabCargoExport: "Kargo Ekspor",
     tabSampleRequest: "Permintaan Sampel",
@@ -649,7 +650,7 @@ export const translations: Record<string, TranslationKeys> = {
     logisticsCert: "Logistics & Certificates",
     originLabel: "Origin",
     categoryAgri: "AGRICULTURE / PRODUCE",
-    footerLine1: "Indonesian Export Administration Management Application (ExportFlow) \u2022 Integrated with Quarantine, Indonesian Customs, CEISA, & INSW.",
+    footerLine1: "Indonesian Export Administration Management Application (ExportFlow).",
     footerLine2: "All FOB calculations and customs data comply with international INCOTERMS standards.",
     tabCargoExport: "Export Cargo",
     tabSampleRequest: "Sample Requests",
