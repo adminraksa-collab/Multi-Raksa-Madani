@@ -2019,11 +2019,17 @@ export default function App() {
                   setActiveShipmentId(shipmentId);
                   setTargetStepIndex(stepIndex);
                   setTargetSubStepIndex(subStepIndex);
+                  setWorkflowSubTab('cargo');
                 }}
                 onNavigateToTab={handleTabClick}
                 alerts={alerts}
                 onMarkAlertAsRead={handleMarkAlertAsRead}
                 onClearAlerts={handleClearAlerts}
+                lang={lang}
+                sampleRequests={sampleRequests}
+                onSelectSampleRequest={() => {
+                  setWorkflowSubTab('sample');
+                }}
               />
 
               {/* Language Selector */}
