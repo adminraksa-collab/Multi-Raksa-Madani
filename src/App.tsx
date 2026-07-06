@@ -2876,9 +2876,12 @@ export default function App() {
 
                                       {req.shippingFeePaymentStatus === 'paid' && (
                                         <div className="font-semibold text-emerald-700 leading-relaxed text-[11px] bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200">
-                                          {isId 
+                                          {isPending && (isId 
                                             ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel dapat segera diproses untuk dikirim.`
-                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package can be processed for shipping immediately.`}
+                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package can be processed for shipping immediately.`)}
+                                          {(isShipped || isDelivered) && (isId
+                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller.`
+                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller.`)}
                                         </div>
                                       )}
                                     </div>
