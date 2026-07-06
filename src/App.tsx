@@ -2879,9 +2879,12 @@ export default function App() {
                                           {isPending && (isId 
                                             ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel dapat segera diproses untuk dikirim.`
                                             : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package can be processed for shipping immediately.`)}
-                                          {(isShipped || isDelivered) && (isId
-                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller.`
-                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller.`)}
+                                          {isShipped && (isId
+                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel sedang dalam perjalanan.`
+                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package is on the way.`)}
+                                          {isDelivered && (isId
+                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel telah berhasil diterima oleh Buyer.`
+                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package has been successfully received by the Buyer.`)}
                                         </div>
                                       )}
                                     </div>
