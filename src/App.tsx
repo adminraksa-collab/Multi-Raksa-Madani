@@ -2759,7 +2759,7 @@ export default function App() {
                                         <div className="col-span-2">
                                           <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'No. Resi Pelacakan' : 'Tracking Number'}:</span>
                                           <span className="font-mono font-extrabold text-indigo-600 block mt-0.5 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100/50">
-                                            {req.trackingNumber || (isId ? 'PROSES_GENERATE...' : 'GENERATING...')}
+                                            {req.trackingNumber || (isId ? 'Belum Diinput' : 'Not Provided')}
                                           </span>
                                         </div>
                                       )}
@@ -2966,6 +2966,10 @@ export default function App() {
                                             <button
                                               onClick={() => {
                                                 const val = (document.getElementById(`tracking-input-${req.id}`) as HTMLInputElement)?.value;
+                                                if (!val || val.trim() === '') {
+                                                  alert(isId ? 'Harap masukkan nomor resi pelacakan terlebih dahulu.' : 'Please enter the tracking number first.');
+                                                  return;
+                                                }
                                                 handleUpdateSampleStatus(req.id, 'shipped', val);
                                               }}
                                               disabled={!canShip}
