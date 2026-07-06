@@ -426,35 +426,6 @@ export default function AccountManagement({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-lg text-indigo-300 font-extrabold text-[12px] tracking-wider uppercase">
-              {t.superadminPanel}
-            </span>
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-          </div>
-          <h1 className="text-2xl font-black tracking-tight leading-none flex items-center gap-2">
-            <Key className="w-6 h-6 text-indigo-400" />
-            <span>{t.title}</span>
-          </h1>
-          <p className="text-xs text-slate-300 font-medium">
-            {t.desc}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/10">
-          <Shield className="w-5 h-5 text-indigo-300 shrink-0" />
-          <div className="text-left text-xs">
-            <p className="font-extrabold text-white leading-none">{t.validationActive}</p>
-            <p className="text-[12px] text-slate-300 leading-tight mt-0.5">{currentUser?.name}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Stats Bento Block */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Stat - Pending Action */}

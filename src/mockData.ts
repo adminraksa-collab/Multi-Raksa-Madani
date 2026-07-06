@@ -1,8 +1,39 @@
 import { UserProfile, ExportProduct, ExportShipment, Certification, ExportDocument, RealTimeAlert, ShipmentStep, UserRole } from './types';
 
-export const mockUsers: UserProfile[] = [];
+export const mockUsers: UserProfile[] = [
+  { id: 'usr-admin', name: 'Super Admin', email: 'admin@export.com', role: 'Superadmin', avatar: '', companyName: 'NGL Admin' },
+  { id: 'usr-trader', name: 'Trader (Exporter)', email: 'trader@export.com', role: 'Trader', avatar: '', companyName: 'NGL Trader' },
+  { id: 'usr-buyer1', name: 'Buyer 1', email: 'buyer1@export.com', role: 'Buyer', avatar: '', companyName: 'Buyer Corp' },
+];
 
-export const mockProducts: ExportProduct[] = [];
+export const mockProducts: ExportProduct[] = [
+  {
+    id: 'prod-1',
+    name: 'Kopi Arabika Gayo Specialty',
+    hsCode: '09012110',
+    price: '6,200',
+    category: 'Pertanian',
+    unit: 'Ton',
+    specification: 'Moisture <12%, Defect <2%',
+    image: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=800&q=80',
+    supplierName: 'PT Kopi Gayo Indonesia',
+    origin: 'Aceh Tengah, Indonesia',
+    minOrder: '18 Ton (1x 20ft FCL)',
+  },
+  {
+    id: 'prod-2',
+    name: 'Kakao Biji Fermentasi',
+    hsCode: '18010000',
+    price: '4,500',
+    category: 'Pertanian',
+    unit: 'Ton',
+    specification: 'Fermentasi 90%, Moisture 7%',
+    image: 'https://images.unsplash.com/photo-1629853966023-c9cf719d266e?w=800&q=80',
+    supplierName: 'PT Kakao Mandiri',
+    origin: 'Sulawesi Selatan, Indonesia',
+    minOrder: '20 Ton',
+  }
+];
 
 export const mockCertificationsList = (shipmentId: string): Certification[] => [
   {

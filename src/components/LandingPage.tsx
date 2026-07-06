@@ -863,8 +863,8 @@ export default function LandingPage({
 
   // Product price guidelines derived dynamically from the products state
   const productPricing = products.reduce((acc, p) => {
-    const cleanPrice = parseFloat(p.price.replace(/,/g, '')) || 1000;
-    const minVolMatch = p.minOrder.match(/\d+/);
+    const cleanPrice = p.price ? parseFloat(p.price.replace(/,/g, '')) || 1000 : 1000;
+    const minVolMatch = p.minOrder ? p.minOrder.match(/\d+/) : null;
     const minVol = minVolMatch ? parseInt(minVolMatch[0]) : 10;
     
     acc[p.id] = {
@@ -915,8 +915,11 @@ export default function LandingPage({
                 <span className="text-sm font-black text-white tracking-wider uppercase drop-shadow-md">
                   {t.companyProfileTitle} — PT Multi Raksa Madani
                 </span>
-                <span className="text-[11px] text-indigo-200 tracking-wide drop-shadow-md">
+                <span className="text-[11px] text-yellow-400 tracking-wide drop-shadow-md">
                   {t.companyProfileSubTitle}
+                </span>
+                <span className="text-[10px] text-yellow-400 tracking-wide drop-shadow-md mt-0.5">
+                  {t.footerLine2}
                 </span>
               </div>
               <span className="px-2.5 py-0.5 rounded text-[12px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
@@ -938,7 +941,7 @@ export default function LandingPage({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 text-xs text-left">
             {/* Col 1: Izin Resmi */}
             <div className="space-y-1">
-              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+              <span className="text-xs font-black text-yellow-400 tracking-wider uppercase block">
                 {t.officialLicense}
               </span>
               <p className="text-slate-200 font-semibold leading-relaxed">
@@ -949,7 +952,7 @@ export default function LandingPage({
 
             {/* Col 2: Perpajakan & Pabean */}
             <div className="space-y-1">
-              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+              <span className="text-xs font-black text-yellow-400 tracking-wider uppercase block">
                 {t.customsTaxLabel}
               </span>
               {companyProfile.npwp && (
@@ -975,7 +978,7 @@ export default function LandingPage({
 
             {/* Col 3: Alamat Kantor */}
             <div className="space-y-1">
-              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+              <span className="text-xs font-black text-yellow-400 tracking-wider uppercase block">
                 {t.officeAddress}
               </span>
               <p className="text-slate-300 font-medium leading-relaxed text-[12px] sm:text-xs">
@@ -985,7 +988,7 @@ export default function LandingPage({
 
             {/* Col 4: Kontak & Layanan */}
             <div className="space-y-1">
-              <span className="text-xs font-black text-indigo-400 tracking-wider uppercase block">
+              <span className="text-xs font-black text-yellow-400 tracking-wider uppercase block">
                 {t.contactService}
               </span>
               <div className="text-slate-300 font-medium leading-relaxed space-y-0.5 text-[12px] sm:text-xs">

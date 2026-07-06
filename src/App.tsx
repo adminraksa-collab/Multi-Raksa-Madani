@@ -32,6 +32,7 @@ import InteractiveInfographic from './components/InteractiveInfographic';
 import ExportGuide from './components/ExportGuide';
 import LandingPage from './components/LandingPage';
 import AccountManagement from './components/AccountManagement';
+import SystemMetrics from './components/SystemMetrics';
 import NotificationCenter from './components/NotificationCenter';
 import { LANGUAGES, translations } from './translations';
 import { 
@@ -118,7 +119,7 @@ export default function App() {
   const [targetSubStepIndex, setTargetSubStepIndex] = useState<number | undefined>(undefined);
   const [shipmentSearchQuery, setShipmentSearchQuery] = useState('');
   const [shipmentStatusFilter, setShipmentStatusFilter] = useState('All');
-  const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'guide' | 'negotiation' | 'users'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'workflow' | 'guide' | 'negotiation' | 'users' | 'metrics'>('home');
   const [workflowSubTab, setWorkflowSubTab] = useState<'cargo' | 'sample'>('sample');
   const [negoStepId, setNegoStepId] = useState<number>(1);
   const [negotiationProduct, setNegotiationProduct] = useState<ExportProduct | undefined>(undefined);
@@ -133,10 +134,10 @@ export default function App() {
     if (stored) {
       try {
         let us = JSON.parse(stored);
-        return us;
+        if (us && us.length > 0) return us;
       } catch (e) {}
     }
-    return [];
+    return mockUsers;
   });
 
   // Local storage based products state
@@ -144,10 +145,11 @@ export default function App() {
     const stored = localStorage.getItem('exportflow_products');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        let pr = JSON.parse(stored);
+        if (pr && pr.length > 0) return pr;
       } catch (e) {}
     }
-    return [];
+    return mockProducts;
   });
 
   // Local storage based company profile
@@ -762,7 +764,7 @@ export default function App() {
     }
   };
 
-  const handleTabClick = (tab: 'home' | 'workflow' | 'guide' | 'negotiation' | 'users') => {
+  const handleTabClick = (tab: 'home' | 'workflow' | 'guide' | 'negotiation' | 'users' | 'metrics') => {
     if (isRestricted && tab !== 'home') {
       setShowRestrictedAlert(tab);
       // Auto-hide alert after 8 seconds
@@ -2026,6 +2028,19 @@ export default function App() {
                   )}
                   {currentUser.role === 'Superadmin' && (
                     <button
+                      onClick={() => handleTabClick('metrics')}
+                      className={`px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                        activeTab === 'metrics'
+                          ? 'bg-slate-900 text-white shadow-sm font-extrabold'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Activity className="w-4 h-4" />
+                      <span>{lang === 'id' ? 'Sistem' : 'System'}</span>
+                    </button>
+                  )}
+                  {currentUser.role === 'Superadmin' && (
+                    <button
                       onClick={() => handleTabClick('users')}
                       className={`px-3.5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                         activeTab === 'users'
@@ -2247,14 +2262,24 @@ export default function App() {
                   </button>
                 )}
                 {currentUser?.role === 'Superadmin' ? (
-                  <button
-                    onClick={() => handleTabClick('users')}
-                    className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
-                      activeTab === 'users' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
-                    }`}
-                  >
-                    Akun
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleTabClick('metrics')}
+                      className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                        activeTab === 'metrics' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
+                      }`}
+                    >
+                      Sistem
+                    </button>
+                    <button
+                      onClick={() => handleTabClick('users')}
+                      className={`text-center py-2 px-2 text-[12px] font-black rounded-lg transition-all flex-1 min-w-[70px] ${
+                        activeTab === 'users' ? 'bg-slate-900 text-white' : 'text-gray-600 hover:bg-gray-50 bg-slate-50'
+                      }`}
+                    >
+                      Akun
+                    </button>
+                  </>
                 ) : (
                   <div className="text-center py-2 px-1 text-[12px] font-bold rounded-lg text-slate-300 bg-slate-100/50 select-none flex items-center justify-center flex-1 min-w-[30px]">
                     •
@@ -2957,7 +2982,8 @@ export default function App() {
                                                 </label>
                                                 <input
                                                   type="text"
-                                                  id={`tracking-input-${req.id}`}
+                                                  value={trackingNumberInputs[req.id] || ''}
+                                                  onChange={(e) => setTrackingNumberInputs(prev => ({ ...prev, [req.id]: e.target.value }))}
                                                   placeholder={isId ? "Contoh: AWBA123..." : "E.g. AWBA123..."}
                                                   className="w-full px-3 py-2 text-xs font-mono border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 mb-2"
                                                 />
@@ -2965,7 +2991,7 @@ export default function App() {
                                             )}
                                             <button
                                               onClick={() => {
-                                                const val = (document.getElementById(`tracking-input-${req.id}`) as HTMLInputElement)?.value;
+                                                const val = trackingNumberInputs[req.id];
                                                 if (!val || val.trim() === '') {
                                                   alert(isId ? 'Harap masukkan nomor resi pelacakan terlebih dahulu.' : 'Please enter the tracking number first.');
                                                   return;
@@ -3023,6 +3049,8 @@ export default function App() {
             onToggleApprove={handleToggleApproveUser}
             onUpdateUsersList={handleUpdateUsersList}
           />
+        ) : activeTab === 'metrics' && currentUser?.role === 'Superadmin' ? (
+          <SystemMetrics lang={lang} />
         ) : null}
 
       </main>
@@ -3794,9 +3822,7 @@ export default function App() {
         <p className="text-xs font-medium text-gray-500">
           {t.footerLine1}
         </p>
-        <p className="text-[12px] text-gray-400">
-          {t.footerLine2}
-        </p>
+        
       </footer>
 
     </div>
