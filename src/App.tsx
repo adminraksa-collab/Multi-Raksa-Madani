@@ -1767,7 +1767,7 @@ export default function App() {
         return {
           ...r,
           status,
-          ...(trackingNumber ? { courierTrackingNo: trackingNumber } : {})
+          ...(trackingNumber ? { trackingNumber } : {})
         };
       }
       return r;
