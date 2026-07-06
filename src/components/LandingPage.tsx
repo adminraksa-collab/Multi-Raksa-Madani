@@ -673,6 +673,7 @@ export default function LandingPage({
       shippingFeePaidBy: sampleFeePayer,
       shippingFeeAmount: sampleQty === '500 gram' ? 35 : sampleQty === '1 kg' ? 45 : sampleQty === '2 kg' ? 65 : sampleQty === '5 kg' ? 120 : 25,
       shippingFeeFixed: sampleFeePayer === 'buyer' && !sampleCourierAcc ? false : true,
+      shippingFeePaymentStatus: sampleFeePayer === 'buyer' && !sampleCourierAcc ? 'pending_rate' : 'paid',
       status: 'pending',
       trackingNumber: '',
       createdAt: new Date().toISOString()

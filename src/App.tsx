@@ -2797,7 +2797,7 @@ export default function App() {
                                                 <CreditCard className="w-4 h-4 text-indigo-500" />
                                                 <span>{isId ? 'Pembayaran T/T (Transfer Bank)' : 'T/T Payment (Bank Transfer)'}</span>
                                               </div>
-                                              {req.shippingFeePaymentStatus === 'pending_rate' && (
+                                              {(!req.shippingFeePaymentStatus || req.shippingFeePaymentStatus === 'pending_rate') && (
                                                 <div className="space-y-2">
                                                   <p className="text-slate-500 leading-relaxed font-medium">
                                                     {currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin'
