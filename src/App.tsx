@@ -39,7 +39,7 @@ import {
   Clock, CheckCircle, Package, Truck, AlertCircle, 
   Database, UserCheck, UserPlus, Users, TrendingUp, Info, Layers,
   Plus, X, FileSignature, BookOpen, Lock, ArrowRight, ArrowLeft, ShieldAlert,
-  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut, ChevronDown, Upload
+  Ship, Home, Key, Eye, EyeOff, Edit, User, Settings, Trash2, Search, Filter, Award, LogOut, ChevronDown, Upload, CreditCard
 } from 'lucide-react';
 
 export default function App() {
@@ -808,6 +808,7 @@ export default function App() {
   const [openedLoginFromCalculator, setOpenedLoginFromCalculator] = useState(false);
   const [isDocEditorOpen, setIsDocEditorOpen] = useState(false);
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
+  const [expandedSampleId, setExpandedSampleId] = useState<string | null>(null);
   const [viewingDocument, setViewingDocument] = useState<ExportDocument | null>(null);
   const [shipmentToDeleteId, setShipmentToDeleteId] = useState<string | null>(null);
   const [sampleRequestToDeleteId, setSampleRequestToDeleteId] = useState<string | null>(null);
@@ -1759,6 +1760,35 @@ export default function App() {
     localStorage.setItem('exportflow_users', JSON.stringify(newUsers));
   };
 
+  
+  const handleUpdateSampleStatus = (reqId: string, status: 'shipped' | 'delivered', trackingNumber?: string) => {
+    setSampleRequests(prev => prev.map(r => {
+      if (r.id === reqId) {
+        return {
+          ...r,
+          status,
+          ...(trackingNumber ? { courierTrackingNo: trackingNumber } : {})
+        };
+      }
+      return r;
+    }));
+    
+    // Add an alert
+    const isId = lang === 'id';
+    const alertMsg = status === 'shipped' 
+        ? (isId ? `Sampel telah dikirim.` : `Sample has been shipped.`)
+        : (isId ? `Sampel telah diterima.` : `Sample has been delivered.`);
+        
+    saveAlertToFirestore({
+      id: 'alert-' + Date.now(),
+      type: 'info',
+      message: alertMsg,
+      timestamp: new Date().toISOString(),
+      readBy: [],
+      shipmentId: reqId, title: 'Sample Update'
+    }).catch(err => console.error("Error creating alert:", err));
+  };
+
   const handleCloseLoginModal = () => {
     setIsLoginOpen(false);
     if (openedLoginFromCalculator) {
@@ -2624,8 +2654,9 @@ export default function App() {
                       </p>
                     </div>
                   </div>
+
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-3">
                     {visibleSampleRequests.map((req) => {
                       const isPending = req.status === 'pending';
                       const isShipped = req.status === 'shipped';
@@ -2638,364 +2669,342 @@ export default function App() {
                         req.courierAccount ||
                         req.shippingFeePaymentStatus === 'paid'
                       );
+                      const isExpanded = expandedSampleId === req.id;
 
                       return (
                         <div 
                           key={req.id}
-                          className="bg-white rounded-2xl border border-gray-150 hover:border-emerald-200 transition-all p-5 flex flex-col justify-between gap-4 shadow-3xs"
+                          className="bg-white rounded-xl border border-gray-200 hover:border-emerald-300 transition-all shadow-sm flex flex-col overflow-hidden"
                         >
-                          <div className="space-y-3.5">
-                            <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-3">
-                              <div>
-                                <span className="text-[12px] font-black uppercase text-slate-400 tracking-wider font-mono">{isId ? 'KODE' : 'CODE'}: {req.id}</span>
-                                <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-0.5">{req.productName}</h4>
-                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">{isId ? 'Diajukan' : 'Submitted'}: {formattedDate}</span>
-                              </div>
-                              <span className={`px-2 py-0.5 text-[12px] font-bold uppercase rounded-md border shrink-0 ${
-                                isPending 
-                                  ? 'text-amber-700 bg-amber-50 border-amber-200'
-                                  : isShipped
-                                    ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                    : 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                              }`}>
-                                {isPending ? (isId ? 'Menunggu Kirim' : 'Pending Shipment') : isShipped ? (isId ? 'Dalam Perjalanan' : 'In Transit') : (isId ? 'Telah Sampai' : 'Delivered')}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3.5 text-xs text-left">
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'Calon Buyer' : 'Prospective Buyer'}:</span>
-                                <span className="font-extrabold text-slate-800 block mt-0.5">{req.buyerName}</span>
-                                <span className="text-[12px] text-slate-500 font-semibold block">{req.buyerCompany}</span>
-                              </div>
-
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'Jumlah Sampel' : 'Sample Quantity'}:</span>
-                                <span className="font-extrabold text-indigo-600 block mt-0.5">{req.quantity}</span>
-                              </div>
-
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'Kurir Logistik' : 'Logistics Courier'}:</span>
-                                <span className="font-extrabold text-slate-800 block mt-0.5">{req.courier || '-'}</span>
-                              </div>
-
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'No. Akun Kurir' : 'Courier Account No.'}:</span>
-                                <span className="font-mono text-slate-700 block mt-0.5">{req.courierAccount || (isId ? 'Tidak Ada (Cash)' : 'None (Cash)')}</span>
-                              </div>
-
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'Penanggung Ongkir' : 'Shipping Fee Payer'}:</span>
-                                <span className="font-bold text-slate-800 block mt-0.5">
-                                  {req.shippingFeePaidBy === 'buyer' ? (isId ? 'Buyer (Penerima)' : 'Buyer (Receiver)') : (isId ? 'Seller (Pengirim)' : 'Seller (Sender)')}
+                          {/* LIST ROW SUMMARY - ALWAYS VISIBLE */}
+                          <div 
+                            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                            onClick={() => setExpandedSampleId(isExpanded ? null : req.id)}
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              {/* KODE & STATUS */}
+                              <div className="flex flex-col items-start gap-1">
+                                <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-md border ${
+                                  isPending ? 'text-amber-700 bg-amber-50 border-amber-200' : isShipped ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                                }`}>
+                                  {isPending ? (isId ? 'Menunggu Kirim' : 'Pending') : isShipped ? (isId ? 'Dalam Perjalanan' : 'In Transit') : (isId ? 'Telah Sampai' : 'Delivered')}
                                 </span>
+                                <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider font-mono">{req.id}</span>
                               </div>
-
-                              <div>
-                                <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Est. Ongkir' : 'Est. Shipping'}:</span>
-                                <div className="mt-0.5">
-                                  {req.shippingFeePaidBy === 'buyer' && !req.courierAccount && req.shippingFeeFixed !== true
-                                    ? <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-[10px] font-bold tracking-tight">{isId ? 'Menunggu Tarif' : 'Pending Rate'}</span>
-                                    : <span className="font-black text-emerald-600">{`$${req.shippingFeeAmount || 0} USD`}</span>}
+                              
+                              {/* INFO PRODUK */}
+                              <div className="flex-1">
+                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">{req.productName}</h4>
+                                <div className="text-[11px] text-slate-500 font-medium flex items-center gap-2 mt-0.5">
+                                  <span>{isId ? 'Buyer' : 'Buyer'}: <strong className="text-slate-700">{req.buyerCompany}</strong></span>
+                                  <span>&bull;</span>
+                                  <span>{formattedDate}</span>
                                 </div>
-                              </div>
-
-                              {(req.trackingNumber || isShipped || isDelivered) && (
-                                <div className="col-span-2">
-                                  <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'No. Resi Pelacakan' : 'Tracking Number'}:</span>
-                                  <span className="font-mono font-extrabold text-indigo-600 block mt-0.5 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100/50">
-                                    {req.trackingNumber || (isId ? 'PROSES_GENERATE...' : 'GENERATING...')}
-                                  </span>
-                                </div>
-                              )}
-
-                              <div className="col-span-2">
-                                <span className="text-gray-400 font-bold block text-[12px] uppercase tracking-wider font-sans">{isId ? 'Alamat Pengiriman' : 'Shipping Address'}:</span>
-                                <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[12px] mt-0.5">
-                                  {req.shippingAddress}
-                                </span>
-                              </div>
-
-                              {/* PROSEDUR DAN ALUR PEMBAYARAN ONGKIR */}
-                              <div className="col-span-2 border-t border-dashed border-gray-150 pt-3 mt-1">
-                                <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans mb-2 flex items-center gap-1.5">
-                                  <Info className="w-3.5 h-3.5 text-indigo-500" />
-                                  <span>{isId ? 'Mekanisme Pembayaran Ongkir' : 'Shipping Payment Mechanism'}:</span>
-                                </span>
-
-                                {req.shippingFeePaidBy === 'buyer' ? (
-                                  req.courierAccount && req.courierAccount !== 'Tidak Ada (Cash)' && req.courierAccount !== 'Cash' && req.courierAccount !== 'None (Cash)' ? (
-                                    <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 text-[12px]">
-                                      <div className="flex items-center gap-1.5 font-bold text-indigo-700">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                                        <span>{isId ? 'Metode: Freight Collect (Autodebit Akun Buyer)' : 'Method: Freight Collect (Autodebit Buyer Account)'}</span>
-                                      </div>
-                                      <p className="mt-1.5 text-slate-500 font-medium leading-relaxed">
-                                        {isId ? 'Biaya kirim' : 'Shipping fee of'} <strong className="font-bold text-slate-700">${req.shippingFeeAmount || 75} USD</strong> {isId ? 'akan ditagih langsung oleh kurir' : 'will be charged directly by courier'} <strong className="font-bold text-slate-700">{req.courier}</strong> {isId ? 'ke nomor rekening akun Buyer:' : 'to the Buyer account number:'} <strong className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-[10px] text-indigo-800 font-bold">{req.courierAccount}</strong> {isId ? 'saat paket diserahkan. Eksportir tidak menanggung ongkir apa pun.' : 'when the package is handed over. The exporter does not bear any shipping cost.'}
-                                      </p>
-                                    </div>
-                                  ) : (
-                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[12px] space-y-2">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5 font-bold text-amber-700">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-                                          <span>{isId ? 'Metode: Prepaid (Transfer Langsung ke Seller)' : 'Method: Prepaid (Direct Transfer to Seller)'}</span>
-                                        </div>
-                                        <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase border ${
-                                          req.shippingFeePaymentStatus === 'paid'
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                            : req.shippingFeePaymentStatus === 'pending_confirmation'
-                                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                              : 'bg-red-50 text-red-700 border-red-200 animate-pulse'
-                                        }`}>
-                                          {req.shippingFeePaymentStatus === 'paid'
-                                            ? (isId ? 'LUNAS' : 'PAID')
-                                            : req.shippingFeePaymentStatus === 'pending_confirmation'
-                                              ? (isId ? 'MENUNGGU VERIFIKASI' : 'PENDING VERIFICATION')
-                                              : (isId ? 'BELUM BAYAR' : 'UNPAID')}
-                                        </span>
-                                      </div>
-
-                                      {(!req.shippingFeePaymentStatus || req.shippingFeePaymentStatus === 'unpaid') && (
-                                        <div className="space-y-2 font-medium">
-                                          {req.shippingFeeFixed !== true ? (
-                                            currentUser?.role === 'Buyer' ? (
-                                              <div className="p-2.5 bg-amber-50 rounded-lg border border-amber-200">
-                                                <p className="text-amber-800 text-[11px] leading-relaxed font-bold">
-                                                  {isId ? 'Menunggu Seller (Eksportir) menetapkan biaya pengiriman final berdasarkan alamat pengiriman Anda.' : 'Waiting for the Seller (Exporter) to set the final shipping cost based on your shipping address.'}
-                                                </p>
-                                              </div>
-                                            ) : (
-                                              <div className="space-y-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                                <p className="text-amber-800 text-[11px] leading-relaxed font-bold">
-                                                  {isId ? 'Tetapkan Biaya Pengiriman Final (USD)' : 'Set Final Shipping Cost (USD)'}
-                                                </p>
-                                                <p className="text-amber-700 text-[10px] leading-relaxed">
-                                                  {isId ? 'Cek tarif kurir ke alamat pembeli:' : 'Check courier rates to buyer address:'} <br/><strong className="font-mono">{req.shippingAddress}</strong>
-                                                </p>
-                                                <div className="flex gap-2">
-                                                  <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={fixedFeeInputs[req.id] || ''}
-                                                    onChange={(e) => setFixedFeeInputs(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                                    placeholder={isId ? 'Contoh: 85' : 'e.g. 85'}
-                                                    className="w-full px-2 py-1.5 border border-amber-300 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-sm font-mono"
-                                                  />
-                                                  <button
-                                                    onClick={() => {
-                                                      const fee = parseFloat(fixedFeeInputs[req.id]);
-                                                      if (!isNaN(fee) && fee > 0) {
-                                                        setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeeFixed: true, shippingFeeAmount: fee } : r));
-                                                        setFixedFeeInputs(prev => { const next = {...prev}; delete next[req.id]; return next; });
-                                                      }
-                                                    }}
-                                                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-[10px] uppercase tracking-wider shrink-0 whitespace-nowrap"
-                                                  >
-                                                    {isId ? 'Tetapkan' : 'Set Cost'}
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            )
-                                          ) : (
-                                            <>
-                                              <p className="text-slate-500 leading-relaxed">
-                                                {isId ? 'Buyer wajib mentransfer biaya pengiriman sebesar' : 'Buyer must transfer shipping cost of'} <strong className="font-bold text-slate-800">${req.shippingFeeAmount || 75} USD</strong> {isId ? 'ke rekening bank Seller. Seller akan menyetor tunai di agen kurir saat mengirimkan paket.' : 'to Seller bank account. Seller will pay cash to courier agent when sending package.'}
-                                              </p>
-                                              <div className="bg-white border border-gray-150 rounded-lg p-2 text-[11px] text-slate-600 font-mono space-y-1">
-                                                <p className="font-bold text-slate-700">{isId ? 'REKENING TRANSFER SELLER:' : 'SELLER TRANSFER ACCOUNT:'}</p>
-                                                <p>{isId ? 'Bank:' : 'Bank:'} <strong className="font-bold">Bank Mandiri (IDR/USD)</strong></p>
-                                                <p>{isId ? 'No. Rekening:' : 'Account No:'} <strong className="font-bold">123-00-9876543-2</strong></p>
-                                                <p>{isId ? 'Atas Nama:' : 'Account Name:'} <strong className="font-bold">PT Multi Raksa Madani</strong></p>
-                                              </div>
-                                              {currentUser?.role === 'Buyer' ? (
-                                                <button
-                                                  onClick={() => {
-                                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'pending_confirmation' } : r));
-                                                    const newAlert: RealTimeAlert = {
-                                                      id: `alt-pay-confirm-${Date.now()}`,
-                                                      title: isId ? 'Bukti Bayar Sampel' : 'Sample Payment Sent',
-                                                      message: isId 
-                                                        ? `Buyer ${req.buyerCompany} mengirim konfirmasi transfer ongkir sampel sebesar $${req.shippingFeeAmount} USD.`
-                                                        : `Buyer ${req.buyerCompany} submitted payment confirmation of $${req.shippingFeeAmount} USD for sample shipping.`,
-                                                      type: 'info',
-                                                      timestamp: new Date().toISOString(),
-                                                      readBy: []
-                                                    };
-                                                    saveAlertToFirestore(newAlert);
-                                                  }}
-                                                  className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
-                                                >
-                                                  {isId ? 'Konfirmasi Saya Sudah Transfer' : 'Confirm I Have Transferred'}
-                                                </button>
-                                              ) : (
-                                                <div className="flex gap-1.5">
-                                                  <button
-                                                    disabled
-                                                    className="w-full py-1.5 bg-gray-100 text-gray-400 font-bold uppercase rounded-lg text-[10px] tracking-wider border border-gray-200 cursor-not-allowed"
-                                                  >
-                                                    {isId ? 'Menunggu Pembayaran Buyer' : 'Waiting for Buyer Payment'}
-                                                  </button>
-                                                </div>
-                                              )}
-                                            </>
-                                          )}
-                                        </div>
-                                      )}
-
-                                      {req.shippingFeePaymentStatus === 'pending_confirmation' && (
-                                        <div className="space-y-2 font-medium">
-                                          <p className="text-amber-700 leading-relaxed text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-100">
-                                            {currentUser?.role === 'Buyer' 
-                                              ? (isId ? 'Konfirmasi transfer Anda telah terkirim! Menunggu Eksportir memverifikasi mutasi rekening.' : 'Your transfer confirmation has been sent! Waiting for Exporter to verify account statement.')
-                                              : (isId ? 'Buyer telah mengonfirmasi transfer ongkos kirim! Silakan periksa mutasi rekening Bank Mandiri Anda.' : 'Buyer has confirmed shipping fee transfer! Please check your Bank Mandiri account statement.')}
-                                          </p>
-                                          {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
-                                            <button
-                                              onClick={() => {
-                                                setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'paid' } : r));
-                                                const newAlert: RealTimeAlert = {
-                                                  id: `alt-pay-confirm-${Date.now()}`,
-                                                  title: isId ? 'Ongkir Sampel Lunas' : 'Sample Fee Cleared',
-                                                  message: isId 
-                                                    ? `Eksportir menandai ongkos kirim sampel $${req.shippingFeeAmount} USD untuk ${req.buyerCompany} telah lunas.`
-                                                    : `Exporter marked sample shipping fee of $${req.shippingFeeAmount} USD for ${req.buyerCompany} as paid.`,
-                                                  type: 'success',
-                                                  timestamp: new Date().toISOString(),
-                                                  readBy: []
-                                                };
-                                                saveAlertToFirestore(newAlert);
-                                              }}
-                                              className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
-                                            >
-                                              {isId ? 'Sahkan & Terima Pembayaran (Lunas)' : 'Approve & Accept Payment (Paid)'}
-                                            </button>
-                                          )}
-                                        </div>
-                                      )}
-
-                                      {req.shippingFeePaymentStatus === 'paid' && (
-                                        <div className="font-semibold text-emerald-700 leading-relaxed text-[11px] bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200">
-                                          {isPending && (isId 
-                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel dapat segera diproses untuk dikirim.`
-                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package can be processed for shipping immediately.`)}
-                                          {isShipped && (isId
-                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel sedang dalam perjalanan.`
-                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package is on the way.`)}
-                                          {isDelivered && (isId
-                                            ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel telah berhasil diterima oleh Buyer.`
-                                            : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package has been successfully received by the Buyer.`)}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                ) : (
-                                  <div className="bg-emerald-50/50 border border-emerald-150 rounded-xl p-3 text-[12px]">
-                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                                      <span>Metode: Gratis / Ditanggung Seller</span>
-                                    </div>
-                                    <p className="mt-1.5 text-slate-500 font-medium leading-relaxed">
-                                      Seluruh biaya pengiriman sampel sebesar <strong className="font-bold text-emerald-600">${req.shippingFeeAmount || 110} USD</strong> dibayarkan sepenuhnya oleh Seller sebagai bagian dari strategi pemasaran/loyalitas pembeli. Gratis bagi Buyer.
-                                    </p>
-                                  </div>
-                                )}
                               </div>
                             </div>
 
-                            {/* Status Update Actions for Exporter */}
-                            <div className="space-y-2 mt-2">
-                              {currentUser?.role === 'Superadmin' && (
-                                <button
-                                  onClick={() => setSampleRequestToDeleteId(req.id)}
-                                  className="w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Hapus Permintaan</span>
-                                </button>
-                              )}
-                              {isExporter && isPending && (
-                                <div className="space-y-2 mt-3 pt-3 border-t border-gray-100">
-                                  {canShip && (
-                                    <div>
-                                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                                        {isId ? 'Input No. Resi Kurir:' : 'Input Courier Tracking No:'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        placeholder={isId ? 'Contoh: TRK-DHL-12345' : 'e.g., TRK-DHL-12345'}
-                                        value={trackingNumberInputs[req.id] || ''}
-                                        onChange={(e) => setTrackingNumberInputs(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                        className="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
-                                      />
-                                    </div>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      if (!canShip) return;
-                                      const trkNumber = trackingNumberInputs[req.id]?.trim();
-                                      if (!trkNumber) {
-                                        alert(isId ? 'Mohon isi Nomor Resi Pelacakan terlebih dahulu.' : 'Please enter the Tracking Number first.');
-                                        return;
-                                      }
-                                      setSampleRequests(prev => prev.map(r => r.id === req.id ? { 
-                                        ...r, 
-                                        status: 'shipped',
-                                        trackingNumber: trkNumber
-                                      } : r));
-                                      setTrackingNumberInputs(prev => {
-                                        const next = { ...prev };
-                                        delete next[req.id];
-                                        return next;
-                                      });
-                                      const isIdLang = lang === 'id';
-                                      const newAlert: RealTimeAlert = {
-                                        id: `alt-samp-ship-${Date.now()}`,
-                                        title: isIdLang ? 'Sampel Dikirim' : 'Sample Shipped',
-                                        message: isIdLang 
-                                          ? `Sampel produk ${req.productName} untuk buyer ${req.buyerCompany} telah dikirim dengan resi ${trkNumber}.`
-                                          : `Product sample of ${req.productName} for buyer ${req.buyerCompany} has been shipped with tracking number ${trkNumber}.`,
-                                        type: 'success',
-                                        timestamp: new Date().toISOString(),
-                                        readBy: []
-                                      };
-                                      saveAlertToFirestore(newAlert);
-                                    }}
-                                    disabled={!canShip || !trackingNumberInputs[req.id]?.trim()}
-                                    className={`w-full py-2 px-4 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 ${canShip && trackingNumberInputs[req.id]?.trim() ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'}`}
-                                  >
-                                    <span>{isId ? (canShip ? 'Kirim Sampel' : 'Menunggu Pembayaran') : (canShip ? 'Ship Sample' : 'Awaiting Payment')}</span>
-                                  </button>
-                                </div>
-                              )}
-                              {isExporter && isShipped && (
-                                <button
-                                  onClick={() => {
-                                    setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'delivered' } : r));
-                                    const isId = lang === 'id';
-                                    const newAlert: RealTimeAlert = {
-                                      id: `alt-samp-deliv-${Date.now()}`,
-                                      title: isId ? 'Sampel Diterima' : 'Sample Delivered',
-                                      message: isId 
-                                        ? `Sampel produk ${req.productName} telah sukses terkirim dan diterima oleh buyer ${req.buyerCompany}.`
-                                        : `Product sample of ${req.productName} has been successfully delivered and received by buyer ${req.buyerCompany}.`,
-                                      type: 'success',
-                                      timestamp: new Date().toISOString(),
-                                      readBy: []
-                                    };
-                                    saveAlertToFirestore(newAlert);
-                                  }}
-                                  className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
-                                >
-                                  <span>Konfirmasi Terkirim</span>
-                                </button>
-                              )}
+                            <div className="flex items-center gap-4 justify-between md:justify-end shrink-0 w-full md:w-auto">
+                               <div className="text-right">
+                                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isId ? 'Jumlah' : 'Qty'}</span>
+                                  <span className="block text-sm font-extrabold text-indigo-600">{req.quantity}</span>
+                               </div>
+                               <button 
+                                 className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors shrink-0"
+                               >
+                                 <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                               </button>
                             </div>
                           </div>
+
+                          {/* EXPANDED DETAILS */}
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="border-t border-gray-100 bg-slate-50 overflow-hidden"
+                              >
+                                <div className="p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                                  {/* LEFT: DETAILS */}
+                                  <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-3.5 text-xs text-left bg-white p-4 rounded-xl border border-gray-150 shadow-3xs">
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Calon Buyer' : 'Prospective Buyer'}:</span>
+                                        <span className="font-extrabold text-slate-800 block mt-0.5">{req.buyerName}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Kurir Logistik' : 'Logistics Courier'}:</span>
+                                        <span className="font-extrabold text-slate-800 block mt-0.5">{req.courier || '-'}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'No. Akun Kurir' : 'Courier Account No.'}:</span>
+                                        <span className="font-mono text-slate-700 block mt-0.5">{req.courierAccount || (isId ? 'Tidak Ada (Cash)' : 'None (Cash)')}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Penanggung Ongkir' : 'Shipping Fee Payer'}:</span>
+                                        <span className="font-bold text-slate-800 block mt-0.5">
+                                          {req.shippingFeePaidBy === 'buyer' ? (isId ? 'Buyer (Penerima)' : 'Buyer (Receiver)') : (isId ? 'Seller (Pengirim)' : 'Seller (Sender)')}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Est. Ongkir' : 'Est. Shipping'}:</span>
+                                        <div className="mt-0.5">
+                                          {req.shippingFeePaidBy === 'buyer' && !req.courierAccount && req.shippingFeeFixed !== true
+                                            ? <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-md text-[10px] font-bold tracking-tight">{isId ? 'Menunggu Tarif' : 'Pending Rate'}</span>
+                                            : <span className="font-black text-emerald-600">{`$${req.shippingFeeAmount || 0} USD`}</span>}
+                                        </div>
+                                      </div>
+                                      {(req.trackingNumber || isShipped || isDelivered) && (
+                                        <div className="col-span-2">
+                                          <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'No. Resi Pelacakan' : 'Tracking Number'}:</span>
+                                          <span className="font-mono font-extrabold text-indigo-600 block mt-0.5 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100/50">
+                                            {req.trackingNumber || (isId ? 'PROSES_GENERATE...' : 'GENERATING...')}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <div className="col-span-2">
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans">{isId ? 'Alamat Pengiriman' : 'Shipping Address'}:</span>
+                                        <span className="font-medium text-slate-600 block leading-normal bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[11px] mt-0.5">
+                                          {req.shippingAddress}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* RIGHT: MECHANISM & ACTIONS */}
+                                  <div className="flex flex-col space-y-4">
+                                      {/* PROSEDUR DAN ALUR PEMBAYARAN ONGKIR */}
+                                      <div>
+                                        <span className="text-gray-400 font-bold block text-[11px] uppercase tracking-wider font-sans mb-2 flex items-center gap-1.5">
+                                          <Info className="w-3.5 h-3.5 text-indigo-500" />
+                                          <span>{isId ? 'Mekanisme Pembayaran Ongkir' : 'Shipping Payment Mechanism'}:</span>
+                                        </span>
+                                        {req.shippingFeePaidBy === 'buyer' ? (
+                                          req.courierAccount && req.courierAccount !== 'Tidak Ada (Cash)' && req.courierAccount !== 'Cash' && req.courierAccount !== 'None (Cash)' ? (
+                                            <div className="bg-indigo-50/60 border border-indigo-150 rounded-xl p-3 text-[11px]">
+                                              <div className="flex items-center gap-1.5 font-bold text-indigo-700">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                                                <span>{isId ? 'Ditagihkan ke Akun Kurir Buyer' : 'Billed to Buyer Courier Account'}</span>
+                                              </div>
+                                              <p className="mt-1.5 text-slate-600 leading-relaxed">
+                                                {isId ? 'Buyer akan membayar ongkos kirim langsung ke kurir logistik menggunakan nomor akun mereka. Seller tidak perlu menagih pembayaran ongkir.' : 'Buyer will pay shipping directly to the courier using their account. Seller does not need to collect shipping fees.'}
+                                              </p>
+                                            </div>
+                                          ) : (
+                                            <div className="bg-white border border-gray-200 rounded-xl p-3 text-[11px] shadow-3xs">
+                                              <div className="flex items-center gap-1.5 font-bold text-slate-700 mb-2 pb-2 border-b border-gray-100">
+                                                <CreditCard className="w-4 h-4 text-indigo-500" />
+                                                <span>{isId ? 'Pembayaran T/T (Transfer Bank)' : 'T/T Payment (Bank Transfer)'}</span>
+                                              </div>
+                                              {req.shippingFeePaymentStatus === 'pending_rate' && (
+                                                <div className="space-y-2">
+                                                  <p className="text-slate-500 leading-relaxed font-medium">
+                                                    {currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin'
+                                                      ? (isId ? 'Anda perlu menetapkan jumlah ongkos kirim final (USD) setelah mengecek tarif kurir agar Buyer dapat melakukan pembayaran.' : 'You need to set the final shipping amount (USD) after checking courier rates so the Buyer can pay.')
+                                                      : (isId ? 'Menunggu Eksportir menginformasikan total biaya pengiriman final dari kurir logistik.' : 'Waiting for Exporter to provide the final shipping cost from logistics.')}
+                                                  </p>
+                                                  {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
+                                                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                                                      <span className="font-bold text-slate-700 text-xs">$</span>
+                                                      <input
+                                                        type="number"
+                                                        placeholder="0.00"
+                                                        id={`fee-input-${req.id}`}
+                                                        className="w-24 px-2 py-1.5 text-xs font-bold border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                                      />
+                                                      <button
+                                                        onClick={() => {
+                                                          const val = (document.getElementById(`fee-input-${req.id}`) as HTMLInputElement)?.value;
+                                                          if (val && !isNaN(Number(val))) {
+                                                            setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeeAmount: Number(val), shippingFeeFixed: true, shippingFeePaymentStatus: 'pending_payment' } : r));
+                                                            const newAlert: RealTimeAlert = {
+                                                              id: `alt-rate-${Date.now()}`,
+                                                              title: isId ? 'Tarif Ongkir Ditetapkan' : 'Shipping Rate Set',
+                                                              message: isId
+                                                                ? `Eksportir telah menetapkan ongkos kirim sampel sebesar $${val} USD untuk ${req.productName}. Silakan lakukan pembayaran.`
+                                                                : `Exporter has set the sample shipping fee to $${val} USD for ${req.productName}. Please proceed with payment.`,
+                                                              type: 'info',
+                                                              timestamp: new Date().toISOString(),
+                                                              readBy: []
+                                                            };
+                                                            saveAlertToFirestore(newAlert);
+                                                          } else {
+                                                            alert(isId ? 'Masukkan nominal valid' : 'Enter a valid amount');
+                                                          }
+                                                        }}
+                                                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                                      >
+                                                        {isId ? 'Tetapkan' : 'Set Rate'}
+                                                      </button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                              {req.shippingFeePaymentStatus === 'pending_payment' && (
+                                                <div className="space-y-2 font-medium">
+                                                  <p className="text-slate-500 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                                    {isId ? 'Eksportir telah menetapkan tagihan ongkos kirim.' : 'Exporter has set the shipping bill.'} <br/>
+                                                    {isId ? 'Total Tagihan:' : 'Total Bill:'} <strong className="text-indigo-600 font-extrabold text-xs ml-1">${req.shippingFeeAmount} USD</strong>.
+                                                  </p>
+                                                  {currentUser?.role === 'Buyer' ? (
+                                                    <button
+                                                      onClick={() => {
+                                                        setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'pending_confirmation' } : r));
+                                                        const newAlert: RealTimeAlert = {
+                                                          id: `alt-pay-${Date.now()}`,
+                                                          title: isId ? 'Konfirmasi Transfer Ongkir' : 'Shipping Transfer Confirmation',
+                                                          message: isId
+                                                            ? `Buyer ${req.buyerCompany} mengonfirmasi telah mentransfer $${req.shippingFeeAmount} USD untuk ongkos kirim sampel. Silakan cek mutasi.`
+                                                            : `Buyer ${req.buyerCompany} confirmed transferring $${req.shippingFeeAmount} USD for sample shipping. Please check statement.`,
+                                                          type: 'info',
+                                                          timestamp: new Date().toISOString(),
+                                                          readBy: []
+                                                        };
+                                                        saveAlertToFirestore(newAlert);
+                                                      }}
+                                                      className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                                    >
+                                                      {isId ? 'Konfirmasi Saya Sudah Transfer' : 'Confirm I Have Transferred'}
+                                                    </button>
+                                                  ) : (
+                                                    <div className="flex gap-1.5">
+                                                      <button
+                                                        disabled
+                                                        className="w-full py-1.5 bg-gray-100 text-gray-400 font-bold uppercase rounded-lg text-[10px] tracking-wider border border-gray-200 cursor-not-allowed"
+                                                      >
+                                                        {isId ? 'Menunggu Pembayaran Buyer' : 'Waiting for Buyer Payment'}
+                                                      </button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                              {req.shippingFeePaymentStatus === 'pending_confirmation' && (
+                                                <div className="space-y-2 font-medium">
+                                                  <p className="text-amber-700 leading-relaxed text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                                    {currentUser?.role === 'Buyer'
+                                                      ? (isId ? 'Konfirmasi transfer Anda telah terkirim! Menunggu Eksportir memverifikasi mutasi rekening.' : 'Your transfer confirmation has been sent! Waiting for Exporter to verify account statement.')
+                                                      : (isId ? 'Buyer telah mengonfirmasi transfer ongkos kirim! Silakan periksa mutasi rekening Bank Mandiri Anda.' : 'Buyer has confirmed shipping fee transfer! Please check your Bank Mandiri account statement.')}
+                                                  </p>
+                                                  {(currentUser?.role === 'Trader' || currentUser?.role === 'Superadmin') && (
+                                                    <button
+                                                      onClick={() => {
+                                                        setSampleRequests(prev => prev.map(r => r.id === req.id ? { ...r, shippingFeePaymentStatus: 'paid' } : r));
+                                                        const newAlert: RealTimeAlert = {
+                                                          id: `alt-pay-confirm-${Date.now()}`,
+                                                          title: isId ? 'Ongkir Sampel Lunas' : 'Sample Fee Cleared',
+                                                          message: isId
+                                                            ? `Eksportir menandai ongkos kirim sampel $${req.shippingFeeAmount} USD untuk ${req.buyerCompany} telah lunas.`
+                                                            : `Exporter marked sample shipping fee of $${req.shippingFeeAmount} USD for ${req.buyerCompany} as paid.`,
+                                                          type: 'success',
+                                                          timestamp: new Date().toISOString(),
+                                                          readBy: []
+                                                        };
+                                                        saveAlertToFirestore(newAlert);
+                                                      }}
+                                                      className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer"
+                                                    >
+                                                      {isId ? 'Sahkan & Terima Pembayaran (Lunas)' : 'Approve & Accept Payment (Paid)'}
+                                                    </button>
+                                                  )}
+                                                </div>
+                                              )}
+                                              {req.shippingFeePaymentStatus === 'paid' && (
+                                                <div className="font-semibold text-emerald-700 leading-relaxed text-[11px] bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200">
+                                                  {isPending && (isId
+                                                    ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel dapat segera diproses untuk dikirim.`
+                                                    : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package can be processed for shipping immediately.`)}
+                                                  {isShipped && (isId
+                                                    ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel sedang dalam perjalanan.`
+                                                    : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package is on the way.`)}
+                                                  {isDelivered && (isId
+                                                    ? `Ongkos kirim sebesar $${req.shippingFeeAmount || 75} USD telah lunas ditransfer oleh Buyer dan diverifikasi oleh Seller. Paket sampel telah berhasil diterima oleh Buyer.`
+                                                    : `Shipping fee of $${req.shippingFeeAmount || 75} USD has been paid by Buyer and verified by Seller. The sample package has been successfully received by the Buyer.`)}
+                                                </div>
+                                              )}
+                                            </div>
+                                          )
+                                        ) : (
+                                          <div className="bg-emerald-50/50 border border-emerald-150 rounded-xl p-3 text-[11px]">
+                                            <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                                              <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                              <span>{isId ? 'Metode: Gratis / Ditanggung Seller' : 'Method: Free / Borne by Seller'}</span>
+                                            </div>
+                                            <p className="mt-1.5 text-slate-500 font-medium leading-relaxed">
+                                              {isId ? 'Seluruh biaya pengiriman sampel sebesar' : 'The total sample shipping cost of'} <strong className="font-bold text-emerald-600">${req.shippingFeeAmount || 110} USD</strong> {isId ? 'dibayarkan sepenuhnya oleh Seller sebagai bagian dari strategi pemasaran/loyalitas pembeli. Gratis bagi Buyer.' : 'is fully paid by the Seller as part of marketing/loyalty strategy. Free for Buyer.'}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Status Update Actions for Exporter */}
+                                      <div className="space-y-2 mt-auto pt-4">
+                                        {currentUser?.role === 'Superadmin' && (
+                                          <button
+                                            onClick={() => setSampleRequestToDeleteId(req.id)}
+                                            className="w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-[11px] font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <span>{isId ? 'Hapus Permintaan' : 'Delete Request'}</span>
+                                          </button>
+                                        )}
+                                        {isExporter && isPending && (
+                                          <div className="space-y-2 mt-3 pt-3 border-t border-gray-100">
+                                            {canShip && (
+                                              <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                                  {isId ? 'Input No. Resi Kurir:' : 'Input Courier Tracking No:'}
+                                                </label>
+                                                <input
+                                                  type="text"
+                                                  id={`tracking-input-${req.id}`}
+                                                  placeholder={isId ? "Contoh: AWBA123..." : "E.g. AWBA123..."}
+                                                  className="w-full px-3 py-2 text-xs font-mono border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 mb-2"
+                                                />
+                                              </div>
+                                            )}
+                                            <button
+                                              onClick={() => {
+                                                const val = (document.getElementById(`tracking-input-${req.id}`) as HTMLInputElement)?.value;
+                                                handleUpdateSampleStatus(req.id, 'shipped', val);
+                                              }}
+                                              disabled={!canShip}
+                                              className={`w-full py-2 text-[11px] font-extrabold uppercase rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 ${
+                                                canShip 
+                                                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer' 
+                                                  : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                                              }`}
+                                            >
+                                              <Truck className="w-3.5 h-3.5" />
+                                              <span>{isId ? 'Tandai "Terkirim"' : 'Mark "Shipped"'}</span>
+                                            </button>
+                                            {!canShip && (
+                                              <p className="text-[10px] text-amber-600 font-medium text-center px-2">
+                                                {isId ? 'Tidak dapat memproses pengiriman sebelum urusan ongkir diselesaikan/lunas.' : 'Cannot process shipment before shipping fee is resolved/paid.'}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )}
+                                        {isExporter && isShipped && (
+                                          <button
+                                            onClick={() => handleUpdateSampleStatus(req.id, 'delivered')}
+                                            className="w-full py-2 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold uppercase rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                          >
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                            <span>{isId ? 'Konfirmasi Telah Sampai' : 'Confirm Delivered'}</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
                   </div>
+
                 )}
               </div>
             )}
@@ -3789,3 +3798,4 @@ export default function App() {
     </div>
   );
 }
+// trigger update 4
