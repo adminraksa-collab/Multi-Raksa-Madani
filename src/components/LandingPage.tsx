@@ -615,6 +615,8 @@ export default function LandingPage({
 
   const [targetProduct, setTargetProduct] = useState<string>('prod-1');
   const [orderVolume, setOrderVolume] = useState<number>(20); // default 20 metric tons
+  const [selectedPort, setSelectedPort] = useState<string>('Tokyo');
+  const [activeIncoterm, setActiveIncoterm] = useState<'EXW' | 'FOB' | 'CIF'>('FOB');
   const [localCalcOpen, setLocalCalcOpen] = useState<boolean>(false);
   const isCalcOpen = isCalcOpenProp !== undefined ? isCalcOpenProp : localCalcOpen;
   const setIsCalcOpen = setIsCalcOpenProp !== undefined ? setIsCalcOpenProp : setLocalCalcOpen;
@@ -892,8 +894,35 @@ export default function LandingPage({
     maxVol: 500
   };
 
-  const totalCost = (orderVolume || activeProduct.minVol) * activeProduct.pricePerTon;
-  const fclCount = Math.ceil((orderVolume || activeProduct.minVol) / activeProduct.containerCapacity20ft);
+  const DESTINATION_PORTS = [
+    { name: 'Tokyo, Japan', value: 'Tokyo', freightRate: 1400, region: 'Asia-Pacific' },
+    { name: 'Singapore', value: 'Singapore', freightRate: 500, region: 'Southeast Asia' },
+    { name: 'Shanghai, China', value: 'Shanghai', freightRate: 1000, region: 'East Asia' },
+    { name: 'Rotterdam, Netherlands', value: 'Rotterdam', freightRate: 2800, region: 'Europe' },
+    { name: 'Los Angeles, USA', value: 'Los Angeles', freightRate: 3300, region: 'North America' },
+    { name: 'Jebel Ali, Dubai', value: 'Jebel Ali', freightRate: 1900, region: 'Middle East' },
+  ];
+
+  const activeVol = orderVolume || activeProduct.minVol;
+  const fclCount = Math.ceil(activeVol / activeProduct.containerCapacity20ft);
+
+  // EXW Calculation (approx 8% reduction from FOB as standard handling/transport deduction)
+  const exwPricePerMT = activeProduct.pricePerTon * 0.92;
+  const totalExw = activeVol * exwPricePerMT;
+
+  // FOB Calculation
+  const fobPricePerMT = activeProduct.pricePerTon;
+  const totalFob = activeVol * fobPricePerMT;
+
+  // CIF Calculation
+  const portObj = DESTINATION_PORTS.find(p => p.value === selectedPort) || DESTINATION_PORTS[0];
+  const freightCost = fclCount * portObj.freightRate;
+  const insuranceCost = Math.max(50, totalFob * 0.0015);
+  const totalCif = totalFob + freightCost + insuranceCost;
+  const cifPricePerMT = totalCif / activeVol;
+
+  // For backward compatibility / standard total cost
+  const totalCost = totalFob;
 
   return (
     <div className="space-y-12 pb-16 animate-fade-in">
@@ -1282,6 +1311,29 @@ export default function LandingPage({
                         <span>{t.maxVolLabel || 'Max'}: {activeProduct.maxVol} MT</span>
                       </div>
                     </div>
+
+                    {/* Destination Port Selection */}
+                    <div className="pt-4 border-t border-slate-200 mt-2 text-left">
+                      <label className="text-[12px] font-black uppercase text-slate-500 tracking-wider block mb-1.5">
+                        {currentLanguage === 'id' ? 'Pelabuhan Tujuan (Untuk CIF)' : 'Destination Port (For CIF)'}
+                      </label>
+                      <select
+                        value={selectedPort}
+                        onChange={(e) => setSelectedPort(e.target.value)}
+                        className="w-full py-2.5 px-3 bg-white text-slate-800 text-xs font-bold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer shadow-sm"
+                      >
+                        {DESTINATION_PORTS.map((port) => (
+                          <option key={port.value} value={port.value}>
+                            {port.name} (Freight: ${port.freightRate} USD/FCL)
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-slate-400 mt-1 font-semibold italic">
+                        {currentLanguage === 'id' 
+                          ? '*Sewa kontainer dihitung otomatis berdasarkan jumlah kontainer FCL'
+                          : '*Container shipment is calculated automatically based on FCL count'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -1305,34 +1357,192 @@ export default function LandingPage({
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-                    <div className="flex justify-between items-center text-left">
-                      <div>
-                        <span className="text-[12px] font-black uppercase text-amber-600 tracking-wider block">{t.totalEstFobPrice}</span>
-                        <span className="text-xs text-slate-500 font-medium">{t.fobTermsDesc}</span>
-                      </div>
-                      <span className="text-2xl font-black text-slate-900 font-mono">${totalCost.toLocaleString('id-ID')} USD</span>
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-4">
+                    {/* Incoterms Header / Info */}
+                    <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
+                      <span className="text-[11px] font-black uppercase text-indigo-600 tracking-wider">
+                        {currentLanguage === 'id' ? 'Kalkulasi Perbandingan Incoterms' : 'Incoterms Comparison Calculator'}
+                      </span>
+                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                        {activeVol} MT ({fclCount} FCL)
+                      </span>
                     </div>
 
-                    {/* Edukasi Tanggung Jawab Ongkir (FOB) */}
-                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-[12px] leading-relaxed text-slate-600">
-                      <div className="flex items-center gap-1.5 text-indigo-600 font-extrabold uppercase text-[12px] tracking-wider">
-                        <Info className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{t.shippingLogisticsFobTitle}</span>
+                    {/* Three Cards (EXW, FOB, CIF) */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* EXW Card */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveIncoterm('EXW')}
+                        className={`p-3 rounded-xl border text-center flex flex-col justify-between transition-all cursor-pointer ${
+                          activeIncoterm === 'EXW'
+                            ? 'bg-slate-900 text-white border-slate-950 shadow-md ring-2 ring-slate-900/10'
+                            : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                            activeIncoterm === 'EXW' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            EXW
+                          </span>
+                          <span className="block text-[10px] font-bold mt-2 uppercase tracking-wide leading-none">
+                            {currentLanguage === 'id' ? 'Ex Works' : 'Ex Works'}
+                          </span>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-current/10">
+                          <span className="text-sm font-black font-mono block">${Math.round(exwPricePerMT).toLocaleString('id-ID')}</span>
+                          <span className={`text-[8.5px] font-bold block uppercase mt-0.5 ${
+                            activeIncoterm === 'EXW' ? 'text-slate-300' : 'text-slate-500'
+                          }`}>
+                            / MT
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* FOB Card */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveIncoterm('FOB')}
+                        className={`p-3 rounded-xl border text-center flex flex-col justify-between transition-all cursor-pointer ${
+                          activeIncoterm === 'FOB'
+                            ? 'bg-indigo-900 text-white border-indigo-950 shadow-md ring-2 ring-indigo-950/10'
+                            : 'bg-indigo-50/50 text-indigo-900 border-indigo-100/70 hover:bg-indigo-100/40'
+                        }`}
+                      >
+                        <div>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                            activeIncoterm === 'FOB' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
+                          }`}>
+                            FOB
+                          </span>
+                          <span className="block text-[10px] font-bold mt-2 uppercase tracking-wide leading-none">
+                            {currentLanguage === 'id' ? 'Free On Board' : 'Free On Board'}
+                          </span>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-current/10">
+                          <span className="text-sm font-black font-mono block">${Math.round(fobPricePerMT).toLocaleString('id-ID')}</span>
+                          <span className={`text-[8.5px] font-bold block uppercase mt-0.5 ${
+                            activeIncoterm === 'FOB' ? 'text-indigo-200' : 'text-indigo-500'
+                          }`}>
+                            / MT
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* CIF Card */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveIncoterm('CIF')}
+                        className={`p-3 rounded-xl border text-center flex flex-col justify-between transition-all cursor-pointer ${
+                          activeIncoterm === 'CIF'
+                            ? 'bg-emerald-900 text-white border-emerald-950 shadow-md ring-2 ring-emerald-950/10'
+                            : 'bg-emerald-50/50 text-emerald-900 border-emerald-100/70 hover:bg-emerald-100/40'
+                        }`}
+                      >
+                        <div>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                            activeIncoterm === 'CIF' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+                          }`}>
+                            CIF
+                          </span>
+                          <span className="block text-[10px] font-bold mt-2 uppercase tracking-wide leading-none">
+                            CIF ({portObj.value})
+                          </span>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-current/10">
+                          <span className="text-sm font-black font-mono block">${Math.round(cifPricePerMT).toLocaleString('id-ID')}</span>
+                          <span className={`text-[8.5px] font-bold block uppercase mt-0.5 ${
+                            activeIncoterm === 'CIF' ? 'text-emerald-200' : 'text-emerald-500'
+                          }`}>
+                            / MT
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Selected Incoterm Summary Box */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5 text-[12px] leading-relaxed text-slate-600">
+                      <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <div className="flex items-center gap-1.5 font-extrabold text-slate-800 uppercase tracking-wider">
+                          <Info className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span>
+                            {activeIncoterm} - {
+                              activeIncoterm === 'EXW' ? (currentLanguage === 'id' ? 'Serah Terima Pabrik' : 'Ex Works') :
+                              activeIncoterm === 'FOB' ? (currentLanguage === 'id' ? 'Bebas di Atas Kapal' : 'Free On Board') :
+                              (currentLanguage === 'id' ? 'Biaya, Asuransi & Pengapalan' : 'Cost, Insurance & Freight')
+                            }
+                          </span>
+                        </div>
+                        <span className="font-mono font-black text-sm text-slate-900">
+                          ${(
+                            activeIncoterm === 'EXW' ? Math.round(totalExw) :
+                            activeIncoterm === 'FOB' ? Math.round(totalFob) :
+                            Math.round(totalCif)
+                          ).toLocaleString('id-ID')} USD
+                        </span>
                       </div>
-                      <p className="text-slate-700">
-                        {t.fobBasePriceInfo}
+
+                      {/* Description */}
+                      <p className="text-slate-700 font-medium text-[11px] leading-relaxed">
+                        {activeIncoterm === 'EXW' && (
+                          currentLanguage === 'id' 
+                            ? 'Harga komoditas dihitung saat diserahteramkan langsung di lokasi gudang/pabrik kami. Pembeli wajib mengurus seluruh armada truk, pabean pabean ekspor, pengapalan, asuransi, dan izin impor sendiri.' 
+                            : 'Product cost of goods at our factory/warehouse. The buyer assumes all costs and risks for domestic trucking, export custom brokerage, shipping, insurance, and import duties.'
+                        )}
+                        {activeIncoterm === 'FOB' && (
+                          currentLanguage === 'id' 
+                            ? 'Harga sudah mencakup seluruh penanganan kargo lokal, pengurusan dokumen kepabeanan Bea Cukai RI (CEISA/INSW) & Karantina pertanian lunas, serta THC pelabuhan muat sampai kargo di atas dek kapal.' 
+                            : 'Price covers cargo packing, local transport to Port of Tanjung Priok, export customs document approvals (CEISA/INSW), quarantine certifications, and loading onto the vessel.'
+                        )}
+                        {activeIncoterm === 'CIF' && (
+                          currentLanguage === 'id' 
+                            ? `Seluruh cakupan FOB + sewa armada kapal laut (Ocean Freight) menuju Pelabuhan ${portObj.name} + Premi Asuransi Maritim Internasional (All-Risk) ditanggung oleh kami selaku eksportir.` 
+                            : `Covers complete FOB scopes + Ocean Freight charter cost to ${portObj.name} + International Maritime Insurance (All-Risk coverage) fully paid and arranged by us.`
+                        )}
                       </p>
-                      <ul className="space-y-1.5 pl-1">
-                        <li className="flex items-start gap-1.5">
-                          <span className="text-amber-600 font-bold shrink-0">{t.seaFreightInsuranceTitle}</span>
-                          <span className="text-slate-600">{t.seaFreightInsuranceDesc}</span>
-                        </li>
-                        <li className="flex items-start gap-1.5">
-                          <span className="text-emerald-600 font-bold shrink-0">{t.localOriginPortCostsTitle}</span>
-                          <span className="text-slate-600">{t.localOriginPortCostsDesc}</span>
-                        </li>
-                      </ul>
+
+                      {/* Checklist Scopes */}
+                      <div className="space-y-1.5 pt-1 border-t border-slate-200/60">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-emerald-500 font-bold shrink-0">✔️</span>
+                          <span className="text-slate-700 font-medium">
+                            {currentLanguage === 'id' ? 'Barang Berstandar Ekspor & Pengemasan' : 'Export Standard Goods & Packaging'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={activeIncoterm !== 'EXW' ? 'text-emerald-500 font-bold shrink-0' : 'text-red-500 font-bold shrink-0'}>
+                            {activeIncoterm !== 'EXW' ? '✔️' : '❌'}
+                          </span>
+                          <span className={activeIncoterm !== 'EXW' ? 'text-slate-700 font-medium' : 'text-slate-400 font-medium line-through'}>
+                            {currentLanguage === 'id' ? 'Truk Gudang ke Pelabuhan Tanjung Priok' : 'Inland Trucking to Tanjung Priok Port'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={activeIncoterm !== 'EXW' ? 'text-emerald-500 font-bold shrink-0' : 'text-red-500 font-bold shrink-0'}>
+                            {activeIncoterm !== 'EXW' ? '✔️' : '❌'}
+                          </span>
+                          <span className={activeIncoterm !== 'EXW' ? 'text-slate-700 font-medium' : 'text-slate-400 font-medium line-through'}>
+                            {currentLanguage === 'id' ? 'Pengurusan Dokumen Bea Cukai & Karantina' : 'Customs & Quarantine Clearance (CEISA)'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={activeIncoterm === 'CIF' ? 'text-emerald-500 font-bold shrink-0' : 'text-red-500 font-bold shrink-0'}>
+                            {activeIncoterm === 'CIF' ? '✔️' : '❌'}
+                          </span>
+                          <span className={activeIncoterm === 'CIF' ? 'text-slate-700 font-medium' : 'text-slate-400 font-medium line-through'}>
+                            {currentLanguage === 'id' ? `Ocean Freight ke ${portObj.name}` : `Ocean Freight Shipping to ${portObj.name}`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={activeIncoterm === 'CIF' ? 'text-emerald-500 font-bold shrink-0' : 'text-red-500 font-bold shrink-0'}>
+                            {activeIncoterm === 'CIF' ? '✔️' : '❌'}
+                          </span>
+                          <span className={activeIncoterm === 'CIF' ? 'text-slate-700 font-medium' : 'text-slate-400 font-medium line-through'}>
+                            {currentLanguage === 'id' ? 'Premi Asuransi Maritim Internasional' : 'Marine Cargo Insurance Premium'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     
                     {/* Pembatasan Autentikasi Peran Buyer */}
