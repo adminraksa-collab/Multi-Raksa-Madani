@@ -1562,7 +1562,13 @@ export default function App() {
     // Local state will be updated by onSnapshot listener
   };
 
-  const handleStartNegotiation = (product: ExportProduct, customQuantity?: number) => {
+  const handleStartNegotiation = (
+    product: ExportProduct, 
+    customQuantity?: number, 
+    incoterms?: string, 
+    destinationPort?: string, 
+    calculatedTotalValue?: number
+  ) => {
     // Generate new active shipment in draft mode
     const newShipmentId = `ship-${1000 + shipments.length + 1}`;
     const defaultBuyerCompany = (currentUser && currentUser.role === 'Buyer') ? currentUser.companyName : 'YOSHIHIDE TRADING CO., LTD.';
@@ -1570,15 +1576,15 @@ export default function App() {
     
     const finalQty = customQuantity || 15;
     const pricePerTon = parseFloat(product.price.replace(/,/g, '')) || 1000;
-    const finalTotalValue = pricePerTon * finalQty;
+    const finalTotalValue = calculatedTotalValue !== undefined ? calculatedTotalValue : (pricePerTon * finalQty);
 
-    let defaultPortOfDischarge = 'Port of Yokohama, Japan';
+    let defaultPortOfDischarge = destinationPort ? `Port of ${destinationPort}` : 'Port of Yokohama, Japan';
     let defaultPortOfLoading = 'Tanjung Priok, Jakarta';
 
     if (currentUser && currentUser.role === 'Buyer') {
-      if (currentUser.preferredPortOfDischarge) {
+      if (currentUser.preferredPortOfDischarge && !destinationPort) {
         defaultPortOfDischarge = currentUser.preferredPortOfDischarge;
-      } else if (currentUser.country) {
+      } else if (!destinationPort && currentUser.country) {
         const countryLower = currentUser.country.toLowerCase();
         if (countryLower.includes('germany') || countryLower.includes('jerman') || countryLower.includes('hamburg')) {
           defaultPortOfDischarge = 'Port of Hamburg, Germany';
@@ -1597,7 +1603,7 @@ export default function App() {
         } else {
           defaultPortOfDischarge = `Port of ${currentUser.country}`;
         }
-      } else if (currentUser.companyName) {
+      } else if (!destinationPort && currentUser.companyName) {
         const coLower = currentUser.companyName.toLowerCase();
         if (coLower.includes('malay') || coLower.includes('lion')) {
           defaultPortOfDischarge = 'Port Klang, Malaysia';
@@ -1640,13 +1646,14 @@ export default function App() {
       etd: new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString().split('T')[0],
       eta: new Date(Date.now() + 50 * 24 * 3600 * 1000).toISOString().split('T')[0],
       trackingNumber: `SMDR-TR-${Math.floor(100000 + Math.random() * 900000)}`,
+      incoterms: incoterms || 'FOB',
       currentStep: 'Draft',
       stepHistory: [
         { 
           step: 'Draft', 
           timestamp: new Date().toISOString(), 
           updatedBy: 'usr-buyer', 
-          comments: 'Inisiasi minat pembeli asing (Letter of Intent / LOI) dari Halaman Katalog.' 
+          comments: `Inisiasi minat pembeli asing (Letter of Intent / LOI) dari Halaman Katalog dengan kondisi ${incoterms || 'FOB'}.` 
         }
       ],
       documents: [],

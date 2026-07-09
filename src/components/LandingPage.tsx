@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Globe, ArrowRight, ShieldCheck, FileText, 
   ChevronRight, Ship, FileSignature, Calculator, Info, X,
@@ -534,7 +534,7 @@ interface CompanyProfileData {
 
 interface LandingPageProps {
   onNavigate: (tab: any) => void;
-  onStartNegotiation: (product: ExportProduct, quantity: number) => void;
+  onStartNegotiation: (product: ExportProduct, quantity: number, incoterms?: string, destinationPort?: string, totalValue?: number) => void;
   shipmentsCount: number;
   totalVolume: number;
   totalValue: number;
@@ -617,6 +617,17 @@ export default function LandingPage({
   const [orderVolume, setOrderVolume] = useState<number>(20); // default 20 metric tons
   const [selectedPort, setSelectedPort] = useState<string>('Tokyo');
   const [activeIncoterm, setActiveIncoterm] = useState<'EXW' | 'FOB' | 'CIF'>('FOB');
+  const [fclHandlingRate, setFclHandlingRate] = useState<number>(600);
+
+  useEffect(() => {
+    const selectedProdObj = products.find(p => p.id === targetProduct);
+    if (selectedProdObj && selectedProdObj.handlingRate) {
+      setFclHandlingRate(parseFloat(selectedProdObj.handlingRate) || 600);
+    } else {
+      setFclHandlingRate(600);
+    }
+  }, [targetProduct, products]);
+
   const [localCalcOpen, setLocalCalcOpen] = useState<boolean>(false);
   const isCalcOpen = isCalcOpenProp !== undefined ? isCalcOpenProp : localCalcOpen;
   const setIsCalcOpen = setIsCalcOpenProp !== undefined ? setIsCalcOpenProp : setLocalCalcOpen;
@@ -736,6 +747,7 @@ export default function LandingPage({
     specification: '',
     origin: '',
     minOrder: '',
+    handlingRate: '600',
     image: '',
     attachmentUrl: '',
     attachmentName: '',
@@ -753,6 +765,7 @@ export default function LandingPage({
       specification: prod.specification,
       origin: prod.origin,
       minOrder: prod.minOrder,
+      handlingRate: prod.handlingRate || '600',
       image: prod.image,
       attachmentUrl: prod.attachmentUrl || '',
       attachmentName: prod.attachmentName || '',
@@ -771,6 +784,7 @@ export default function LandingPage({
       specification: '',
       origin: 'Indonesia',
       minOrder: '10 MT',
+      handlingRate: '600',
       image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
       attachmentUrl: '',
       attachmentName: '',
@@ -829,6 +843,7 @@ export default function LandingPage({
         specification: productForm.specification,
         origin: productForm.origin,
         minOrder: productForm.minOrder,
+        handlingRate: productForm.handlingRate,
         image: productForm.image || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400',
         supplierName: 'Koperasi Mitra AgriFlow',
         attachmentUrl: productForm.attachmentUrl || undefined,
@@ -847,6 +862,7 @@ export default function LandingPage({
         specification: productForm.specification,
         origin: productForm.origin,
         minOrder: productForm.minOrder,
+        handlingRate: productForm.handlingRate,
         image: productForm.image,
         supplierName: editingProduct.supplierName || 'Koperasi Mitra AgriFlow',
         attachmentUrl: productForm.attachmentUrl || undefined,
@@ -877,7 +893,8 @@ export default function LandingPage({
       leadTimeDays: p.id === 'prod-1' ? 30 : p.id === 'prod-2' ? 25 : p.id === 'prod-3' ? 28 : p.id === 'prod-4' ? 20 : 22,
       rawProduct: p,
       minVol: minVol,
-      maxVol: minVol * 50
+      maxVol: minVol * 50,
+      handlingRate: p.handlingRate ? parseFloat(p.handlingRate) || 600 : 600
     };
     return acc;
   }, {} as Record<string, any>);
@@ -891,7 +908,8 @@ export default function LandingPage({
     leadTimeDays: 30,
     rawProduct: products[0],
     minVol: 10,
-    maxVol: 500
+    maxVol: 500,
+    handlingRate: 600
   };
 
   const DESTINATION_PORTS = [
@@ -906,23 +924,23 @@ export default function LandingPage({
   const activeVol = orderVolume || activeProduct.minVol;
   const fclCount = Math.ceil(activeVol / activeProduct.containerCapacity20ft);
 
-  // EXW Calculation (approx 8% reduction from FOB as standard handling/transport deduction)
-  const exwPricePerMT = activeProduct.pricePerTon * 0.92;
+  // EXW Calculation (base price from product catalog)
+  const exwPricePerMT = activeProduct.pricePerTon;
   const totalExw = activeVol * exwPricePerMT;
 
-  // FOB Calculation
-  const fobPricePerMT = activeProduct.pricePerTon;
-  const totalFob = activeVol * fobPricePerMT;
+  // FOB Calculation (EXW + fclHandlingRate USD per container handling & transport)
+  const totalFob = totalExw + (fclCount * fclHandlingRate);
+  const fobPricePerMT = totalFob / activeVol;
 
-  // CIF Calculation
+  // CIF Calculation (FOB + Freight + Insurance)
   const portObj = DESTINATION_PORTS.find(p => p.value === selectedPort) || DESTINATION_PORTS[0];
   const freightCost = fclCount * portObj.freightRate;
   const insuranceCost = Math.max(50, totalFob * 0.0015);
   const totalCif = totalFob + freightCost + insuranceCost;
   const cifPricePerMT = totalCif / activeVol;
 
-  // For backward compatibility / standard total cost
-  const totalCost = totalFob;
+  // For backward compatibility / standard total cost based on active selected Incoterm
+  const totalCost = activeIncoterm === 'EXW' ? totalExw : activeIncoterm === 'FOB' ? totalFob : totalCif;
 
   return (
     <div className="space-y-12 pb-16 animate-fade-in">
@@ -1145,7 +1163,9 @@ export default function LandingPage({
                     })()}
                     <div className="pt-2 flex justify-between items-center border-t border-slate-100">
                       <div>
-                        <span className="text-[12px] uppercase font-black text-gray-400 block tracking-wider leading-none">{t.fobPriceTentative}</span>
+                        <span className="text-[12px] uppercase font-black text-gray-400 block tracking-wider leading-none">
+                          {currentLanguage === 'id' ? 'Harga EXW Tentatif' : 'Tentative EXW Price'}
+                        </span>
                         <span className="text-sm font-black text-indigo-600 font-mono">${p.price} <span className="text-[12px] text-gray-500 font-bold">/ {getT(p, 'unit').split(' ')[0]}</span></span>
                       </div>
                       <div className="text-right">
@@ -1267,7 +1287,9 @@ export default function LandingPage({
                           </div>
                         )}
                         <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-200">
-                          <span className="text-slate-500 font-bold uppercase text-[12px] tracking-wider">{t.fobPriceRef}</span>
+                          <span className="text-slate-500 font-bold uppercase text-[12px] tracking-wider">
+                            {currentLanguage === 'id' ? 'Harga Acuan EXW' : 'EXW Reference Price'}
+                          </span>
                           <span className="font-mono font-black text-indigo-600">${activeProduct.pricePerTon.toLocaleString('id-ID')} USD / MT</span>
                         </div>
                       </div>
@@ -1334,6 +1356,8 @@ export default function LandingPage({
                           : '*Container shipment is calculated automatically based on FCL count'}
                       </p>
                     </div>
+
+
                   </div>
                 </div>
 
@@ -1492,13 +1516,13 @@ export default function LandingPage({
                         )}
                         {activeIncoterm === 'FOB' && (
                           currentLanguage === 'id' 
-                            ? 'Harga sudah mencakup seluruh penanganan kargo lokal, pengurusan dokumen kepabeanan Bea Cukai RI (CEISA/INSW) & Karantina pertanian lunas, serta THC pelabuhan muat sampai kargo di atas dek kapal.' 
-                            : 'Price covers cargo packing, local transport to Port of Tanjung Priok, export customs document approvals (CEISA/INSW), quarantine certifications, and loading onto the vessel.'
+                            ? `Dihitung dengan rumus EXW + biaya logistik per kontainer FCL ($${fclHandlingRate} USD). Ini mencakup truk domestik ke Pelabuhan Tanjung Priok, pengurusan pabean ekspor RI (CEISA/INSW), dokumen karantina pertanian, dan THC pelabuhan muat.` 
+                            : `Calculated as EXW + fixed container handling rate ($${fclHandlingRate} USD per FCL). This covers domestic trucking to Tanjung Priok Port, Indonesian customs clearance (CEISA/INSW), quarantine certifications, and terminal handling charges (THC).`
                         )}
                         {activeIncoterm === 'CIF' && (
                           currentLanguage === 'id' 
-                            ? `Seluruh cakupan FOB + sewa armada kapal laut (Ocean Freight) menuju Pelabuhan ${portObj.name} + Premi Asuransi Maritim Internasional (All-Risk) ditanggung oleh kami selaku eksportir.` 
-                            : `Covers complete FOB scopes + Ocean Freight charter cost to ${portObj.name} + International Maritime Insurance (All-Risk coverage) fully paid and arranged by us.`
+                            ? `Seluruh cakupan FOB + biaya riil angkutan laut (Ocean Freight) senilai $${portObj.freightRate} per kontainer FCL menuju Pelabuhan ${portObj.name} + Premi Asuransi Maritim Internasional All-Risk (0.15% dari FOB atau min. $50 USD).` 
+                            : `Covers complete FOB scopes + Ocean Freight charter rate of $${portObj.freightRate} per FCL to ${portObj.name} + All-Risk Marine Insurance (0.15% of FOB value or min. $50 USD).`
                         )}
                       </p>
 
@@ -1583,7 +1607,7 @@ export default function LandingPage({
                     <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[12px] text-slate-500">
                       <span className="italic flex items-center gap-1">
                         <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                        {t.fobPriceLimitText}: ${activeProduct.pricePerTon}/MT
+                        {currentLanguage === 'id' ? 'Sesuai batasan acuan EXW' : 'Consistent with EXW price guidelines'}: ${activeProduct.pricePerTon}/MT
                       </span>
                       <button
                         onClick={() => {
@@ -1591,7 +1615,13 @@ export default function LandingPage({
                           const targetProdObj = activeProduct.rawProduct;
                           if (targetProdObj) {
                             setIsCalcOpen(false);
-                            onStartNegotiation(targetProdObj, orderVolume);
+                            onStartNegotiation(
+                              targetProdObj, 
+                              orderVolume, 
+                              activeIncoterm, 
+                              activeIncoterm === 'CIF' ? portObj.value : undefined,
+                              Math.round(totalCost)
+                            );
                           }
                         }}
                         disabled={currentUser?.role !== 'Buyer'}
@@ -2565,7 +2595,7 @@ export default function LandingPage({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Harga FOB (USD)</label>
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Harga EXW (USD)</label>
                     <input
                       type="text"
                       required
@@ -2588,7 +2618,7 @@ export default function LandingPage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-1 md:col-span-2">
                     <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Asal / Origin</label>
                     <input
@@ -2610,6 +2640,18 @@ export default function LandingPage({
                       value={productForm.minOrder}
                       onChange={(e) => setProductForm({ ...productForm, minOrder: e.target.value })}
                       className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[12px] font-bold text-slate-400 uppercase tracking-wider">Handling/FCL (USD)</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="600"
+                      value={productForm.handlingRate}
+                      onChange={(e) => setProductForm({ ...productForm, handlingRate: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500 font-semibold font-mono"
                     />
                   </div>
                 </div>

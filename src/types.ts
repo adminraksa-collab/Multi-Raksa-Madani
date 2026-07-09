@@ -139,6 +139,7 @@ export interface ExportProduct {
   supplierName: string;
   origin: string;
   minOrder: string;
+  handlingRate?: string;
   attachmentUrl?: string;
   attachmentName?: string;
   translations?: { en?: { name?: string; specification?: string; category?: string; origin?: string; minOrder?: string; unit?: string } };
