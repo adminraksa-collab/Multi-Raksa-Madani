@@ -1383,13 +1383,18 @@ export default function LandingPage({
 
                   <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-4">
                     {/* Incoterms Header / Info */}
-                    <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
-                      <span className="text-[11px] font-black uppercase text-indigo-600 tracking-wider">
-                        {currentLanguage === 'id' ? 'Kalkulasi Perbandingan Incoterms' : 'Incoterms Comparison Calculator'}
-                      </span>
-                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-                        {activeVol} MT ({fclCount} FCL)
-                      </span>
+                    <div className="border-b border-slate-100 pb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-black uppercase text-indigo-600 tracking-wider">
+                          {currentLanguage === 'id' ? 'Kalkulasi Perbandingan Incoterms' : 'Incoterms Comparison Calculator'}
+                        </span>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                          {activeVol} MT ({fclCount} FCL)
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-slate-400 italic font-semibold text-left">
+                        {currentLanguage === 'id' ? '*Harga sewaktu-waktu bisa berubah' : '*Prices are subject to change at any time'}
+                      </p>
                     </div>
 
                     {/* Three Cards (EXW, FOB, CIF) */}
