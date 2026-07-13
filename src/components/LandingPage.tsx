@@ -2439,7 +2439,37 @@ export default function LandingPage({
                             const reader = new FileReader();
                             reader.onloadend = () => {
                               if (typeof reader.result === 'string') {
-                                setTempProfile({ ...tempProfile, bannerImage: reader.result });
+                                const img = new Image();
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas');
+                                  const MAX_WIDTH = 1200;
+                                  const MAX_HEIGHT = 450;
+                                  let width = img.width;
+                                  let height = img.height;
+
+                                  if (width > height) {
+                                    if (width > MAX_WIDTH) {
+                                      height *= MAX_WIDTH / width;
+                                      width = MAX_WIDTH;
+                                    }
+                                  } else {
+                                    if (height > MAX_HEIGHT) {
+                                      width *= MAX_HEIGHT / height;
+                                      height = MAX_HEIGHT;
+                                    }
+                                  }
+
+                                  canvas.width = width;
+                                  canvas.height = height;
+                                  const ctx = canvas.getContext('2d');
+                                  if (ctx) {
+                                    ctx.drawImage(img, 0, 0, width, height);
+                                    // Compress to JPEG with 60% quality to ensure small Firestore document size (<100KB)
+                                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                                    setTempProfile({ ...tempProfile, bannerImage: compressedBase64 });
+                                  }
+                                };
+                                img.src = reader.result;
                               }
                             };
                             reader.readAsDataURL(file);

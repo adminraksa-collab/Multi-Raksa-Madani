@@ -161,8 +161,8 @@ export default function App() {
       ceisa: 'rec CEISA',
       insw: 'rec insw',
       address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
-      telephone: '0857-2045-21691',
-      whatsapp: '0822-1832-2672',
+      telephone: '+62 857-2045-21691',
+      whatsapp: '+62 822-1832-2672',
       email: 'support@ptmrm.my.id',
       bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80',
       originPort: 'Tanjung Priok, JKT',
@@ -199,29 +199,6 @@ export default function App() {
       const updatedCurrentUser = { ...currentUser, companyName: 'PT Multi Raksa Madani' };
       setCurrentUser(updatedCurrentUser);
       localStorage.setItem('exportflow_current_user', JSON.stringify(updatedCurrentUser));
-    }
-
-    // Migrate company profile to updated legality and contact info
-    const storedProfile = localStorage.getItem('exportflow_company_profile');
-    if (storedProfile) {
-      try {
-        const parsed = JSON.parse(storedProfile);
-        if (parsed.nib === 'No. NIB 0122110034455 / SIUP 452/32.10/2026' || !parsed.npwp || parsed.email === 'support@multiraksamaradani.co.id') {
-          const updatedProfile = {
-            ...parsed,
-            nib: '0602230086432',
-            npwp: '62.708.227.4-429.000',
-            ceisa: 'rec CEISA',
-            insw: 'rec insw',
-            address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
-            telephone: '0857-2045-21691',
-            whatsapp: '0822-1832-2672',
-            email: 'support@ptmrm.my.id',
-          };
-          setCompanyProfile(updatedProfile);
-          localStorage.setItem('exportflow_company_profile', JSON.stringify(updatedProfile));
-        }
-      } catch (e) {}
     }
   }, []);
 
@@ -309,8 +286,8 @@ export default function App() {
           ceisa: 'rec CEISA',
           insw: 'rec insw',
           address: 'Kompleks Cisaranten Indah No. 21, Kota Bandung, Jawa Barat, Indonesia',
-          telephone: '0857-2045-21691',
-          whatsapp: '0822-1832-2672',
+          telephone: '+62 857-2045-21691',
+          whatsapp: '+62 822-1832-2672',
           email: 'support@ptmrm.my.id',
           bannerImage: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1600&q=80',
           originPort: 'Tanjung Priok, JKT',
@@ -341,8 +318,16 @@ export default function App() {
           lastSyncedSampleRequestsRef.current = JSON.stringify(data.sampleRequests);
         }
         if (data.companyProfile) {
-          setCompanyProfile(data.companyProfile);
-          lastSyncedCompanyProfileRef.current = JSON.stringify(data.companyProfile);
+          let updatedProfile = data.companyProfile;
+          if (updatedProfile.telephone === '0857-2045-21691' || updatedProfile.whatsapp === '0822-1832-2672' || updatedProfile.telephone === '+62 0857-2045-21691') {
+            updatedProfile = {
+              ...updatedProfile,
+              telephone: '+62 857-2045-21691',
+              whatsapp: '+62 822-1832-2672'
+            };
+          }
+          setCompanyProfile(updatedProfile);
+          lastSyncedCompanyProfileRef.current = JSON.stringify(updatedProfile);
         }
       } catch (err) {
         console.error("Firebase load failed, using local storage fallback:", err);
